@@ -80,6 +80,14 @@ class StreamTab(QtGui.QWidget):
         self.timer.timeout.connect(self.updatePlot)
 
     def toggleStream(self):
+        """
+        This works as long as the daemon was started externally,
+        and the GUI was started with data piped in from proto2bytes:
+
+        $ ~/sng/sng-daemon/build/proto2bytes -s -c 3 | ./wiredLeaf.py
+
+        otherwise, this will crash the GUI.
+        """
         if self.streamCheckbox.isChecked():
             self.timer.start(self.fp)
             self.parent.statusBox.setText('Started streaming')
