@@ -52,6 +52,49 @@ class SetupTab(QtGui.QWidget):
         self.parent.statusBox.setText('Ethernet buffers expanded!')
 
 
+class StreamTab(QtGui.QWidget):
+
+    def __init__(self, parent):
+        super(StreamTab, self).__init__(None)
+        self.parent = parent
+
+        self.streamCheckbox = QtGui.QCheckBox('Stream Data')
+        self.streamCheckbox.stateChanged.connect(self.toggleStream)
+
+        self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.streamCheckbox)
+        self.setLayout(self.layout)
+
+        # stream buffers, etc.
+        sr = 30000  # sample rate
+        fr = 30      # frame rate
+        self.fp = 1000//fr  # frame period
+        n = 30000   # number of samples to display
+        self.nrefresh = sr//fr   # new samples collected before refresh
+        self.xvalues = np.arange(n, dtype='int')
+        self.plotBuff = np.zeros(n, dtype='uint16')
+        self.newBuff = np.zeros(self.nrefresh, dtype='uint16')
+
+        # timer stuff
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.updatePlot)
+
+    def toggleStream(self):
+        if self.streamCheckbox.isChecked():
+            self.timer.start(self.fp)
+            self.parent.statusBox.setText('Started streaming')
+        else:
+            self.timer.stop()
+            self.parent.statusBox.setText('Stopped streaming')
+
+    def updatePlot(self):
+        for i in range(self.nrefresh):
+            self.newBuff[i] = sys.stdin.readline()
+        self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],self.newBuff))
+        self.parent.waveform[0].set_data(self.xvalues, self.plotBuff)
+        self.parent.canvas.draw()
+
+
 class RecordTab(QtGui.QWidget):
 
     def __init__(self, parent):
@@ -98,51 +141,32 @@ class RecordTab(QtGui.QWidget):
         self.parent.statusBox.setText('This does nothing yet')
 
 
-class StreamTab(QtGui.QWidget):
-
-    def __init__(self, parent):
-        super(StreamTab, self).__init__(None)
-        self.parent = parent
-
-        self.streamCheckbox = QtGui.QCheckBox('Stream Data')
-        self.streamCheckbox.stateChanged.connect(self.toggleStream)
-
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.addWidget(self.streamCheckbox)
-        self.setLayout(self.layout)
-
-    def toggleStream(self):
-        if self.streamCheckbox.isChecked():
-            self.parent.timer.start(500)
-            self.parent.statusBox.setText('Started streaming')
-        else:
-            self.parent.timer.stop()
-            self.parent.statusBox.setText('Stopped streaming')
-
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
         self.setup()
-        self.drawFlatline()
 
     def setup(self):
 
         # TODO sort out sizing policies with this logo..
         self.logo = QtGui.QLabel()
-        self.logo.setPixmap(QtGui.QPixmap('round_logo_60x60_text.png'))
-        #self.logo.setPixmap(QtGui.QPixmap('newLogo.png'))
-        #self.logo.setAlignment(QtCore.Qt.AlignHCenter)
-        logoscale = 0.3
-        self.logo.setMaximumSize(QtCore.QSize(825*logoscale,450*logoscale))
+        #self.logo.setPixmap(QtGui.QPixmap('round_logo_60x60_text.png'))
+        self.logo.setPixmap(QtGui.QPixmap('newlogo.png'))
+        self.logo.setAlignment(QtCore.Qt.AlignHCenter)
+        #logoscale = 2.
+        #self.logo.setMaximumSize(QtCore.QSize(825*logoscale,450*logoscale))
         #self.logo.setScaledContents(True)
         #self.logo.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
 
         self.tabDialog = QtGui.QTabWidget()
-        self.tabDialog.addTab(SetupTab(self), 'Setup')
-        self.tabDialog.addTab(StreamTab(self), 'Stream')
-        self.tabDialog.addTab(RecordTab(self), 'Record')
+        self.setupTab = SetupTab(self)
+        self.tabDialog.addTab(self.setupTab, 'Setup')
+        self.streamTab = StreamTab(self)
+        self.tabDialog.addTab(self.streamTab, 'Stream')
+        self.recordTab = RecordTab(self)
+        self.tabDialog.addTab(self.recordTab, 'Record')
 
         self.leftColumn = QtGui.QWidget()
         tmp = QtGui.QVBoxLayout()
@@ -185,18 +209,12 @@ class MainWindow(QtGui.QWidget):
         self.setWindowTitle('WiredLeaf Control Panel')
         self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
 
-        ### Timer Shit
+        ###
 
-        self.xvalues = np.arange(30000)
-        self.flatline = np.array([2**15]*30000)
-        self.sinewave = np.sin(self.xvalues/1000.)*10000+2**15
+        self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000))
+        self.canvas.draw()
 
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.timerCallback)
-
-        self.state = True
-
-    def timerCallback(self):
+    def testRTPlotting(self):
         if self.state:
             self.waveform[0].set_data(self.xvalues, self.sinewave)
             self.canvas.draw()
@@ -204,11 +222,6 @@ class MainWindow(QtGui.QWidget):
             self.waveform[0].set_data(self.xvalues, self.flatline)
             self.canvas.draw()
         self.state = not self.state
-            
-
-    def drawFlatline(self):
-        self.waveform = self.axes.plot(self.xvalues, self.flatline)
-        self.canvas.draw()
 
 
 if __name__=='__main__':
