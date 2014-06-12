@@ -58,10 +58,19 @@ class StreamTab(QtGui.QWidget):
         super(StreamTab, self).__init__(None)
         self.parent = parent
 
+        self.chipNumLine = QtGui.QLineEdit('3')
+        self.channelNumLine = QtGui.QLineEdit('3')
+
         self.streamCheckbox = QtGui.QCheckBox('Stream Data')
         self.streamCheckbox.stateChanged.connect(self.toggleStream)
 
         self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(QtGui.QLabel('Chip Number:'))
+        self.layout.addWidget(self.chipNumLine)
+        self.layout.addWidget(QtGui.QLabel('Channel Number:'))
+        self.layout.addWidget(self.channelNumLine)
+        #TODO add a spacer here?
+        self.layout.addSpacing(100)
         self.layout.addWidget(self.streamCheckbox)
         self.setLayout(self.layout)
 
