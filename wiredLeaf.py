@@ -4,7 +4,7 @@ WiredLeaf Control Panel GUI
 Chris Chronopoulos, 20140522
 """
 
-import sys, subprocess
+import sys, time, subprocess
 from PyQt4 import QtCore, QtGui
 
 import matplotlib
@@ -98,15 +98,27 @@ class StreamTab(QtGui.QWidget):
         otherwise, this will crash the GUI.
         """
         if self.streamCheckbox.isChecked():
-            self.timer.start(self.fp)
-            self.parent.statusBox.setText('Started streaming')
+            if self.parent.setupTab.daemonCheckbox.isChecked():
+                subprocess.call([DAEMON_DIR+'util/acquire.py', 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
+                subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
+                subprocess.call([DAEMON_DIR+'util/acquire.py', 'forward', 'start', '-f', '-t', 'subsample'])
+                self.proto2bytes_po = subprocess.Popen([DAEMON_DIR+'build/proto2bytes', '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
+                self.timer.start(self.fp)
+                self.parent.statusBox.setText('Started streaming')
+            else:
+                #TODO gray-out the checkbox when the daemon is not running
+                self.parent.statusBox.setText('Start daemon first!')
+                time.sleep(1)
+                self.streamCheckbox.setChecked(False)
         else:
             self.timer.stop()
+            self.proto2bytes_po.kill()
+            subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
             self.parent.statusBox.setText('Stopped streaming')
 
     def updatePlot(self):
         for i in range(self.nrefresh):
-            self.newBuff[i] = sys.stdin.readline()
+            self.newBuff[i] = self.proto2bytes_po.stdout.readline()
         self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],self.newBuff))
         self.parent.waveform[0].set_data(self.xvalues, self.plotBuff)
         self.parent.canvas.draw()
