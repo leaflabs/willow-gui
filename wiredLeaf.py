@@ -25,11 +25,18 @@ class SetupTab(QtGui.QWidget):
         self.daemonCheckbox = QtGui.QCheckBox('Daemon Running')
         self.daemonCheckbox.stateChanged.connect(self.toggleDaemon)
 
+        # Test keypress
+        self.keypressCheckbox = QtGui.QCheckBox('Test Keypress')
+        self.shcut = QtGui.QShortcut(self)
+        self.shcut.setKey("space")
+        self.shcut.activated.connect(self.handleKeypress)
+
         self.ethConfigButton = QtGui.QPushButton('Expand Ethernet Buffers')
         self.ethConfigButton.clicked.connect(self.configureEthernet)
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.daemonCheckbox)
+        self.layout.addWidget(self.keypressCheckbox)
         self.layout.addWidget(self.ethConfigButton)
         self.setLayout(self.layout)
 
@@ -48,8 +55,16 @@ class SetupTab(QtGui.QWidget):
         Probably this should just be run on init()
         """
 
+        self.parent.statusBox.setText('Please enter password in terminal..')
         subprocess.call(DAEMON_DIR+'util/expand_eth_buffers.sh')
         self.parent.statusBox.setText('Ethernet buffers expanded!')
+
+    def handleKeypress(self):
+        if self.keypressCheckbox.isChecked():
+            self.keypressCheckbox.setChecked(False)
+        else:
+            self.keypressCheckbox.setChecked(True)
+
 
 
 class StreamTab(QtGui.QWidget):
@@ -61,7 +76,10 @@ class StreamTab(QtGui.QWidget):
         self.chipNumLine = QtGui.QLineEdit('3')
         self.channelNumLine = QtGui.QLineEdit('3')
 
-        self.streamCheckbox = QtGui.QCheckBox('Stream Data')
+        self.standbyCheckbox = QtGui.QCheckBox('Standby')
+        self.standbyCheckbox.clicked.connect(self.toggleStandby)
+
+        self.streamCheckbox = QtGui.QCheckBox('Stream')
         self.streamCheckbox.stateChanged.connect(self.toggleStream)
 
         self.layout = QtGui.QVBoxLayout()
@@ -69,8 +87,8 @@ class StreamTab(QtGui.QWidget):
         self.layout.addWidget(self.chipNumLine)
         self.layout.addWidget(QtGui.QLabel('Channel Number:'))
         self.layout.addWidget(self.channelNumLine)
-        #TODO add a spacer here?
         self.layout.addSpacing(100)
+        self.layout.addWidget(self.standbyCheckbox)
         self.layout.addWidget(self.streamCheckbox)
         self.setLayout(self.layout)
 
@@ -88,6 +106,27 @@ class StreamTab(QtGui.QWidget):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
 
+    def toggleStandby(self):
+        """
+        Decided to separate out standby mode because the setup is kind of slow (~5 seconds)
+        and you probably only want to do this occasionally, while starting/stopping the stream
+        you would do more frequently, without having to wait.
+        """
+        if self.parent.setupTab.daemonCheckbox.isChecked():
+            if self.standbyCheckbox.isChecked():
+                subprocess.call([DAEMON_DIR+'util/acquire.py', 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
+                subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
+                subprocess.call([DAEMON_DIR+'util/acquire.py', 'forward', 'start', '-f', '-t', 'subsample'])
+                self.parent.statusBox.setText('Standby mode activated')
+            else:
+                subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
+                self.parent.statusBox.setText('Standby mode de-activated')
+        else:
+            #TODO gray-out the checkbox when the daemon is not running
+            self.parent.statusBox.setText('Please start daemon first!')
+            self.standbyCheckbox.setChecked(False)
+                
+
     def toggleStream(self):
         """
         This works as long as the daemon was started externally,
@@ -97,24 +136,21 @@ class StreamTab(QtGui.QWidget):
 
         otherwise, this will crash the GUI.
         """
-        if self.streamCheckbox.isChecked():
-            if self.parent.setupTab.daemonCheckbox.isChecked():
-                subprocess.call([DAEMON_DIR+'util/acquire.py', 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
-                subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
-                subprocess.call([DAEMON_DIR+'util/acquire.py', 'forward', 'start', '-f', '-t', 'subsample'])
+        if self.parent.setupTab.daemonCheckbox.isChecked():
+            if self.streamCheckbox.isChecked():
                 self.proto2bytes_po = subprocess.Popen([DAEMON_DIR+'build/proto2bytes', '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
                 self.timer.start(self.fp)
                 self.parent.statusBox.setText('Started streaming')
             else:
-                #TODO gray-out the checkbox when the daemon is not running
-                self.parent.statusBox.setText('Start daemon first!')
-                time.sleep(1)
-                self.streamCheckbox.setChecked(False)
+                self.timer.stop()
+                self.proto2bytes_po.kill()
+                self.parent.statusBox.setText('Stopped streaming')
         else:
-            self.timer.stop()
-            self.proto2bytes_po.kill()
-            subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
-            self.parent.statusBox.setText('Stopped streaming')
+            #TODO gray-out the checkbox when the daemon is not running
+            self.parent.statusBox.setText('Please start daemon first!')
+            self.streamCheckbox.setChecked(False)
+
+
 
     def updatePlot(self):
         for i in range(self.nrefresh):
@@ -170,6 +206,19 @@ class RecordTab(QtGui.QWidget):
         self.parent.statusBox.setText('This does nothing yet')
 
 
+class DiskTab(QtGui.QWidget):
+
+    def __init__(self, parent):
+        super(DiskTab, self).__init__(None)
+        self.parent = parent
+
+        self.placeholderMessage = QtGui.QLabel("Disk utility coming soon!")
+
+        self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.placeholderMessage)
+        self.setLayout(self.layout)
+
+
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):
@@ -196,6 +245,8 @@ class MainWindow(QtGui.QWidget):
         self.tabDialog.addTab(self.streamTab, 'Stream')
         self.recordTab = RecordTab(self)
         self.tabDialog.addTab(self.recordTab, 'Record')
+        self.diskTab = DiskTab(self)
+        self.tabDialog.addTab(self.diskTab, 'Disk')
 
         self.leftColumn = QtGui.QWidget()
         tmp = QtGui.QVBoxLayout()
@@ -212,6 +263,7 @@ class MainWindow(QtGui.QWidget):
         self.axes.set_title('Data Window')
         self.axes.set_xlabel('Samples')
         self.axes.set_ylabel('Counts')
+        self.axes.set_axis_bgcolor('k')
         self.axes.axis([0,30000,0,2**16-1])
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
         self.mplLayout = QtGui.QVBoxLayout()
@@ -240,7 +292,7 @@ class MainWindow(QtGui.QWidget):
 
         ###
 
-        self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000))
+        self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
         self.canvas.draw()
 
     def testRTPlotting(self):
