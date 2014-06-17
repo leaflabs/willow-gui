@@ -289,6 +289,7 @@ class MainWindow(QtGui.QWidget):
         self.setLayout(mainLayout)
         self.setWindowTitle('WiredLeaf Control Panel')
         self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.resize(1000,500)
 
         ###
 
