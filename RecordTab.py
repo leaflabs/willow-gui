@@ -1,6 +1,8 @@
 from PyQt4 import QtCore, QtGui
 import subprocess
 
+from parameters import *
+
 class RecordTab(QtGui.QWidget):
 
     def __init__(self, parent):

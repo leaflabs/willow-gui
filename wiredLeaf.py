@@ -22,8 +22,6 @@ from RegisterTab import RegisterTab
 from DebugTab import DebugTab
 
 
-DAEMON_DIR = '/home/chrono/sng/sng-daemon/'
-
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):

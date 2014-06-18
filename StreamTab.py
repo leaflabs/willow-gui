@@ -2,6 +2,8 @@ from PyQt4 import QtCore, QtGui
 import subprocess
 import numpy as np
 
+from parameters import *
+
 class StreamTab(QtGui.QWidget):
 
     def __init__(self, parent):
