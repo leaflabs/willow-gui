@@ -20,8 +20,8 @@ Before starting the GUI:
 
     - make sure your system is set up to work with the daemon (see section 3
         of the wired-leaf-docs User Guide for directions)
-    - change the DAEMON_DIR string variable to point to the location of the
-        sng-daemon repo on your system
+    - change the DAEMON_DIR string variable near the top of wiredLeafy.py to
+        point to the location of the sng-daemon repo on your system
     - make sure there isn't an instance of the daemon running before you start
         the GUI (to be sure, you can run $ killall leafysd)
 

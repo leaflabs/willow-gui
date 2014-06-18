@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui
+import subprocess
 
 class RecordTab(QtGui.QWidget):
 

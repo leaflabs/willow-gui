@@ -5,7 +5,7 @@ WiredLeaf Control Panel GUI
 Created on 20140522 by Chris Chronopoulos.
 """
 
-import sys, time, subprocess
+import sys, time 
 
 import numpy as np
 import matplotlib
