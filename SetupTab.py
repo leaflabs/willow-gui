@@ -13,9 +13,9 @@ class SetupTab(QtGui.QWidget):
         self.daemonCheckbox.stateChanged.connect(self.toggleDaemon)
 
         # Test keypress
-        self.keypressCheckbox = QtGui.QCheckBox('Test Keypress')
+        self.keypressCheckbox = QtGui.QCheckBox('Test Keypress: CTRL+e')
         self.shcut = QtGui.QShortcut(self)
-        self.shcut.setKey("space")
+        self.shcut.setKey('CTRL+e')
         self.shcut.activated.connect(self.handleKeypress)
 
         self.ethConfigButton = QtGui.QPushButton('Expand Ethernet Buffers')
@@ -31,9 +31,11 @@ class SetupTab(QtGui.QWidget):
 
         if self.daemonCheckbox.isChecked():
             subprocess.call([DAEMON_DIR+'build/leafysd', '-A', '192.168.1.2'])
+            self.parent.isDaemonRunning = True
             self.parent.statusBox.setText('Daemon started')
         else:
             subprocess.call(['killall', 'leafysd'])
+            self.parent.isDaemonRunning = False
             self.parent.statusBox.setText('Daemon stopped')
         pass
 

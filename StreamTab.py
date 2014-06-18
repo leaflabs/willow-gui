@@ -49,7 +49,7 @@ class StreamTab(QtGui.QWidget):
         and you probably only want to do this occasionally, while starting/stopping the stream
         you would do more frequently, without having to wait.
         """
-        if self.parent.setupTab.daemonCheckbox.isChecked():
+        if self.parent.isDaemonRunning:
             if self.standbyCheckbox.isChecked():
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
@@ -73,7 +73,7 @@ class StreamTab(QtGui.QWidget):
 
         otherwise, this will crash the GUI.
         """
-        if self.parent.setupTab.daemonCheckbox.isChecked():
+        if self.parent.isDaemonRunning:
             if self.streamCheckbox.isChecked():
                 self.proto2bytes_po = subprocess.Popen([DAEMON_DIR+'build/proto2bytes', '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
                 self.timer.start(self.fp)

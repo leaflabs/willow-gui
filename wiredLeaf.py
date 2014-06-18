@@ -5,7 +5,7 @@ WiredLeaf Control Panel GUI
 Created on 20140522 by Chris Chronopoulos.
 """
 
-import sys, time 
+import sys, time, subprocess
 
 import numpy as np
 import matplotlib
@@ -21,17 +21,14 @@ from RecordTab import RecordTab
 from RegisterTab import RegisterTab
 from DebugTab import DebugTab
 
+from parameters import *
+
 
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        self.setup()
-
-    def setup(self):
-
-        # TODO sort out sizing policies with this logo..
         self.logo = QtGui.QLabel()
         #self.logo.setPixmap(QtGui.QPixmap('round_logo_60x60_text.png'))
         self.logo.setPixmap(QtGui.QPixmap('newlogo.png'))
@@ -102,14 +99,12 @@ class MainWindow(QtGui.QWidget):
         self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
         self.canvas.draw()
 
-    def testRTPlotting(self):
-        if self.state:
-            self.waveform[0].set_data(self.xvalues, self.sinewave)
-            self.canvas.draw()
-        else:
-            self.waveform[0].set_data(self.xvalues, self.flatline)
-            self.canvas.draw()
-        self.state = not self.state
+        self.isDaemonRunning = False
+
+    def exit(self):
+        print 'Cleaning up, then exiting..'
+        subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
+        subprocess.call(['killall', 'leafysd'])
 
 
 if __name__=='__main__':
@@ -117,4 +112,4 @@ if __name__=='__main__':
     main = MainWindow()
     main.show()
     app.exec_()
-
+    main.exit()

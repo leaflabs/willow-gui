@@ -31,19 +31,22 @@ class RecordTab(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def recordData(self):
-        DATA_DIR = self.dirLine.text()
-        if DATA_DIR[-1] != '/':
-            DATA_DIR = DATA_DIR + '/'
-        filename = self.filenameLine.text()
-        nsamp = self.nsampLine.text()
-        status1 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
-        status2 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'save_stream', DATA_DIR+filename, nsamp])
-        status3 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
-        if (status1==1 or status2==1 or status3==1):
-            self.parent.statusBox.setText('Error')
+        if self.parent.isDaemonRunning:
+            DATA_DIR = self.dirLine.text()
+            if DATA_DIR[-1] != '/':
+                DATA_DIR = DATA_DIR + '/'
+            filename = self.filenameLine.text()
+            nsamp = self.nsampLine.text()
+            status1 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
+            status2 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'save_stream', DATA_DIR+filename, nsamp])
+            status3 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
+            if (status1==1 or status2==1 or status3==1):
+                self.parent.statusBox.setText('Error')
+            else:
+                self.parent.statusBox.setText('Saved '+nsamp+' samples to: '+DATA_DIR+filename)
+                self.mostRecentFilename = DATA_DIR+filename
         else:
-            self.parent.statusBox.setText('Saved '+nsamp+' samples to: '+DATA_DIR+filename)
-            self.mostRecentFilename = DATA_DIR+filename
+            self.parent.statusBox.setText('Please start daemon first!')
 
     def plotRecent(self):
         self.parent.statusBox.setText('This does nothing yet')
