@@ -1,18 +1,19 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 """
 WiredLeaf Control Panel GUI
-Chris Chronopoulos, 20140522
+Created on 20140522 by Chris Chronopoulos.
 """
 
 import sys, time, subprocess
+
 import numpy as np
-
-from PyQt4 import QtCore, QtGui
-
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
+
+from PyQt4 import QtCore, QtGui
 
 from SetupTab import SetupTab
 from StreamTab import StreamTab
