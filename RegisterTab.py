@@ -127,7 +127,8 @@ class RegisterTab(QtGui.QWidget):
         self.moduleDropdown.activated.connect(self.populateRegisterDropdown)
 
         self.registerDropdown = QtGui.QComboBox()
-        self.registerDropdown.addItem('(Select Module First)')
+        for reg in self.reglists['Error']:
+            self.registerDropdown.addItem(reg)
 
         self.valueLine = QtGui.QLineEdit()
 
@@ -172,8 +173,18 @@ class RegisterTab(QtGui.QWidget):
         subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'error', '0', '0'])
 
     def read(self):
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'read', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex())])
+        if self.parent.isDaemonRunning:
+            pipeObject = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'read', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex())], stdout=subprocess.PIPE)
+            result = pipeObject.stdout.readline()
+            self.parent.statusBox.setText(result[:-1])
+        else:
+            self.parent.statusBox.setText('Daemon is not running!')
 
     def write(self):
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex()), self.valueLine.text()])
+        if self.parent.isDaemonRunning:
+            pipeObject = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'write', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex()), self.valueLine.text()], stdout=subprocess.PIPE)
+            result = pipeObject.stdout.readline()
+            self.parent.statusBox.setText(result[:-1])
+        else:
+            self.parent.statusBox.setText('Daemon is not running!')
 
