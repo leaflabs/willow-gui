@@ -90,7 +90,7 @@ class MainWindow(QtGui.QWidget):
 
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.LRSplitter)
-        mainLayout.addWidget(QtGui.QLabel('Status Box'))
+        mainLayout.addWidget(QtGui.QLabel('Message Log')) # TODO change statusBox var name to msgLog
         mainLayout.addWidget(self.statusBox)
 
         self.setLayout(mainLayout)
@@ -107,8 +107,9 @@ class MainWindow(QtGui.QWidget):
 
     def exit(self):
         print 'Cleaning up, then exiting..'
-        subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
-        subprocess.call(['killall', 'leafysd'])
+        if self.isDaemonRunning:
+            subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
+            subprocess.call(['killall', 'leafysd'])
 
 
 if __name__=='__main__':
