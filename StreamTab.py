@@ -43,6 +43,8 @@ class StreamTab(QtGui.QWidget):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
 
+        self.standingBy = False
+
     def toggleStandby(self):
         """
         Decided to separate out standby mode because the setup is kind of slow (~5 seconds)
@@ -55,9 +57,11 @@ class StreamTab(QtGui.QWidget):
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'forward', 'start', '-f', '-t', 'subsample'])
                 self.parent.statusBox.append('Standby mode activated')
+                self.standingBy = True
             else:
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
                 self.parent.statusBox.append('Standby mode de-activated')
+                self.standingBy = False
         else:
             #TODO gray-out the checkbox when the daemon is not running
             self.parent.statusBox.append('Please start daemon first!')
@@ -73,7 +77,7 @@ class StreamTab(QtGui.QWidget):
 
         otherwise, this will crash the GUI.
         """
-        if self.parent.isDaemonRunning:
+        if (self.parent.isDaemonRunning and self.standingBy):
             if self.streamCheckbox.isChecked():
                 self.proto2bytes_po = subprocess.Popen([DAEMON_DIR+'build/proto2bytes', '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
                 self.timer.start(self.fp)
@@ -84,8 +88,8 @@ class StreamTab(QtGui.QWidget):
                 self.parent.statusBox.append('Stopped streaming')
         else:
             #TODO gray-out the checkbox when the daemon is not running
-            self.parent.statusBox.append('Please start daemon first!')
-            self.streamCheckbox.setChecked(False)
+            self.parent.statusBox.append('Make sure daemon is started,  and standby is on!')
+            self.streamCheckbox.setChecked(False) #TODO bug: this still gets checked 1 in 3 times (??)
 
 
 
