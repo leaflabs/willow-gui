@@ -1,5 +1,8 @@
 from PyQt4 import QtCore, QtGui
-import subprocess
+import subprocess, h5py
+import numpy as np
+from progressbar import ProgressBar
+import matplotlib.pyplot as plt
 
 from parameters import *
 
@@ -16,6 +19,7 @@ class RecordTab(QtGui.QWidget):
         self.recordButton.clicked.connect(self.recordData)
         self.plotButton = QtGui.QPushButton('Plot Most Recent')
         self.plotButton.clicked.connect(self.plotRecent)
+        self.mostRecentFilename = None
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(QtGui.QLabel('Number of Samples:'))
@@ -49,6 +53,25 @@ class RecordTab(QtGui.QWidget):
             self.parent.statusBox.setText('Please start daemon first!')
 
     def plotRecent(self):
-        self.parent.statusBox.setText('This does nothing yet')
+        if self.mostRecentFilename:
+            f = h5py.File(self.mostRecentFilename)
+            dset = f['wired-dataset'] # each element is this convoluted tuple
+            ns = len(dset)  # number of samples
+            data = np.zeros((1024,ns), dtype='uint16')      # 1024 channels at 30 kHz
+            pbar = ProgressBar(maxval=ns-1).start()
+            print 'reading in data...'
+            for i in range(ns):
+                pbar.update(i)
+                data[:,i] = dset[i][3][:1024]
+            pbar.finish()
+            plt.figure(figsize=(12,16))
+            for i in range(32):
+                ax = plt.subplot(8,4,i+1)
+                ax.set_axis_bgcolor('k')
+                ax.plot(data[bank*32+i,:], color='y')
+                ax.set_ylim([0,2**16-1])
+            plt.show()
+        else:
+            self.parent.statusBox.setText('Nothing recorded yet.')
 
 
