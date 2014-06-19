@@ -143,9 +143,6 @@ class RegisterTab(QtGui.QWidget):
         self.buttons = QtGui.QWidget()
         self.buttons.setLayout(self.buttonLayout)
 
-        self.resetButton = QtGui.QPushButton('Reset All Error Registers')
-        self.resetButton.clicked.connect(self.resetAllRegisters)
-
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(QtGui.QLabel('Select Module:'))
         self.layout.addWidget(self.moduleDropdown)
@@ -155,7 +152,6 @@ class RegisterTab(QtGui.QWidget):
         self.layout.addWidget(self.valueLine)
         self.layout.addSpacing(100)
         self.layout.addWidget(self.buttons)
-        self.layout.addWidget(self.resetButton)
         self.setLayout(self.layout)
 
     def populateRegisterDropdown(self):
@@ -163,14 +159,6 @@ class RegisterTab(QtGui.QWidget):
         reglist = self.reglists[str(self.moduleDropdown.currentText())]
         for reg in reglist:
             self.registerDropdown.addItem(reg)
-
-    def resetAllRegisters(self):
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'central', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'sata', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'daq', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'udp', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'gpio', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'error', '0', '0'])
 
     def read(self):
         if self.parent.isDaemonRunning:
