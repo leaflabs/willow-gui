@@ -24,22 +24,28 @@ class DebugTab(QtGui.QWidget):
             result = debugtool_po.stdout.readline()
             start, stop = result.index('\t'), result.index('|')
             bitfield = int(result[start:stop])
-            bitfield_str = bin(bitfield)[2:].zfill(8)
-            badModuleList = []
-            # lots of one-off confusion here, but i think this works now
-            for i in range(1,8):
-                if bitfield_str[-(i+1)]=='1':
-                    badModuleList.append(self.moduleMap[i])
-            error_msg = ''
-            for module in badModuleList:
-                debugtool_po = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'read', module, '0'], stdout=subprocess.PIPE)
-                result = debugtool_po.stdout.readline()
-                start, stop = result.index('\t'), result.index('|')
-                bitfield = int(result[start:stop])
-                bitfield_str = bin(bitfield)[2:].zfill(32)
-                for i in range(32):
+            if bitfield==0:
+                self.parent.statusBox.append('No error conditions present on FPGA')
+            else:
+                bitfield_str = bin(bitfield)[2:].zfill(8)
+                badModuleList = []
+                # lots of one-off confusion here, but i think this works now
+                for i in range(1,8):
                     if bitfield_str[-(i+1)]=='1':
-                        pass # TODO append to error_msg here
-            #self.parent.statusBox.setText('Bad Modules: '+badModuleList)
+                        badModuleList.append(self.moduleMap[i])
+                error_msg = ''
+                for module in badModuleList:
+                    debugtool_po = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'read', module, '0'], stdout=subprocess.PIPE)
+                    result = debugtool_po.stdout.readline()
+                    start, stop = result.index('\t'), result.index('|')
+                    bitfield = int(result[start:stop])
+                    self.parent.statusBox.append(module+' has an error bitfield of: '+str(bitfield))
+                    """
+                    bitfield_str = bin(bitfield)[2:].zfill(32)
+                    for i in range(32):
+                        if bitfield_str[-(i+1)]=='1':
+                            pass # TODO append to error_msg here
+                    self.parent.statusBox.append('Bad Modules: '+badModuleList)
+                    """
         else:
-            self.parent.statusBox.setText('Daemon is not running!')
+            self.parent.statusBox.append('Daemon is not running!')

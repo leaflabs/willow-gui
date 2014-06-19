@@ -32,11 +32,11 @@ class SetupTab(QtGui.QWidget):
         if self.daemonCheckbox.isChecked():
             subprocess.call([DAEMON_DIR+'build/leafysd', '-A', '192.168.1.2'])
             self.parent.isDaemonRunning = True
-            self.parent.statusBox.setText('Daemon started')
+            self.parent.statusBox.append('Daemon started')
         else:
             subprocess.call(['killall', 'leafysd'])
             self.parent.isDaemonRunning = False
-            self.parent.statusBox.setText('Daemon stopped')
+            self.parent.statusBox.append('Daemon stopped')
         pass
 
     def configureEthernet(self):
@@ -44,9 +44,9 @@ class SetupTab(QtGui.QWidget):
         Probably this should just be run on init()
         """
 
-        self.parent.statusBox.setText('Please enter password in terminal..')
+        self.parent.statusBox.append('Please enter password in terminal..')
         subprocess.call(DAEMON_DIR+'util/expand_eth_buffers.sh')
-        self.parent.statusBox.setText('Ethernet buffers expanded!')
+        self.parent.statusBox.append('Ethernet buffers expanded!')
 
     def handleKeypress(self):
         if self.keypressCheckbox.isChecked():

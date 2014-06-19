@@ -176,15 +176,15 @@ class RegisterTab(QtGui.QWidget):
         if self.parent.isDaemonRunning:
             pipeObject = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'read', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex())], stdout=subprocess.PIPE)
             result = pipeObject.stdout.readline()
-            self.parent.statusBox.setText(result[:-1])
+            self.parent.statusBox.append(result[:-1])
         else:
-            self.parent.statusBox.setText('Daemon is not running!')
+            self.parent.statusBox.append('Daemon is not running!')
 
     def write(self):
         if self.parent.isDaemonRunning:
             pipeObject = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'write', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex()), self.valueLine.text()], stdout=subprocess.PIPE)
             result = pipeObject.stdout.readline()
-            self.parent.statusBox.setText(result[:-1])
+            self.parent.statusBox.append(result[:-1])
         else:
-            self.parent.statusBox.setText('Daemon is not running!')
+            self.parent.statusBox.append('Daemon is not running!')
 

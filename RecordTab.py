@@ -45,12 +45,12 @@ class RecordTab(QtGui.QWidget):
             status2 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'save_stream', DATA_DIR+filename, nsamp])
             status3 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
             if (status1==1 or status2==1 or status3==1):
-                self.parent.statusBox.setText('Error')
+                self.parent.statusBox.append('Error')
             else:
-                self.parent.statusBox.setText('Saved '+nsamp+' samples to: '+DATA_DIR+filename)
+                self.parent.statusBox.append('Saved '+nsamp+' samples to: '+DATA_DIR+filename)
                 self.mostRecentFilename = DATA_DIR+filename
         else:
-            self.parent.statusBox.setText('Please start daemon first!')
+            self.parent.statusBox.append('Please start daemon first!')
 
     def plotRecent(self):
         if self.mostRecentFilename:
@@ -72,6 +72,6 @@ class RecordTab(QtGui.QWidget):
                 ax.set_ylim([0,2**16-1])
             plt.show()
         else:
-            self.parent.statusBox.setText('Nothing recorded yet.')
+            self.parent.statusBox.append('Nothing recorded yet.')
 
 

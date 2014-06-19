@@ -54,13 +54,13 @@ class StreamTab(QtGui.QWidget):
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'forward', 'start', '-f', '-t', 'subsample'])
-                self.parent.statusBox.setText('Standby mode activated')
+                self.parent.statusBox.append('Standby mode activated')
             else:
                 subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
-                self.parent.statusBox.setText('Standby mode de-activated')
+                self.parent.statusBox.append('Standby mode de-activated')
         else:
             #TODO gray-out the checkbox when the daemon is not running
-            self.parent.statusBox.setText('Please start daemon first!')
+            self.parent.statusBox.append('Please start daemon first!')
             self.standbyCheckbox.setChecked(False)
                 
 
@@ -77,14 +77,14 @@ class StreamTab(QtGui.QWidget):
             if self.streamCheckbox.isChecked():
                 self.proto2bytes_po = subprocess.Popen([DAEMON_DIR+'build/proto2bytes', '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
                 self.timer.start(self.fp)
-                self.parent.statusBox.setText('Started streaming')
+                self.parent.statusBox.append('Started streaming')
             else:
                 self.timer.stop()
                 self.proto2bytes_po.kill()
-                self.parent.statusBox.setText('Stopped streaming')
+                self.parent.statusBox.append('Stopped streaming')
         else:
             #TODO gray-out the checkbox when the daemon is not running
-            self.parent.statusBox.setText('Please start daemon first!')
+            self.parent.statusBox.append('Please start daemon first!')
             self.streamCheckbox.setChecked(False)
 
 
