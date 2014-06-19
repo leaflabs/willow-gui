@@ -85,13 +85,13 @@ class MainWindow(QtGui.QWidget):
 
         self.statusBox = QtGui.QLabel('Status Box')
 
-        self.statusWindow = QtGui.QTextEdit()
-        self.statusWindow.setReadOnly(True)
+        self.statusBox = QtGui.QTextEdit()
+        self.statusBox.setReadOnly(True)
 
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.LRSplitter)
         mainLayout.addWidget(QtGui.QLabel('Status Box'))
-        mainLayout.addWidget(self.statusWindow)
+        mainLayout.addWidget(self.statusBox)
 
         self.setLayout(mainLayout)
         self.setWindowTitle('WiredLeaf Control Panel')
