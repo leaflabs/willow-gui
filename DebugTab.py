@@ -62,12 +62,14 @@ class DebugTab(QtGui.QWidget):
             self.parent.statusBox.append('Daemon is not running!')
 
     def clearErrorRegisters(self):
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'central', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'sata', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'daq', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'udp', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'gpio', '0', '0'])
-        subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'error', '0', '0'])
-        self.parent.statusBox.append('Error registers cleared. Note, WiredLeaf may be in a funky state. Recommend soft hardware reset.')
-
+        if self.parent.isDaemonRunning:
+            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'central', '0', '0'])
+            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'sata', '0', '0'])
+            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'daq', '0', '0'])
+            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'udp', '0', '0'])
+            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'gpio', '0', '0'])
+            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'error', '0', '0'])
+            self.parent.statusBox.append('Error registers cleared. Note, WiredLeaf may be in a funky state. Recommend soft hardware reset.')
+        else:
+            self.parent.statusBox.append('Daemon is not running!')
 
