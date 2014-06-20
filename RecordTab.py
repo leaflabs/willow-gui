@@ -28,9 +28,9 @@ class RecordTab(QtGui.QWidget):
         self.layout.addWidget(self.dirLine)
         self.layout.addWidget(QtGui.QLabel('Filename:'))
         self.layout.addWidget(self.filenameLine)
+        self.layout.addSpacing(100)
         self.layout.addWidget(self.recordButton)
         self.layout.addWidget(self.plotButton)
-        self.layout.addStretch(1)
 
         self.setLayout(self.layout)
 
