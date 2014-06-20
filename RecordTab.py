@@ -3,6 +3,7 @@ import subprocess, h5py
 import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from parameters import *
 
@@ -36,10 +37,10 @@ class RecordTab(QtGui.QWidget):
 
     def recordData(self):
         if self.parent.isDaemonRunning:
-            DATA_DIR = self.dirLine.text()
+            DATA_DIR = str(self.dirLine.text())
             if DATA_DIR[-1] != '/':
                 DATA_DIR = DATA_DIR + '/'
-            filename = self.filenameLine.text()
+            filename = str(self.filenameLine.text())
             nsamp = self.nsampLine.text()
             status1 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
             status2 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'save_stream', DATA_DIR+filename, nsamp])
@@ -64,14 +65,18 @@ class RecordTab(QtGui.QWidget):
                 pbar.update(i)
                 data[:,i] = dset[i][3][:1024]
             pbar.finish()
-            plt.figure(figsize=(12,16))
+            bank = 3
+            newFig = Figure((5.,4.), dpi=100)
+
+            self.parent.fig.clear()
             for i in range(32):
-                ax = plt.subplot(8,4,i+1)
+                ax = self.parent.fig.add_subplot(8,4,i+1)
                 ax.set_axis_bgcolor('k')
                 ax.plot(data[bank*32+i,:], color='y')
                 ax.set_ylim([0,2**16-1])
-            plt.show()
+                ax.xaxis.set_ticklabels([]) # this makes the axes text invisible (but not the ticks themselves)
+                ax.yaxis.set_ticklabels([]) # this makes the axes text invisible (but not the ticks themselves)
+            self.parent.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
+            self.parent.canvas.draw()
         else:
             self.parent.statusBox.append('Nothing recorded yet.')
-
-

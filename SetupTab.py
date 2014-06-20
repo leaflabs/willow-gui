@@ -18,6 +18,7 @@ class SetupTab(QtGui.QWidget):
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.ethConfigButton)
         self.layout.addWidget(self.daemonCheckbox)
+        self.layout.addSpacing(100)
         self.setLayout(self.layout)
 
     def toggleDaemon(self):

@@ -24,7 +24,7 @@ class StreamTab(QtGui.QWidget):
         self.layout.addWidget(self.chipNumLine)
         self.layout.addWidget(QtGui.QLabel('Channel Number:'))
         self.layout.addWidget(self.channelNumLine)
-        self.layout.addSpacing(100)
+        self.layout.addSpacing(200)
         self.layout.addWidget(self.standbyCheckbox)
         self.layout.addWidget(self.streamCheckbox)
         self.setLayout(self.layout)
@@ -69,16 +69,20 @@ class StreamTab(QtGui.QWidget):
                 
 
     def toggleStream(self):
-        """
-        This works as long as the daemon was started externally,
-        and the GUI was started with data piped in from proto2bytes:
-
-        $ ~/sng/sng-daemon/build/proto2bytes -s -c 3 | ./wiredLeaf.py
-
-        otherwise, this will crash the GUI.
-        """
         if (self.parent.isDaemonRunning and self.standingBy):
             if self.streamCheckbox.isChecked():
+                # matplotlib stuff
+                self.parent.fig.clear()
+                self.parent.axes = self.parent.fig.add_subplot(111)
+                self.parent.fig.subplots_adjust() # return to default
+                self.parent.axes.set_title('Data Window')
+                self.parent.axes.set_xlabel('Samples')
+                self.parent.axes.set_ylabel('Counts')
+                self.parent.axes.set_axis_bgcolor('k')
+                self.parent.axes.axis([0,30000,0,2**16-1])
+                self.parent.waveform = self.parent.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
+                self.parent.canvas.draw()
+                # other stuff
                 self.proto2bytes_po = subprocess.Popen([DAEMON_DIR+'build/proto2bytes', '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
                 self.timer.start(self.fp)
                 self.parent.statusBox.append('Started streaming')

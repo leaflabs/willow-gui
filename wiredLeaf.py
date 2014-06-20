@@ -57,15 +57,20 @@ class MainWindow(QtGui.QWidget):
         tmp.addWidget(self.tabDialog)
         self.leftColumn.setLayout(tmp)
 
-        ###
+        ###################
+        # Matplotlib stuff
+        ###################
+        # TODO this whole setup is a little ugly, especially
+        #  the way it switches between stream view and record
+        #  view. Needs a general overhaul.
 
         self.fig = Figure((5.0, 4.0), dpi=100)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         self.axes = self.fig.add_subplot(111)
-        self.axes.set_title('Data Window')
-        self.axes.set_xlabel('Samples')
-        self.axes.set_ylabel('Counts')
+        self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
+        self.axes.xaxis.set_ticklabels([])
+        self.axes.yaxis.set_ticklabels([])
         self.axes.set_axis_bgcolor('k')
         self.axes.axis([0,30000,0,2**16-1])
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
