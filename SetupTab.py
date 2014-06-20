@@ -12,19 +12,12 @@ class SetupTab(QtGui.QWidget):
         self.daemonCheckbox = QtGui.QCheckBox('Daemon Running')
         self.daemonCheckbox.stateChanged.connect(self.toggleDaemon)
 
-        # Test keypress
-        self.keypressCheckbox = QtGui.QCheckBox('Test Keypress: CTRL+e')
-        self.shcut = QtGui.QShortcut(self)
-        self.shcut.setKey('CTRL+e')
-        self.shcut.activated.connect(self.handleKeypress)
-
         self.ethConfigButton = QtGui.QPushButton('Expand Ethernet Buffers')
         self.ethConfigButton.clicked.connect(self.configureEthernet)
 
         self.layout = QtGui.QVBoxLayout()
-        self.layout.addWidget(self.daemonCheckbox)
-        self.layout.addWidget(self.keypressCheckbox)
         self.layout.addWidget(self.ethConfigButton)
+        self.layout.addWidget(self.daemonCheckbox)
         self.setLayout(self.layout)
 
     def toggleDaemon(self):
