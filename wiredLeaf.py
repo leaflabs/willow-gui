@@ -83,15 +83,23 @@ class MainWindow(QtGui.QWidget):
 
         ###
 
-        self.statusBox = QtGui.QLabel('Status Box')
-
         self.statusBox = QtGui.QTextEdit()
         self.statusBox.setReadOnly(True)
 
+        self.statusBox_withLabel = QtGui.QWidget()
+        tmp = QtGui.QVBoxLayout()
+        tmp.addWidget(QtGui.QLabel('Message Log'))
+        tmp.addWidget(self.statusBox)
+        self.statusBox_withLabel.setLayout(tmp)
+
+        ###
+
+        self.TBSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.TBSplitter.addWidget(self.LRSplitter)
+        self.TBSplitter.addWidget(self.statusBox_withLabel)
+
         mainLayout = QtGui.QVBoxLayout()
-        mainLayout.addWidget(self.LRSplitter)
-        mainLayout.addWidget(QtGui.QLabel('Message Log')) # TODO change statusBox var name to msgLog
-        mainLayout.addWidget(self.statusBox)
+        mainLayout.addWidget(self.TBSplitter)
 
         self.setLayout(mainLayout)
         self.setWindowTitle('WiredLeaf Control Panel')
