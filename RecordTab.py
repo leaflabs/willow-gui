@@ -107,8 +107,8 @@ class RecordTab(QtGui.QWidget):
             self.parent.statusBox.append('Nothing recorded yet.')
 
     def plotSpecific(self):
-        specificFilename = self.DATA_DIR + str(self.specificLine.text())
+        specificFilename = str(self.specificLine.text())
         if specificFilename:
-            self.plotFromFile(specificFilename)
+            self.plotFromFile(self.DATA_DIR + specificFilename)
         else:
             self.parent.statusBox.append('Please enter filename to plot.')
