@@ -6,7 +6,12 @@ Setup
 
 Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-pyqt4
+    $ sudo apt-get install python-numpy python-matplotlib python-pyqt4 python-h5py python-progressbar
+
+Modify parameters.py to store the location of relevant directories on your system:
+
+    DAEMON_DIR = <location of sng-daemon repo>
+    DATA_DIR = <default location of data files> (can be updated from the GUI)
 
 Run:
 
