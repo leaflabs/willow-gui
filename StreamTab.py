@@ -2,7 +2,7 @@ from PyQt4 import QtCore, QtGui
 import subprocess
 import numpy as np
 
-from parameters import *
+from parameters import DAEMON_DIR, DATA_DIR
 
 class StreamTab(QtGui.QWidget):
 

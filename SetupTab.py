@@ -1,7 +1,7 @@
 from PyQt4 import QtCore, QtGui
 import subprocess
 
-from parameters import *
+from parameters import DAEMON_DIR, DATA_DIR
 
 class SetupTab(QtGui.QWidget):
 

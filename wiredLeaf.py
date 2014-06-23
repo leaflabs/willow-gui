@@ -21,7 +21,7 @@ from RecordTab import RecordTab
 from RegisterTab import RegisterTab
 from DebugTab import DebugTab
 
-from parameters import *
+from parameters import DAEMON_DIR, DATA_DIR
 
 
 class MainWindow(QtGui.QWidget):
