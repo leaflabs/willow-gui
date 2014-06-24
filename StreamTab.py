@@ -62,7 +62,7 @@ class StreamTab(QtGui.QWidget):
                 self.parent.statusBox.append('Standby mode activated')
                 self.standingBy = True
             else:
-                subprocess.call([self.aquireDotPy, 'stop'])
+                subprocess.call([self.acquireDotPy, 'stop'])
                 self.parent.statusBox.append('Standby mode de-activated')
                 self.standingBy = False
         else:
