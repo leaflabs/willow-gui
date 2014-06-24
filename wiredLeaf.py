@@ -50,6 +50,8 @@ class MainWindow(QtGui.QWidget):
         self.debugTab = DebugTab(self)
         self.tabDialog.addTab(self.debugTab, 'Debug')
 
+        self.tabDialog.setMovable(True)
+
         self.leftColumn = QtGui.QWidget()
         tmp = QtGui.QVBoxLayout()
         tmp.addWidget(self.logo)
