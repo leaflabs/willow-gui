@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess
+import subprocess, os
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -21,16 +21,17 @@ class SetupTab(QtGui.QWidget):
         self.layout.addSpacing(100)
         self.setLayout(self.layout)
 
+
     def toggleDaemon(self):
 
         if self.daemonCheckbox.isChecked():
-            subprocess.call([DAEMON_DIR+'build/leafysd', '-A', '192.168.1.2'])
+            subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
             self.parent.isDaemonRunning = True
-            self.parent.statusBox.append('Daemon started')
+            self.parent.statusBox.append('Daemon started.')
         else:
             subprocess.call(['killall', 'leafysd'])
             self.parent.isDaemonRunning = False
-            self.parent.statusBox.append('Daemon stopped')
+            self.parent.statusBox.append('Daemon stopped.')
         pass
 
     def configureEthernet(self):
@@ -39,7 +40,7 @@ class SetupTab(QtGui.QWidget):
         """
 
         self.parent.statusBox.append('Please enter password in terminal..')
-        subprocess.call(DAEMON_DIR+'util/expand_eth_buffers.sh')
+        subprocess.call(os.path.join(DAEMON_DIR, 'util/expand_eth_buffers.sh'))
         self.parent.statusBox.append('Ethernet buffers expanded!')
 
     def handleKeypress(self):

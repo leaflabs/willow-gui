@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess
+import subprocess, os
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -154,6 +154,8 @@ class RegisterTab(QtGui.QWidget):
         self.layout.addWidget(self.buttons)
         self.setLayout(self.layout)
 
+        self.debugToolDotPy = os.path.join(DAEMON_DIR, 'util/debug_tool.py')
+
     def populateRegisterDropdown(self):
         self.registerDropdown.clear()
         reglist = self.reglists[str(self.moduleDropdown.currentText())]
@@ -162,7 +164,7 @@ class RegisterTab(QtGui.QWidget):
 
     def read(self):
         if self.parent.isDaemonRunning:
-            pipeObject = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'read', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex())], stdout=subprocess.PIPE)
+            pipeObject = subprocess.Popen([self.debugToolDotPy, 'read', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex())], stdout=subprocess.PIPE)
             result = pipeObject.stdout.readline()
             self.parent.statusBox.append(result[:-1])
         else:
@@ -170,7 +172,7 @@ class RegisterTab(QtGui.QWidget):
 
     def write(self):
         if self.parent.isDaemonRunning:
-            pipeObject = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'write', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex()), self.valueLine.text()], stdout=subprocess.PIPE)
+            pipeObject = subprocess.Popen([self.debugToolDotPy, 'write', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex()), self.valueLine.text()], stdout=subprocess.PIPE)
             result = pipeObject.stdout.readline()
             self.parent.statusBox.append(result[:-1])
         else:

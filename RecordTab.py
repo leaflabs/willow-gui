@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess, h5py
+import subprocess, h5py, os
 import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
@@ -13,11 +13,8 @@ class RecordTab(QtGui.QWidget):
         super(RecordTab, self).__init__(None)
         self.parent = parent
 
-        self.DATA_DIR = DATA_DIR
-
         self.nsampLine = QtGui.QLineEdit('30000')
-        self.dirLine = QtGui.QLineEdit(self.DATA_DIR)
-        self.dirLine.editingFinished.connect(self.updateDataDir)
+        self.dirLine = QtGui.QLineEdit(DATA_DIR)
         self.filenameLine = QtGui.QLineEdit()
         self.recordButton = QtGui.QPushButton('Record Data')
         self.recordButton.clicked.connect(self.recordData)
@@ -48,27 +45,21 @@ class RecordTab(QtGui.QWidget):
 
         self.setLayout(self.layout)
 
-    def updateDataDir(self):
-        self.DATA_DIR = str(self.dirLine.text())
-        if self.DATA_DIR[-1] != '/':
-            self.DATA_DIR = self.DATA_DIR + '/'
+        self.acquireDotPy = os.path.join(DAEMON_DIR,'util/acquire.py')
 
     def recordData(self):
         if self.parent.isDaemonRunning:
-            self.DATA_DIR = str(self.dirLine.text())
-            if self.DATA_DIR[-1] != '/':
-                self.DATA_DIR = self.DATA_DIR + '/'
-            filename = str(self.filenameLine.text())
+            filename = os.path.join(str(self.dirLine.text()), str(self.filenameLine.text()))
             nsamp = self.nsampLine.text()
             self.parent.statusBox.append('Recording...')
-            status1 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
-            status2 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'save_stream', self.DATA_DIR+filename, nsamp])
-            status3 = subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
+            status1 = subprocess.call([self.acquireDotPy, 'start'])
+            status2 = subprocess.call([self.acquireDotPy, 'save_stream', filename, nsamp])
+            status3 = subprocess.call([self.acquireDotPy, 'stop'])
             if (status1==1 or status2==1 or status3==1):
                 self.parent.statusBox.append('Error')
             else:
-                self.parent.statusBox.append('Saved '+nsamp+' samples to: '+self.DATA_DIR+filename)
-                self.mostRecentFilename = self.DATA_DIR+filename
+                self.parent.statusBox.append('Saved '+nsamp+' samples to: '+filename)
+                self.mostRecentFilename = filename
         else:
             self.parent.statusBox.append('Please start daemon first!')
 
@@ -107,8 +98,13 @@ class RecordTab(QtGui.QWidget):
             self.parent.statusBox.append('Nothing recorded yet.')
 
     def plotSpecific(self):
+        datadir = str(self.dirLine.text())
         specificFilename = str(self.specificLine.text())
+        filename = os.path.join(datadir, specificFilename)
         if specificFilename:
-            self.plotFromFile(self.DATA_DIR + specificFilename)
+            if os.path.exists(filename):
+                self.plotFromFile(filename)
+            else:
+                self.parent.statusBox.append('File does not exist: '+filename)
         else:
             self.parent.statusBox.append('Please enter filename to plot.')

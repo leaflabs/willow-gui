@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess
+import subprocess, os
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -29,9 +29,11 @@ class DebugTab(QtGui.QWidget):
             'gpio' : {0:'Module Configuration Error'}
         }
 
+        self.debugToolDotPy = os.path.join(DAEMON_DIR, 'util/debug_tool.py')
+
     def parseErrors(self):
         if self.parent.isDaemonRunning:
-            debugtool_po = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'read', 'error', '0'], stdout=subprocess.PIPE)
+            debugtool_po = subprocess.Popen([self.debugToolDotPy, 'read', 'error', '0'], stdout=subprocess.PIPE)
             result = debugtool_po.stdout.readline()
             start, stop = result.index('\t'), result.index('|')
             errmod_bitfield = int(result[start:stop])
@@ -43,7 +45,7 @@ class DebugTab(QtGui.QWidget):
                 for i in range(1,8):
                     if errmod_bitfield_str[-(i+1)]=='1':
                         module = self.moduleMap[i]
-                        debugtool_po = subprocess.Popen([DAEMON_DIR+'util/debug_tool.py', 'read', module, '0'], stdout=subprocess.PIPE)
+                        debugtool_po = subprocess.Popen([self.debugToolDotPy, 'read', module, '0'], stdout=subprocess.PIPE)
                         result = debugtool_po.stdout.readline()
                         start, stop = result.index('\t'), result.index('|')
                         mod_bitfield = int(result[start:stop])
@@ -63,12 +65,12 @@ class DebugTab(QtGui.QWidget):
 
     def clearErrorRegisters(self):
         if self.parent.isDaemonRunning:
-            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'central', '0', '0'])
-            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'sata', '0', '0'])
-            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'daq', '0', '0'])
-            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'udp', '0', '0'])
-            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'gpio', '0', '0'])
-            subprocess.call([DAEMON_DIR+'util/debug_tool.py', 'write', 'error', '0', '0'])
+            subprocess.call([self.debugToolDotPy, 'write', 'central', '0', '0'])
+            subprocess.call([self.debugToolDotPy, 'write', 'sata', '0', '0'])
+            subprocess.call([self.debugToolDotPy, 'write', 'daq', '0', '0'])
+            subprocess.call([self.debugToolDotPy, 'write', 'udp', '0', '0'])
+            subprocess.call([self.debugToolDotPy, 'write', 'gpio', '0', '0'])
+            subprocess.call([self.debugToolDotPy, 'write', 'error', '0', '0'])
             self.parent.statusBox.append('Error registers cleared. Note, WiredLeaf may be in a funky state. Recommend soft hardware reset.')
         else:
             self.parent.statusBox.append('Daemon is not running!')

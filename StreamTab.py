@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess
+import subprocess, os
 import numpy as np
 
 from parameters import DAEMON_DIR, DATA_DIR
@@ -45,6 +45,9 @@ class StreamTab(QtGui.QWidget):
 
         self.standingBy = False
 
+        self.acquireDotPy = os.path.join(DAEMON_DIR, 'util/acquire.py')
+        self.proto2bytes = os.path.join(DAEMON_DIR, 'build/proto2bytes')
+
     def toggleStandby(self):
         """
         Decided to separate out standby mode because the setup is kind of slow (~5 seconds)
@@ -53,13 +56,13 @@ class StreamTab(QtGui.QWidget):
         """
         if self.parent.isDaemonRunning:
             if self.standbyCheckbox.isChecked():
-                subprocess.call([DAEMON_DIR+'util/acquire.py', 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
-                subprocess.call([DAEMON_DIR+'util/acquire.py', 'start'])
-                subprocess.call([DAEMON_DIR+'util/acquire.py', 'forward', 'start', '-f', '-t', 'subsample'])
+                subprocess.call([self.acquireDotPy, 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
+                subprocess.call([self.acquireDotPy, 'start'])
+                subprocess.call([self.acquireDotPy, 'forward', 'start', '-f', '-t', 'subsample'])
                 self.parent.statusBox.append('Standby mode activated')
                 self.standingBy = True
             else:
-                subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
+                subprocess.call([self.aquireDotPy, 'stop'])
                 self.parent.statusBox.append('Standby mode de-activated')
                 self.standingBy = False
         else:
@@ -83,7 +86,7 @@ class StreamTab(QtGui.QWidget):
                 self.parent.waveform = self.parent.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
                 self.parent.canvas.draw()
                 # other stuff
-                self.proto2bytes_po = subprocess.Popen([DAEMON_DIR+'build/proto2bytes', '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
+                self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
                 self.timer.start(self.fp)
                 self.parent.statusBox.append('Started streaming')
             else:
