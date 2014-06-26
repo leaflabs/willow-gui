@@ -25,7 +25,7 @@ class StreamTab(QtGui.QWidget):
         self.layout.addWidget(QtGui.QLabel('Channel Number:'))
         self.layout.addWidget(self.channelNumLine)
         self.layout.addSpacing(200)
-        self.layout.addWidget(self.standbyCheckbox)
+        #self.layout.addWidget(self.standbyCheckbox)
         self.layout.addWidget(self.streamCheckbox)
         self.setLayout(self.layout)
 
@@ -43,8 +43,6 @@ class StreamTab(QtGui.QWidget):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
 
-        self.standingBy = False
-
         self.acquireDotPy = os.path.join(DAEMON_DIR, 'util/acquire.py')
         self.proto2bytes = os.path.join(DAEMON_DIR, 'build/proto2bytes')
 
@@ -59,11 +57,11 @@ class StreamTab(QtGui.QWidget):
                 subprocess.call([self.acquireDotPy, 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
                 subprocess.call([self.acquireDotPy, 'start'])
                 subprocess.call([self.acquireDotPy, 'forward', 'start', '-f', '-t', 'subsample'])
-                self.parent.statusBox.append('Standby mode activated')
+                self.parent.statusBox.append('Standby mode activated.')
                 self.standingBy = True
             else:
                 subprocess.call([self.acquireDotPy, 'stop'])
-                self.parent.statusBox.append('Standby mode de-activated')
+                self.parent.statusBox.append('Standby mode de-activated.')
                 self.standingBy = False
         else:
             #TODO gray-out the checkbox when the daemon is not running
@@ -72,7 +70,7 @@ class StreamTab(QtGui.QWidget):
                 
 
     def toggleStream(self):
-        if (self.parent.isDaemonRunning and self.standingBy):
+        if (self.parent.isDaemonRunning and self.parent.isDaqRunning):
             if self.streamCheckbox.isChecked():
                 # matplotlib stuff
                 self.parent.fig.clear()
@@ -85,17 +83,19 @@ class StreamTab(QtGui.QWidget):
                 self.parent.axes.axis([0,30000,0,2**16-1])
                 self.parent.waveform = self.parent.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
                 self.parent.canvas.draw()
-                # other stuff
+                # stream stuff
+                subprocess.call([self.acquireDotPy, 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
+                subprocess.call([self.acquireDotPy, 'forward', 'start', '-f', '-t', 'subsample'])
                 self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
                 self.timer.start(self.fp)
-                self.parent.statusBox.append('Started streaming')
+                self.parent.statusBox.append('Started streaming.')
             else:
                 self.timer.stop()
                 self.proto2bytes_po.kill()
-                self.parent.statusBox.append('Stopped streaming')
+                self.parent.statusBox.append('Stopped streaming.')
         else:
-            #TODO gray-out the checkbox when the daemon is not running
-            self.parent.statusBox.append('Make sure daemon is started,  and standby is on!')
+            #TODO gray-out the checkbox when this condition is met
+            self.parent.statusBox.append('Make sure daemon is started,  and DAQ is running!')
             self.streamCheckbox.setChecked(False) #TODO bug: this still gets checked 1 in 3 times (??)
 
 
