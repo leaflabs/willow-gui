@@ -20,6 +20,8 @@ from StreamTab import StreamTab
 from RecordTab import RecordTab
 from RegisterTab import RegisterTab
 from DebugTab import DebugTab
+from DiskTab import DiskTab
+from IntanTab import IntanTab
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -47,6 +49,10 @@ class MainWindow(QtGui.QWidget):
         self.tabDialog.addTab(self.recordTab, 'Record')
         self.registerTab = RegisterTab(self)
         self.tabDialog.addTab(self.registerTab, 'Registers')
+        self.intanTab = IntanTab(self)
+        self.tabDialog.addTab(self.intanTab, 'Intan')
+        self.diskTab = DiskTab(self)
+        self.tabDialog.addTab(self.diskTab, 'Disk')
         self.debugTab = DebugTab(self)
         self.tabDialog.addTab(self.debugTab, 'Debug')
 
@@ -119,13 +125,14 @@ class MainWindow(QtGui.QWidget):
         self.canvas.draw()
 
         self.isDaemonRunning = False
+        self.isDaqRunning = False
 
     def exit(self):
         print 'Cleaning up, then exiting..'
-        if self.isDaemonRunning:
+        if self.isDaqRunning:
             subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
+        if self.isDaemonRunning:
             subprocess.call(['killall', 'leafysd'])
-
 
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
@@ -133,3 +140,4 @@ if __name__=='__main__':
     main.show()
     app.exec_()
     main.exit()
+
