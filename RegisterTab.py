@@ -164,7 +164,10 @@ class RegisterTab(QtGui.QWidget):
 
     def read(self):
         if self.parent.isDaemonRunning:
-            pipeObject = subprocess.Popen([self.debugToolDotPy, 'read', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex())], stdout=subprocess.PIPE)
+            pipeObject = subprocess.Popen([self.debugToolDotPy, 'read',
+                str(self.moduleDropdown.currentText()).lower(),
+                str(self.registerDropdown.currentIndex())],
+                stdout=subprocess.PIPE)
             result = pipeObject.stdout.readline()
             self.parent.statusBox.append(result[:-1])
         else:
@@ -172,7 +175,10 @@ class RegisterTab(QtGui.QWidget):
 
     def write(self):
         if self.parent.isDaemonRunning:
-            pipeObject = subprocess.Popen([self.debugToolDotPy, 'write', str(self.moduleDropdown.currentText()).lower(), str(self.registerDropdown.currentIndex()), self.valueLine.text()], stdout=subprocess.PIPE)
+            pipeObject = subprocess.Popen([self.debugToolDotPy, 'write',
+                str(self.moduleDropdown.currentText()).lower(),
+                str(self.registerDropdown.currentIndex()),
+                self.valueLine.text()], stdout=subprocess.PIPE)
             result = pipeObject.stdout.readline()
             self.parent.statusBox.append(result[:-1])
         else:
