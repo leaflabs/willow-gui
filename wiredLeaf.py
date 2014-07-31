@@ -5,7 +5,7 @@ WiredLeaf Control Panel GUI
 Created on 20140522 by Chris Chronopoulos.
 """
 
-import sys, time, subprocess
+import sys, os, time, subprocess
 
 import numpy as np
 import matplotlib
@@ -15,13 +15,9 @@ from matplotlib.figure import Figure
 
 from PyQt4 import QtCore, QtGui
 
-from SetupTab import SetupTab
-from StreamTab import StreamTab
 from RecordTab import RecordTab
-from RegisterTab import RegisterTab
-from DebugTab import DebugTab
-from DiskTab import DiskTab
-from IntanTab import IntanTab
+from StreamTab import StreamTab
+from TransferTab import TransferTab
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -41,21 +37,12 @@ class MainWindow(QtGui.QWidget):
         #self.logo.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
 
         self.tabDialog = QtGui.QTabWidget()
-        self.setupTab = SetupTab(self)
-        self.tabDialog.addTab(self.setupTab, 'Setup')
         self.streamTab = StreamTab(self)
         self.tabDialog.addTab(self.streamTab, 'Stream')
         self.recordTab = RecordTab(self)
         self.tabDialog.addTab(self.recordTab, 'Record')
-        self.registerTab = RegisterTab(self)
-        self.tabDialog.addTab(self.registerTab, 'Registers')
-        self.intanTab = IntanTab(self)
-        self.tabDialog.addTab(self.intanTab, 'Intan')
-        self.diskTab = DiskTab(self)
-        self.tabDialog.addTab(self.diskTab, 'Disk')
-        self.debugTab = DebugTab(self)
-        self.tabDialog.addTab(self.debugTab, 'Debug')
-
+        self.transferTab = TransferTab(self)
+        self.tabDialog.addTab(self.transferTab, 'Transfer')
         self.tabDialog.setMovable(True)
 
         self.leftColumn = QtGui.QWidget()
@@ -126,6 +113,15 @@ class MainWindow(QtGui.QWidget):
 
         self.isDaemonRunning = False
         self.isDaqRunning = False
+
+        ###
+
+        self.startDaemon()
+
+    def startDaemon(self):
+        subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
+        self.isDaemonRunning = True
+        self.statusBox.append('Daemon started.')
 
     def exit(self):
         print 'Cleaning up, then exiting..'
