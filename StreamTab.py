@@ -1,8 +1,17 @@
 from PyQt4 import QtCore, QtGui
-import subprocess, os
+import subprocess, os, sys
 import numpy as np
 
 from parameters import DAEMON_DIR, DATA_DIR
+
+sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+from daemon_control import *
+
+# more parameters
+DEFAULT_FORWARD_ADDR = '127.0.0.1'
+DEFAULT_FORWARD_PORT = 7654      # for proto2bytes
+CHANNELS_PER_CHIP = 32
+CHIPS_PER_DATANODE = 32
 
 class StreamTab(QtGui.QWidget):
 
@@ -70,35 +79,56 @@ class StreamTab(QtGui.QWidget):
                 
 
     def toggleStream(self):
-        if (self.parent.isDaemonRunning and self.parent.isDaqRunning):
+        if (self.parent.isDaemonRunning and not self.parent.isDaqRunning):
             if self.streamCheckbox.isChecked():
-                # matplotlib stuff
-                self.parent.fig.clear()
-                self.parent.axes = self.parent.fig.add_subplot(111)
-                self.parent.fig.subplots_adjust() # return to default
-                self.parent.axes.set_title('Data Window')
-                self.parent.axes.set_xlabel('Samples')
-                self.parent.axes.set_ylabel('Counts')
-                self.parent.axes.set_axis_bgcolor('k')
-                self.parent.axes.axis([0,30000,0,2**16-1])
-                self.parent.waveform = self.parent.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
-                self.parent.canvas.draw()
-                # stream stuff
-                subprocess.call([self.acquireDotPy, 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
-                subprocess.call([self.acquireDotPy, 'forward', 'start', '-f', '-t', 'subsample'])
-                self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
-                self.timer.start(self.fp)
+                self.setSubsamples()
+                self.toggleForwarding(True)
+                self.toggleStdin(True)
                 self.parent.statusBox.append('Started streaming.')
             else:
-                self.timer.stop()
-                self.proto2bytes_po.kill()
+                self.toggleStdin(False)
+                self.toggleForwarding(False)
                 self.parent.statusBox.append('Stopped streaming.')
         else:
             #TODO gray-out the checkbox when this condition is met
-            self.parent.statusBox.append('Make sure daemon is started,  and DAQ is running!')
+            self.parent.statusBox.append('Make sure daemon is started, and DAQ is NOT running!')
             self.streamCheckbox.setChecked(False) #TODO bug: this still gets checked 1 in 3 times (??)
 
+    def setSubsamples(self):
+        chip = int(self.chipNumLine.text())
+        chipchanList = [(chip, chan) for chan in range(32)]
+        cmds = []
+        for i,chipchan in enumerate(chipchanList):
+            chip = chipchan[0] & 0b00011111
+            chan = chipchan[1] & 0b00011111
+            cmds.append(reg_write(MOD_DAQ, DAQ_SUBSAMP_CHIP0+i,
+                           (chip << 8) | chan))
+        resps = do_control_cmds(cmds)
 
+    def toggleForwarding(self, enable):
+        if self.parent.isDaqRunning:
+            self.parent.statusBox.append('Turn off acquisition before streaming!')
+        else:
+            cmd = ControlCommand(type=ControlCommand.FORWARD)
+            cmd.forward.sample_type = BOARD_SUBSAMPLE
+            cmd.forward.force_daq_reset = True # !!! Make sure you're not already acquiring!!!
+            try:
+                aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
+            except socket.error:
+                self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
+                sys.exit(1)
+            cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
+            cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+            cmd.forward.enable = enable
+            resp = do_control_cmd(cmd)
+
+    def toggleStdin(self, enable):
+        if enable:
+            self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s', '-c', self.channelNumLine.text()], stdout=subprocess.PIPE)
+            self.timer.start(self.fp)
+        else:
+            self.timer.stop()
+            self.proto2bytes_po.kill()
 
     def updatePlot(self):
         for i in range(self.nrefresh):
