@@ -59,22 +59,12 @@ class SnapshotTab(QtGui.QWidget):
         if self.parent.isDaemonRunning:
             filename = os.path.join(str(self.dirLine.text()), str(self.filenameLine.text()))
             nsamples = int(self.nsampLine.text())
-            ### old
-            """
-            self.parent.statusBox.append('Recording...')
-            status1 = subprocess.call([self.acquireDotPy, 'start'])
-            status2 = subprocess.call([self.acquireDotPy, 'save_stream', filename, nsamples])
-            status3 = subprocess.call([self.acquireDotPy, 'stop'])
-            if (status1==1 or status2==1 or status3==1):
-                self.parent.statusBox.append('Error')
-            else:
-                self.parent.statusBox.append('Saved '+nsamp+' samples to: '+filename)
-                self.mostRecentFilename = filename
-            """
-            ### new
             if self.parent.isDaqRunning:
                 self.parent.statusBox.append('Cannot issue ControlCmd because DAQ is currently running.')
             else:
+
+                # TODO why doesn't this show up until after do_control_cmds returns??
+                self.parent.statusBox.append('Taking snapshot...') 
                 cmds = []
 
                 cmd = ControlCommand(type=ControlCommand.FORWARD)
