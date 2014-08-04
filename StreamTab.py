@@ -103,7 +103,7 @@ class StreamTab(QtGui.QWidget):
                 cmd = ControlCommand(type=ControlCommand.ACQUIRE)
                 cmd.acquire.enable = False
                 cmds.append(cmd)
-            resp = do_control_cmd(cmd)
+            resps = do_control_cmds(cmds)
 
     def toggleStdin(self, enable):
         if enable:

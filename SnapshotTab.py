@@ -1,11 +1,19 @@
 from PyQt4 import QtCore, QtGui
-import subprocess, h5py, os
+import subprocess, h5py, os, sys
 import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from parameters import DAEMON_DIR, DATA_DIR
+
+sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+from daemon_control import *
+
+DEFAULT_FORWARD_ADDR = '127.0.0.1'
+DEFAULT_FORWARD_PORT = 7654      # for proto2bytes
+CHANNELS_PER_CHIP = 32
+CHIPS_PER_DATANODE = 32
 
 class SnapshotTab(QtGui.QWidget):
 
@@ -16,8 +24,8 @@ class SnapshotTab(QtGui.QWidget):
         self.nsampLine = QtGui.QLineEdit('30000')
         self.dirLine = QtGui.QLineEdit(DATA_DIR)
         self.filenameLine = QtGui.QLineEdit()
-        self.recordButton = QtGui.QPushButton('Record Data')
-        self.recordButton.clicked.connect(self.recordData)
+        self.recordButton = QtGui.QPushButton('Take a Snapshot')
+        self.recordButton.clicked.connect(self.takeSnapshot)
         self.plotRecentButton = QtGui.QPushButton('Plot Most Recent')
         self.plotRecentButton.clicked.connect(self.plotRecent)
         self.mostRecentFilename = None
@@ -47,23 +55,62 @@ class SnapshotTab(QtGui.QWidget):
 
         self.acquireDotPy = os.path.join(DAEMON_DIR,'util/acquire.py')
 
-    def recordData(self):
+    def takeSnapshot(self):
         if self.parent.isDaemonRunning:
             filename = os.path.join(str(self.dirLine.text()), str(self.filenameLine.text()))
-            nsamp = self.nsampLine.text()
+            nsamples = int(self.nsampLine.text())
+            ### old
+            """
             self.parent.statusBox.append('Recording...')
             status1 = subprocess.call([self.acquireDotPy, 'start'])
-            status2 = subprocess.call([self.acquireDotPy, 'save_stream', filename, nsamp])
+            status2 = subprocess.call([self.acquireDotPy, 'save_stream', filename, nsamples])
             status3 = subprocess.call([self.acquireDotPy, 'stop'])
             if (status1==1 or status2==1 or status3==1):
                 self.parent.statusBox.append('Error')
             else:
                 self.parent.statusBox.append('Saved '+nsamp+' samples to: '+filename)
                 self.mostRecentFilename = filename
+            """
+            ### new
+            if self.parent.isDaqRunning:
+                self.parent.statusBox.append('Cannot issue ControlCmd because DAQ is currently running.')
+            else:
+                cmds = []
+
+                cmd = ControlCommand(type=ControlCommand.FORWARD)
+                # issuing this command seems like overkill, but right now it's
+                # the only way to start the DAQ without saving to SATA
+                cmd.forward.sample_type = BOARD_SUBSAMPLE
+                cmd.forward.force_daq_reset = True
+                try:
+                    aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
+                except socket.error:
+                    self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
+                    sys.exit(1)
+                cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
+                cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+                cmd.forward.enable = True
+                cmds.append(cmd)
+
+                cmd = ControlCommand(type=ControlCommand.STORE)
+                cmd.store.path = filename
+                cmd.store.nsamples = nsamples
+                cmds.append(cmd)
+
+                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+                cmd.acquire.enable = False
+                cmds.append(cmd)
+
+                resps = do_control_cmds(cmds)
+
+                if True: # TODO test for resps here
+                    self.parent.statusBox.append('Saved %d samples to %s' % (nsamples, filename))
+                    self.mostRecentFilename = filename
         else:
-            self.parent.statusBox.append('Please start daemon first!')
+            self.parent.statusBox.append('Daemon is not running.')
 
     def plotFromFile(self, filename):
+        """
         f = h5py.File(filename)
         dset = f['wired-dataset'] # each element is this convoluted tuple
         ns = len(dset)  # number of samples
@@ -90,6 +137,8 @@ class SnapshotTab(QtGui.QWidget):
         self.parent.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
         self.parent.canvas.draw()
         self.parent.statusBox.append('Done.')
+        """
+        self.parent.statusBox.append('This does nothing yet')
 
     def plotRecent(self):
         if self.mostRecentFilename:
