@@ -22,9 +22,6 @@ class StreamTab(QtGui.QWidget):
         self.chipNumLine = QtGui.QLineEdit('3')
         self.channelNumLine = QtGui.QLineEdit('3')
 
-        self.standbyCheckbox = QtGui.QCheckBox('Standby')
-        self.standbyCheckbox.clicked.connect(self.toggleStandby)
-
         self.streamCheckbox = QtGui.QCheckBox('Stream')
         self.streamCheckbox.stateChanged.connect(self.toggleStream)
 
@@ -54,29 +51,6 @@ class StreamTab(QtGui.QWidget):
 
         self.acquireDotPy = os.path.join(DAEMON_DIR, 'util/acquire.py')
         self.proto2bytes = os.path.join(DAEMON_DIR, 'build/proto2bytes')
-
-    def toggleStandby(self):
-        """
-        Decided to separate out standby mode because the setup is kind of slow (~5 seconds)
-        and you probably only want to do this occasionally, while starting/stopping the stream
-        you would do more frequently, without having to wait.
-        """
-        if self.parent.isDaemonRunning:
-            if self.standbyCheckbox.isChecked():
-                subprocess.call([self.acquireDotPy, 'subsamples', '--constant', 'chip', self.chipNumLine.text()])
-                subprocess.call([self.acquireDotPy, 'start'])
-                subprocess.call([self.acquireDotPy, 'forward', 'start', '-f', '-t', 'subsample'])
-                self.parent.statusBox.append('Standby mode activated.')
-                self.standingBy = True
-            else:
-                subprocess.call([self.acquireDotPy, 'stop'])
-                self.parent.statusBox.append('Standby mode de-activated.')
-                self.standingBy = False
-        else:
-            #TODO gray-out the checkbox when the daemon is not running
-            self.parent.statusBox.append('Please start daemon first!')
-            self.standbyCheckbox.setChecked(False)
-                
 
     def toggleStream(self):
         if (self.parent.isDaemonRunning and not self.parent.isDaqRunning):
@@ -110,15 +84,17 @@ class StreamTab(QtGui.QWidget):
             self.parent.statusBox.append('Turn off acquisition before streaming!')
         else:
             cmd = ControlCommand(type=ControlCommand.FORWARD)
-            cmd.forward.sample_type = BOARD_SUBSAMPLE
-            cmd.forward.force_daq_reset = True # !!! Make sure you're not already acquiring!!!
-            try:
-                aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
-            except socket.error:
-                self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-                sys.exit(1)
-            cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-            cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+            if enable:
+                cmd.forward.sample_type = BOARD_SUBSAMPLE
+                cmd.forward.force_daq_reset = True # !!! Make sure you're not already acquiring!!!
+                try:
+                    aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
+                except socket.error:
+                    self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
+                    sys.exit(1)
+                cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
+                cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+
             cmd.forward.enable = enable
             resp = do_control_cmd(cmd)
 
