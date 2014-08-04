@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess, h5py, os, sys
+import h5py, os, sys
 import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
@@ -28,6 +28,7 @@ class RecordTab(QtGui.QWidget):
         self.streamCheckbox.stateChanged.connect(self.toggleStream)
 
         self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.streamCheckbox)
         self.layout.addWidget(self.startButton)
         self.layout.addWidget(self.stopButton)
 
