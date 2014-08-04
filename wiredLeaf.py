@@ -18,6 +18,7 @@ from PyQt4 import QtCore, QtGui
 from RecordTab import RecordTab
 from StreamTab import StreamTab
 from TransferTab import TransferTab
+from DebugTab import DebugTab
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -39,10 +40,16 @@ class MainWindow(QtGui.QWidget):
         self.tabDialog = QtGui.QTabWidget()
         self.streamTab = StreamTab(self)
         self.tabDialog.addTab(self.streamTab, 'Stream')
+
         self.recordTab = RecordTab(self)
         self.tabDialog.addTab(self.recordTab, 'Record')
+
         self.transferTab = TransferTab(self)
         self.tabDialog.addTab(self.transferTab, 'Transfer')
+
+        self.debugTab = DebugTab(self)
+        self.tabDialog.addTab(self.debugTab, 'Debug')
+
         self.tabDialog.setMovable(True)
 
         self.leftColumn = QtGui.QWidget()
