@@ -83,6 +83,7 @@ class StreamTab(QtGui.QWidget):
         if self.parent.isDaqRunning:
             self.parent.statusBox.append('Turn off acquisition before streaming!')
         else:
+            cmds = []
             cmd = ControlCommand(type=ControlCommand.FORWARD)
             if enable:
                 cmd.forward.sample_type = BOARD_SUBSAMPLE
@@ -94,8 +95,14 @@ class StreamTab(QtGui.QWidget):
                     sys.exit(1)
                 cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
                 cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
-
-            cmd.forward.enable = enable
+                cmd.forward.enable = True
+                cmds.append(cmd)
+            else:
+                cmd.forward.enable = False
+                cmds.append(cmd)
+                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+                cmd.acquire.enable = False
+                cmds.append(cmd)
             resp = do_control_cmd(cmd)
 
     def toggleStdin(self, enable):
