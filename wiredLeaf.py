@@ -16,6 +16,7 @@ from matplotlib.figure import Figure
 from PyQt4 import QtCore, QtGui
 
 from RecordTab import RecordTab
+from SnapshotTab import SnapshotTab
 from StreamTab import StreamTab
 from TransferTab import TransferTab
 from DebugTab import DebugTab
@@ -38,8 +39,12 @@ class MainWindow(QtGui.QWidget):
         #self.logo.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
 
         self.tabDialog = QtGui.QTabWidget()
+
         self.streamTab = StreamTab(self)
         self.tabDialog.addTab(self.streamTab, 'Stream')
+
+        self.snapshotTab = SnapshotTab(self)
+        self.tabDialog.addTab(self.snapshotTab, 'Snapshot')
 
         self.recordTab = RecordTab(self)
         self.tabDialog.addTab(self.recordTab, 'Record')
