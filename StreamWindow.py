@@ -100,6 +100,9 @@ class StreamWindow(QtGui.QWidget):
         self.layout.addWidget(self.mplWindow)
         self.setLayout(self.layout)
 
+        self.setWindowTitle('WiredLeaf Live Streaming')
+        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+
         self.isStreaming = False
 
     def setSubsamples_cherryPick(self):
@@ -207,4 +210,8 @@ class StreamWindow(QtGui.QWidget):
             self.plotBuffs[j] = np.concatenate((self.plotBuffs[j][self.nrefresh:],self.newBuffs[j]))
             self.waveformList[j][0].set_data(self.xvalues, self.plotBuffs[j])
         self.canvas.draw()
+
+    def closeEvent(self, event):
+        self.stopStreaming()
+        print 'closing'
 
