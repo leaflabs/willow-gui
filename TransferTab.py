@@ -24,6 +24,9 @@ class TransferTab(QtGui.QWidget):
         super(TransferTab, self).__init__(None)
         self.parent = parent
 
+        self.binarySearchButton = QtGui.QPushButton('Determine Length of Experiment on Disk')
+        self.binarySearchButton.clicked.connect(self.binarySearch)
+
         self.nsampLine = QtGui.QLineEdit()
         self.dirLine = QtGui.QLineEdit(DATA_DIR)
         self.filenameLine = QtGui.QLineEdit()
@@ -31,14 +34,20 @@ class TransferTab(QtGui.QWidget):
         self.transferButton.clicked.connect(self.transferData)
 
         self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.binarySearchButton)
+        self.layout.addSpacing(20)
         self.layout.addWidget(QtGui.QLabel('Number of Samples (blank indicates entire experiment):'))
         self.layout.addWidget(self.nsampLine)
         self.layout.addWidget(QtGui.QLabel('Directory:'))
         self.layout.addWidget(self.dirLine)
         self.layout.addWidget(QtGui.QLabel('Filename:'))
         self.layout.addWidget(self.filenameLine)
+        self.layout.addSpacing(20)
         self.layout.addWidget(self.transferButton)
         self.setLayout(self.layout)
+
+    def binarySearch(self):
+        self.parent.statusBox.append('This does nothing yet')
 
     def transferData(self):
         if self.parent.isDaemonRunning:
