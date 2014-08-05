@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess, h5py, os
+import subprocess, h5py, os, sys
 import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
@@ -7,51 +7,50 @@ from matplotlib.figure import Figure
 
 from parameters import DAEMON_DIR, DATA_DIR
 
+sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+from daemon_control import *
+
+def isBlank(string):
+    if len(string)==0:
+        return True
+    elif string[0]==' ':
+        return isBlank(string[1:])
+    else:
+        return False
+
 class TransferTab(QtGui.QWidget):
 
     def __init__(self, parent):
         super(TransferTab, self).__init__(None)
         self.parent = parent
 
-        self.nsampLine = QtGui.QLineEdit('30000')
+        self.nsampLine = QtGui.QLineEdit()
         self.dirLine = QtGui.QLineEdit(DATA_DIR)
         self.filenameLine = QtGui.QLineEdit()
-        self.recordButton = QtGui.QPushButton('Record Data')
-        self.recordButton.clicked.connect(self.recordData)
-        self.plotRecentButton = QtGui.QPushButton('Plot Most Recent')
-        self.plotRecentButton.clicked.connect(self.plotRecent)
-        self.mostRecentFilename = None
-
-        self.plotSpecificButton = QtGui.QPushButton('Plot Specific File:')
-        self.plotSpecificButton.clicked.connect(self.plotSpecific)
-        self.specificLine = QtGui.QLineEdit()
+        self.transferButton = QtGui.QPushButton('Transfer Data')
+        self.transferButton.clicked.connect(self.transferData)
 
         self.layout = QtGui.QVBoxLayout()
-        self.layout.addWidget(QtGui.QLabel('Number of Samples:'))
+        self.layout.addWidget(QtGui.QLabel('Number of Samples (blank indicates entire experiment):'))
         self.layout.addWidget(self.nsampLine)
         self.layout.addWidget(QtGui.QLabel('Directory:'))
         self.layout.addWidget(self.dirLine)
         self.layout.addWidget(QtGui.QLabel('Filename:'))
         self.layout.addWidget(self.filenameLine)
-        self.layout.addWidget(self.recordButton)
-        self.layout.addSpacing(100)
-        self.layout.addWidget(self.plotRecentButton)
-        tmpLayout = QtGui.QHBoxLayout()
-        tmpLayout.addWidget(self.plotSpecificButton)
-        tmpLayout.addWidget(self.specificLine)
-        tmpWidget = QtGui.QWidget()
-        tmpWidget.setLayout(tmpLayout)
-        self.layout.addWidget(tmpWidget)
-
+        self.layout.addWidget(self.transferButton)
         self.setLayout(self.layout)
 
-        self.acquireDotPy = os.path.join(DAEMON_DIR,'util/acquire.py')
-
-    def recordData(self):
+    def transferData(self):
         if self.parent.isDaemonRunning:
             filename = os.path.join(str(self.dirLine.text()), str(self.filenameLine.text()))
-            nsamp = self.nsampLine.text()
-            self.parent.statusBox.append('Recording...')
+            nsamples_text = self.nsampLine.text()
+            if isBlank(nsamples_text):
+                nsamples = None
+            else:
+                nsamples = int(nsamples_text)
+            self.parent.statusBox.append('Transferring...')
+            # old
+            """
             status1 = subprocess.call([self.acquireDotPy, 'start'])
             status2 = subprocess.call([self.acquireDotPy, 'save_stream', filename, nsamp])
             status3 = subprocess.call([self.acquireDotPy, 'stop'])
@@ -60,8 +59,18 @@ class TransferTab(QtGui.QWidget):
             else:
                 self.parent.statusBox.append('Saved '+nsamp+' samples to: '+filename)
                 self.mostRecentFilename = filename
+            """
+            # new
+            cmd = ControlCommand(type=ControlCommand.STORE)
+            cmd.store.start_sample = 0
+            if nsamples:
+                cmd.store.nsamples = nsamples
+            # (else leave missing which indicates whole experiment)
+            cmd.store.path = filename
+            resp = do_control_cmd(cmd)
+            self.parent.statusBox.append('Transfer Complete')
         else:
-            self.parent.statusBox.append('Please start daemon first!')
+            self.parent.statusBox.append('Daemon is not running.')
 
     def plotFromFile(self, filename):
         f = h5py.File(filename)
