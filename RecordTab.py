@@ -34,6 +34,8 @@ class RecordTab(QtGui.QWidget):
 
         self.setLayout(self.layout)
 
+        self.withStreaming = False
+
     def startRecording(self):
         if self.parent.isDaemonRunning:
             if self.withStreaming:
