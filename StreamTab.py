@@ -16,7 +16,7 @@ class StreamTab(QtGui.QWidget):
                                         'launch the viewing window.')
 
         self.chipLine = QtGui.QLineEdit('3')
-        self.chanListLine = QtGui.QLineEdit('0,1,2,3')
+        self.chanLine = QtGui.QLineEdit('3')
 
         self.launchButton = QtGui.QPushButton('Launch')
         self.launchButton.clicked.connect(self.launch)
@@ -27,7 +27,7 @@ class StreamTab(QtGui.QWidget):
         self.layout.addSpacing(20)
         self.layout.addWidget(QtGui.QLabel('Chip Number:'))
         self.layout.addWidget(self.chipLine)
-        self.layout.addWidget(QtGui.QLabel('Channels (comma-separated):'))
+        self.layout.addWidget(QtGui.QLabel('Channel Number:'))
         self.layout.addWidget(self.chanListLine)
         self.layout.addSpacing(40)
         self.layout.addWidget(self.launchButton)
@@ -35,7 +35,7 @@ class StreamTab(QtGui.QWidget):
 
     def launch(self):
         chip = int(self.chipLine.text())
-        chanList = [int(chan) for chan in str(self.chanListLine.text()).split(',')]
-        self.streamWindow = StreamWindow(chip, chanList)
+        chan = int(self.chanLine.text())
+        self.streamWindow = StreamWindow(chip, chan)
         self.streamWindow.show()
 

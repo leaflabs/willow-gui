@@ -20,12 +20,11 @@ CHIPS_PER_DATANODE = 32
 
 class StreamWindow(QtGui.QWidget):
 
-    def __init__(self, chip, chanList):
+    def __init__(self, chip, chan):
         super(StreamWindow, self).__init__(None)
 
         self.chip = chip
-        self.chanList = chanList
-        self.nchannels = len(self.chanList)
+        self.chan= chan
 
         self.setSubsamples_byChip(self.chip)
 
@@ -38,14 +37,11 @@ class StreamWindow(QtGui.QWidget):
         #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
-        axesList = []
-        for i, chan in enumerate(self.chanList):
-            axes = self.fig.add_subplot(self.nchannels, 1, i+1)
-            axes.set_title('Chip %d, Channel %d' % (self.chip, chan))
-            axes.yaxis.set_ticklabels([])
-            axes.set_axis_bgcolor('k')
-            axes.axis([0,30000,0,2**16-1])
-            axesList.append(axes)
+        self.axes = self.fig.add_subplot(self.nchannels, 1, i+1)
+        self.axes.set_title('Chip %d, Channel %d' % (self.chip, chan))
+        self.axes.yaxis.set_ticklabels([])
+        self.axes.set_axis_bgcolor('k')
+        self.axes.axis([0,30000,0,2**16-1])
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
 
         self.mplLayout = QtGui.QVBoxLayout()
@@ -54,11 +50,7 @@ class StreamWindow(QtGui.QWidget):
         self.mplWindow = QtGui.QWidget()
         self.mplWindow.setLayout(self.mplLayout)
 
-        self.waveformList = []
-        for axes in axesList:
-            waveform = axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
-            self.waveformList.append(waveform)
-
+        self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
         self.canvas.draw()
 
         ###############################
@@ -71,8 +63,8 @@ class StreamWindow(QtGui.QWidget):
         n = 30000   # number of samples to display
         self.nrefresh = sr//fr   # new samples collected before refresh
         self.xvalues = np.arange(n, dtype='int')
-        self.plotBuffs = [np.zeros(n, dtype='uint16') for i in range(self.nchannels)]
-        self.newBuffs = [np.zeros(self.nrefresh, dtype='uint16') for i in range(self.nchannels)]
+        self.plotBuff = np.zeros(n, dtype='uint16')
+        self.newBuff = np.zeros(self.nrefresh, dtype='uint16')
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
@@ -195,7 +187,7 @@ class StreamWindow(QtGui.QWidget):
 
     def toggleStdin(self, enable):
         if enable:
-            self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s', '-A'], stdout=subprocess.PIPE)
+            self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s', '-c', str(self.chan)], stdout=subprocess.PIPE)
             self.timer.start(self.fp)
         else:
             self.timer.stop()
@@ -203,12 +195,9 @@ class StreamWindow(QtGui.QWidget):
 
     def updatePlot(self):
         for i in range(self.nrefresh):
-            line = self.proto2bytes_po.stdout.readline().split(',')
-            for j, chan in enumerate(self.chanList):
-                self.newBuffs[j][i] = line[chan]
-        for j in range(self.nchannels):
-            self.plotBuffs[j] = np.concatenate((self.plotBuffs[j][self.nrefresh:],self.newBuffs[j]))
-            self.waveformList[j][0].set_data(self.xvalues, self.plotBuffs[j])
+            self.newBuff[i] = self.proto2bytes_po.stdout.readline()
+        self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],self.newBuff))
+        self.waveformList[0].set_data(self.xvalues, self.plotBuff)
         self.canvas.draw()
 
     def closeEvent(self, event):
