@@ -19,9 +19,27 @@ from RecordTab import RecordTab
 from SnapshotTab import SnapshotTab
 from StreamTab import StreamTab
 from TransferTab import TransferTab
-from DebugTab import DebugTab
+from PlotTab import PlotTab
 
 from parameters import DAEMON_DIR, DATA_DIR
+
+class WiredLeafState():
+
+    def __init__(self, daemonRunning=False, daqRunning=False):
+        self.daemonRunning = daemonRunning
+        self.daqRunning = daqRunning
+
+    def setDaemonRunning(self, value):
+        self.daemonRunning = value
+
+    def setDaqRunning(self, value):
+        self.daqRunning = value
+
+    def isDaemonRunning(self):
+        return self.daemonRunning
+
+    def isDaqRunning(self):
+        return self.daqRunning
 
 
 class MainWindow(QtGui.QWidget):
@@ -51,6 +69,9 @@ class MainWindow(QtGui.QWidget):
 
         self.transferTab = TransferTab(self)
         self.tabDialog.addTab(self.transferTab, 'Transfer')
+
+        self.plotTab = PlotTab(self)
+        self.tabDialog.addTab(self.plotTab, 'Plot')
 
         self.tabDialog.setMovable(True)
 
@@ -88,23 +109,19 @@ class MainWindow(QtGui.QWidget):
 
         ###
 
-        self.isDaemonRunning = False
-        self.isDaqRunning = False
-
-        ###
-
+        self.state = WiredLeafState(daemonRunning=False, daqRunning=False)
         self.startDaemon()
 
     def startDaemon(self):
         subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
-        self.isDaemonRunning = True
+        self.state.setDaemonRunning(True)
         self.statusBox.append('Daemon started.')
 
     def exit(self):
         print 'Cleaning up, then exiting..'
-        if self.isDaqRunning:
+        if self.state.isDaqRunning():
             subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
-        if self.isDaemonRunning:
+        if self.state.isDaemonRunning():
             subprocess.call(['killall', 'leafysd'])
 
 if __name__=='__main__':

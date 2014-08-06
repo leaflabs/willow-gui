@@ -56,15 +56,16 @@ class SnapshotTab(QtGui.QWidget):
         self.acquireDotPy = os.path.join(DAEMON_DIR,'util/acquire.py')
 
     def takeSnapshot(self):
-        if self.parent.isDaemonRunning:
-            filename = os.path.join(str(self.dirLine.text()), str(self.filenameLine.text()))
-            nsamples = int(self.nsampLine.text())
-            if self.parent.isDaqRunning:
+        if self.parent.state.isDaemonRunning():
+            if self.parent.state.isDaqRunning():
                 self.parent.statusBox.append('Cannot issue ControlCmd because DAQ is currently running.')
             else:
-
                 # TODO why doesn't this show up until after do_control_cmds returns??
                 self.parent.statusBox.append('Taking snapshot...') 
+
+                filename = os.path.join(str(self.dirLine.text()), str(self.filenameLine.text()))
+                nsamples = int(self.nsampLine.text())
+
                 cmds = []
 
                 cmd = ControlCommand(type=ControlCommand.FORWARD)

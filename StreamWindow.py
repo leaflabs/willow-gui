@@ -20,9 +20,10 @@ CHIPS_PER_DATANODE = 32
 
 class StreamWindow(QtGui.QWidget):
 
-    def __init__(self, chip, chan):
+    def __init__(self, parent, chip, chan):
         super(StreamWindow, self).__init__(None)
 
+        self.parent = parent
         self.chip = chip
         self.chan= chan
 
@@ -37,7 +38,7 @@ class StreamWindow(QtGui.QWidget):
         #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
-        self.axes = self.fig.add_subplot(self.nchannels, 1, i+1)
+        self.axes = self.fig.add_subplot(111)
         self.axes.set_title('Chip %d, Channel %d' % (self.chip, chan))
         self.axes.yaxis.set_ticklabels([])
         self.axes.set_axis_bgcolor('k')
@@ -50,7 +51,8 @@ class StreamWindow(QtGui.QWidget):
         self.mplWindow = QtGui.QWidget()
         self.mplWindow.setLayout(self.mplLayout)
 
-        self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='y')
+        self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='#8fdb90')
+        #self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='#b2d89f')
         self.canvas.draw()
 
         ###############################
@@ -132,6 +134,7 @@ class StreamWindow(QtGui.QWidget):
             self.toggleStdin(True)
             print 'started streaming'
             self.isStreaming = True
+            self.parent.parent.state.setDaqRunning(True)
 
     def stopStreaming(self):
         if self.isStreaming:
@@ -139,6 +142,7 @@ class StreamWindow(QtGui.QWidget):
             self.toggleForwarding(False)
             print 'stopped streaming'
             self.isStreaming = False 
+            self.parent.parent.state.setDaqRunning(False)
         else:
             print 'already not streaming'
 
@@ -197,7 +201,7 @@ class StreamWindow(QtGui.QWidget):
         for i in range(self.nrefresh):
             self.newBuff[i] = self.proto2bytes_po.stdout.readline()
         self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],self.newBuff))
-        self.waveformList[0].set_data(self.xvalues, self.plotBuff)
+        self.waveform[0].set_data(self.xvalues, self.plotBuff)
         self.canvas.draw()
 
     def closeEvent(self, event):

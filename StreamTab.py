@@ -28,14 +28,18 @@ class StreamTab(QtGui.QWidget):
         self.layout.addWidget(QtGui.QLabel('Chip Number:'))
         self.layout.addWidget(self.chipLine)
         self.layout.addWidget(QtGui.QLabel('Channel Number:'))
-        self.layout.addWidget(self.chanListLine)
+        self.layout.addWidget(self.chanLine)
         self.layout.addSpacing(40)
         self.layout.addWidget(self.launchButton)
         self.setLayout(self.layout)
 
     def launch(self):
+        """
+        How does this handle multiple instances of StreamWindow?
+        Is it robust?
+        """
         chip = int(self.chipLine.text())
         chan = int(self.chanLine.text())
-        self.streamWindow = StreamWindow(chip, chan)
+        self.streamWindow = StreamWindow(self, chip, chan)
         self.streamWindow.show()
 
