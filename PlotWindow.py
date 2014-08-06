@@ -1,0 +1,122 @@
+from PyQt4 import QtCore, QtGui
+import os, sys, h5py
+import numpy as np
+
+from progressbar import ProgressBar
+
+from parameters import DAEMON_DIR, DATA_DIR
+sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+from daemon_control import *
+
+import numpy as np
+import matplotlib
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+from matplotlib.figure import Figure
+
+def createLabelLine(labelText, lineWidget):
+    widget = QtGui.QWidget()
+    layout = QtGui.QHBoxLayout()
+    layout.addWidget(QtGui.QLabel(labelText))
+    layout.addWidget(lineWidget)
+    widget.setLayout(layout)
+    return widget
+
+class PlotWindow(QtGui.QWidget):
+
+    def __init__(self, parent, filename, nsamples):
+        super(PlotWindow, self).__init__(None)
+
+        self.parent = parent
+        self.filename = filename
+        self.nsamples = nsamples
+
+        ###################
+        # Control Panel
+        ###################
+
+        self.nrowsLine = QtGui.QLineEdit('4')
+        self.ncolsLine = QtGui.QLineEdit('2')
+        self.channelListLine = QtGui.QLineEdit('0,1,2,3,4,5,6,7')
+        self.refreshButton = QtGui.QPushButton('Refresh')
+        self.refreshButton.clicked.connect(self.refresh)
+
+        self.controlPanel = QtGui.QWidget()
+        controlPanelLayout = QtGui.QVBoxLayout()
+        controlPanelLayout.addWidget(createLabelLine('nrows:', self.nrowsLine))
+        controlPanelLayout.addWidget(createLabelLine('ncols:', self.ncolsLine))
+        controlPanelLayout.addWidget(createLabelLine('Channel List:', self.channelListLine))
+        controlPanelLayout.addWidget(self.refreshButton)
+        self.controlPanel.setLayout(controlPanelLayout)
+
+        ###################
+        # Matplotlib Setup
+        ###################
+
+        #self.fig = Figure((5.0, 4.0), dpi=100)
+        self.fig = Figure()
+        #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.setParent(self)
+        self.xvalues = np.arange(self.nsamples)
+        self.maxXvalue = max(self.xvalues)
+        axesList = []
+        self.waveformList = []
+        for i in range(8):
+            axes = self.fig.add_subplot(4, 2, i+1)
+            axes.set_title('Channel %d' % i, fontsize=10, fontweight='bold')
+            #axes.yaxis.set_ticklabels([])
+            #xtickLabels = axes.xaxis.get_ticklabels()
+            #axes.xaxis.set_ticklabels([0,self.maxXvalue/2, self.maxXvalue], fontsize=10)
+            axes.tick_params(labelsize=10)
+            axes.set_axis_bgcolor('k')
+            axes.axis([0,self.nsamples,0,2**16-1], fontsize=10)
+            waveform = axes.plot(np.arange(self.nsamples), np.array([2**15]*self.nsamples), color='#8fdb90')
+            axesList.append(axes)
+            self.waveformList.append(waveform)
+        self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
+        self.mpl_toolbar = NavigationToolbar(self.canvas, self)
+
+        self.mplLayout = QtGui.QVBoxLayout()
+        self.mplLayout.addWidget(self.canvas)
+        self.mplLayout.addWidget(self.mpl_toolbar)
+        self.mplWindow = QtGui.QWidget()
+        self.mplWindow.setLayout(self.mplLayout)
+
+        self.canvas.draw()
+
+        ###################
+        # Top-level stuff
+        ##################
+
+        self.layout = QtGui.QVBoxLayout()
+        self.layout.addWidget(self.controlPanel)
+        self.layout.addWidget(self.mplWindow)
+        self.setLayout(self.layout)
+
+        self.setWindowTitle('WiredLeaf Plotting Window')
+        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.resize(1600,800)
+
+        self.importData()
+
+    def importData(self):
+        f = h5py.File(self.filename)
+        dset = f['wired-dataset']
+        self.data = np.zeros((1024,self.nsamples), dtype='uint16')
+        pbar = ProgressBar(maxval=self.nsamples-1).start()
+        for i in range(self.nsamples):
+            pbar.update(i)
+            self.data[:,i] = dset[i][3][:1024]
+        pbar.finish()
+
+        for i in range(8):
+            self.waveformList[i][0].set_data(self.xvalues, self.data[96+i,:])
+        self.canvas.draw()
+
+    def refresh(self):
+        pass
+
+    def closeEvent(self, event):
+        print 'closing'
+
