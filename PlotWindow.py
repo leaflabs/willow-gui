@@ -35,16 +35,36 @@ class PlotWindow(QtGui.QWidget):
         # Control Panel
         ###################
 
-        self.nrowsLine = QtGui.QLineEdit('4')
-        self.ncolsLine = QtGui.QLineEdit('2')
-        self.channelListLine = QtGui.QLineEdit('0,1,2,3,4,5,6,7')
+        # Number of Channels
+        self.nchannelsGroupBox = QtGui.QGroupBox('Number of Channels')
+        nchannelsLayout = QtGui.QVBoxLayout()
+        radButton1 = QtGui.QRadioButton('1')
+        nchannelsLayout.addWidget(radButton1)
+        radButton2 = QtGui.QRadioButton('2')
+        nchannelsLayout.addWidget(radButton2)
+        radButton4 = QtGui.QRadioButton('4')
+        nchannelsLayout.addWidget(radButton4)
+        radButton6 = QtGui.QRadioButton('6')
+        nchannelsLayout.addWidget(radButton6)
+        radButton8 = QtGui.QRadioButton('8')
+        radButton8.setChecked(True)
+        nchannelsLayout.addWidget(radButton8)
+        radButton12 = QtGui.QRadioButton('12')
+        nchannelsLayout.addWidget(radButton12)
+        radButton16 = QtGui.QRadioButton('16')
+        nchannelsLayout.addWidget(radButton16)
+        self.nchannelsGroupBox.setLayout(nchannelsLayout)
+
+        # Channel List
+        self.channelListGroupBox = QtGui.QGroupBox('Channel List')
+        self.channelListEdit = QtGui.QTextEdit('0,1,2,3,4,5,6,7')
         self.refreshButton = QtGui.QPushButton('Refresh')
         self.refreshButton.clicked.connect(self.refresh)
 
         self.controlPanel = QtGui.QWidget()
-        controlPanelLayout = QtGui.QVBoxLayout()
-        controlPanelLayout.addWidget(createLabelLine('nrows:', self.nrowsLine))
-        controlPanelLayout.addWidget(createLabelLine('ncols:', self.ncolsLine))
+        controlPanelLayout = QtGui.QHBoxLayout()
+        controlPanelLayout.addWidget(self.nchannelsGroupBox)
+        controlPanelLayout.addWidget(self.channelListGroupBox)
         controlPanelLayout.addWidget(createLabelLine('Channel List:', self.channelListLine))
         controlPanelLayout.addWidget(self.refreshButton)
         self.controlPanel.setLayout(controlPanelLayout)
