@@ -30,10 +30,6 @@ class SnapshotTab(QtGui.QWidget):
         self.plotRecentButton.clicked.connect(self.plotRecent)
         self.mostRecentFilename = None
 
-        self.plotSpecificButton = QtGui.QPushButton('Plot Specific File:')
-        self.plotSpecificButton.clicked.connect(self.plotSpecific)
-        self.specificLine = QtGui.QLineEdit()
-
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(QtGui.QLabel('Number of Samples:'))
         self.layout.addWidget(self.nsampLine)
@@ -44,12 +40,6 @@ class SnapshotTab(QtGui.QWidget):
         self.layout.addWidget(self.recordButton)
         self.layout.addSpacing(100)
         self.layout.addWidget(self.plotRecentButton)
-        tmpLayout = QtGui.QHBoxLayout()
-        tmpLayout.addWidget(self.plotSpecificButton)
-        tmpLayout.addWidget(self.specificLine)
-        tmpWidget = QtGui.QWidget()
-        tmpWidget.setLayout(tmpLayout)
-        self.layout.addWidget(tmpWidget)
 
         self.setLayout(self.layout)
 
