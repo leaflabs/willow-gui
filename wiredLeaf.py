@@ -47,14 +47,11 @@ class MainWindow(QtGui.QWidget):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
+        """        
         self.logo = QtGui.QLabel()
-        #self.logo.setPixmap(QtGui.QPixmap('round_logo_60x60_text.png'))
         self.logo.setPixmap(QtGui.QPixmap('newlogo.png'))
         self.logo.setAlignment(QtCore.Qt.AlignHCenter)
-        #logoscale = 2.
-        #self.logo.setMaximumSize(QtCore.QSize(825*logoscale,450*logoscale))
-        #self.logo.setScaledContents(True)
-        #self.logo.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
+        """
 
         self.tabDialog = QtGui.QTabWidget()
 
@@ -77,8 +74,8 @@ class MainWindow(QtGui.QWidget):
 
         self.topHalf = QtGui.QWidget()
         tmp = QtGui.QVBoxLayout()
-        tmp.addWidget(self.logo)
-        tmp.addSpacing(10)
+        #tmp.addWidget(self.logo)
+        #tmp.addSpacing(10)
         tmp.addWidget(self.tabDialog)
         self.topHalf.setLayout(tmp)
 
