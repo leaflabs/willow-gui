@@ -37,7 +37,7 @@ class RecordTab(QtGui.QWidget):
         self.withStreaming = False
 
     def startRecording(self):
-        if self.parent.isDaemonRunning:
+        if self.parent.state.isDaemonRunning():
             if self.withStreaming:
                 self.parent.statusBox.append('No recording with streaming yet')
             else:
@@ -48,13 +48,16 @@ class RecordTab(QtGui.QWidget):
                 resp = do_control_cmd(cmd)
                 self.parent.statusBox.append('Started recording')
         else:
-            self.parent.statusBox.append('Please start daemon first!')
+            self.parent.statusBox.append('Please start daemon first.')
 
     def stopRecording(self):
-        cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-        cmd.acquire.enable = False
-        resp = do_control_cmd(cmd)
-        self.parent.statusBox.append('Stopped recording')
+        if self.parent.state.isDaemonRunning():
+            cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+            cmd.acquire.enable = False
+            resp = do_control_cmd(cmd)
+            self.parent.statusBox.append('Stopped recording')
+        else:
+            self.parent.statusBox.append('Please start daemon first.')
 
     def toggleStream(self):
         if self.streamCheckbox.isChecked():
