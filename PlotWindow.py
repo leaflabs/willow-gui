@@ -57,6 +57,7 @@ class PlotWindow(QtGui.QWidget):
                                     ])
         for item in self.nchannelsLayoutDict.items():
             self.nchannelsDropdown.addItem(str(item[0]))
+        self.nchannelsDropdown.setCurrentIndex(6)
         self.nchannelsDropdown.currentIndexChanged.connect(self.flagNchannels)
 
         nchannelsLayout.addWidget(self.nchannelsDropdown)
@@ -64,13 +65,13 @@ class PlotWindow(QtGui.QWidget):
 
         # Channel List
         self.channelListGroupBox = QtGui.QGroupBox('Channel List')
-        self.channelListLine = QtGui.QLineEdit('0,1,2,3,4,5,6,7')
+        self.channelListLine = QtGui.QLineEdit('96, 97, 98, 99, 100, 101, 102, 103')
         self.channelListLine.editingFinished.connect(self.flagChannelList)
         # -> is this the signal you want? consider also textChanged and textEdited
         channelListLayout = QtGui.QVBoxLayout()
         channelListLayout.addWidget(self.channelListLine)
         self.channelListGroupBox.setLayout(channelListLayout)
-        self.channelListGroupBox.setMaximumWidth(200)
+        self.channelListGroupBox.setMaximumWidth(300)
 
         # Zoom Control
         self.zoomGroupBox = QtGui.QGroupBox('Zoom Control')
@@ -94,16 +95,23 @@ class PlotWindow(QtGui.QWidget):
         self.zoomGroupBox.setLayout(zoomLayout)
         self.zoomGroupBox.setMaximumWidth(200)
 
-        # Refresh Button
+        # Buttons
         self.refreshButton = QtGui.QPushButton('Refresh')
         self.refreshButton.clicked.connect(self.refresh)
+        self.defaultButton = QtGui.QPushButton('Default Settings')
+        self.defaultButton.clicked.connect(self.setDefaults)
+        self.buttons = QtGui.QWidget()
+        tmp = QtGui.QVBoxLayout()
+        tmp.addWidget(self.refreshButton)
+        tmp.addWidget(self.defaultButton)
+        self.buttons.setLayout(tmp)
 
         self.controlPanel = QtGui.QWidget()
         controlPanelLayout = QtGui.QHBoxLayout()
         controlPanelLayout.addWidget(self.nchannelsGroupBox)
         controlPanelLayout.addWidget(self.channelListGroupBox)
         controlPanelLayout.addWidget(self.zoomGroupBox)
-        controlPanelLayout.addWidget(self.refreshButton)
+        controlPanelLayout.addWidget(self.buttons)
         self.controlPanel.setLayout(controlPanelLayout)
         self.controlPanel.setMaximumHeight(100)
 
@@ -154,8 +162,6 @@ class PlotWindow(QtGui.QWidget):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         self.xvalues = np.arange(self.nsamples)
-        self.axesList = []
-        self.waveformList = []
 
     def updateChannels(self):
         nchannels = int(self.nchannelsDropdown.currentText())
@@ -167,20 +173,26 @@ class PlotWindow(QtGui.QWidget):
         ymax = int(self.yRangeMax.text())
         if len(channelList) > nchannels:
             self.parent.parent.statusBox.append('Warning: Truncating channel list to %d channels' % nchannels)
+        self.fig.clear()
+        self.axesList = []
+        self.waveformList = []
         for i in range(nchannels):
+            channel = channelList[i]
             axes = self.fig.add_subplot(nrows, ncols, i+1)
-            axes.set_title('Channel %d' % channelList[i], fontsize=10, fontweight='bold')
+            axes.set_title('Channel %d' % channel, fontsize=10, fontweight='bold')
             #axes.yaxis.set_ticklabels([])
             #xtickLabels = axes.xaxis.get_ticklabels()
             #axes.xaxis.set_ticklabels([0,self.maxXvalue/2, self.maxXvalue], fontsize=10)
             axes.tick_params(labelsize=10)
             axes.set_axis_bgcolor('k')
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
-            waveform = axes.plot(np.arange(self.nsamples), np.array([2**15]*self.nsamples), color='#8fdb90')
+            waveform = axes.plot(self.xvalues, self.data[channel,:], color='#8fdb90')
+            #waveform = axes.plot(self.xvalues, np.array([2**15-1]*self.nsamples, dtype='uint16'), color='#8fdb90')
             self.axesList.append(axes)
             self.waveformList.append(waveform)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
         self.canvas.draw()
+        self.state.channelsChanged = False
 
     def updateZoom(self):
         xmin = int(self.xRangeMin.text())
@@ -190,12 +202,13 @@ class PlotWindow(QtGui.QWidget):
         for axes in self.axesList:
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
         self.canvas.draw()
+        self.state.zoomChanged = False
 
     def flagNchannels(self):
         self.state.channelsChanged = True
 
     def flagChannelList(self):
-        self.state.channelListChanged = True
+        self.state.channelsChanged = True
 
     def flagZoom(self):
         self.state.zoomChanged = True
@@ -205,6 +218,16 @@ class PlotWindow(QtGui.QWidget):
             self.updateChannels()
         elif self.state.zoomChanged:
             self.updateZoom()
+
+    def setDefaults(self):
+        self.nchannelsDropdown.setCurrentIndex(6)
+        self.channelListLine.setText('96, 97, 98, 99, 100, 101, 102, 103')
+        self.xRangeMin.setText('0')
+        self.xRangeMax.setText(str(self.nsamples))
+        self.yRangeMin.setText('0')
+        self.yRangeMax.setText(str(2**16-1))
+        self.state.channelsChanged = True
+        self.updateChannels()
 
     class ChangeState():
 
