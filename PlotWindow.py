@@ -58,6 +58,31 @@ class PlotWindow(QtGui.QWidget):
         # Channel List
         self.channelListGroupBox = QtGui.QGroupBox('Channel List')
         self.channelListEdit = QtGui.QTextEdit('0,1,2,3,4,5,6,7')
+        channelListLayout = QtGui.QVBoxLayout()
+        channelListLayout.addWidget(self.channelListEdit)
+        self.channelListGroupBox.setLayout(channelListLayout)
+        self.channelListGroupBox.setMaximumWidth(200)
+
+        # Zoom Control
+        self.zoomGroupBox = QtGui.QGroupBox('Zoom Control')
+        zoomLayout = QtGui.QGridLayout()
+
+        self.xRangeMin= QtGui.QLineEdit('0')
+        self.xRangeMax = QtGui.QLineEdit(str(self.nsamples))
+        zoomLayout.addWidget(QtGui.QLabel('X-Range:'), 0, 0)
+        zoomLayout.addWidget(self.xRangeMin, 0, 1)
+        zoomLayout.addWidget(self.xRangeMax, 0, 2)
+
+        self.yRangeMin = QtGui.QLineEdit('0')
+        self.yRangeMax = QtGui.QLineEdit('65535')
+        zoomLayout.addWidget(QtGui.QLabel('Y-Range:'),1,0)
+        zoomLayout.addWidget(self.yRangeMin, 1, 1)
+        zoomLayout.addWidget(self.yRangeMax, 1, 2)
+
+        self.zoomGroupBox.setLayout(zoomLayout)
+        self.zoomGroupBox.setMaximumWidth(200)
+
+        # Refresh Button
         self.refreshButton = QtGui.QPushButton('Refresh')
         self.refreshButton.clicked.connect(self.refresh)
 
@@ -65,7 +90,7 @@ class PlotWindow(QtGui.QWidget):
         controlPanelLayout = QtGui.QHBoxLayout()
         controlPanelLayout.addWidget(self.nchannelsGroupBox)
         controlPanelLayout.addWidget(self.channelListGroupBox)
-        controlPanelLayout.addWidget(createLabelLine('Channel List:', self.channelListLine))
+        controlPanelLayout.addWidget(self.zoomGroupBox)
         controlPanelLayout.addWidget(self.refreshButton)
         self.controlPanel.setLayout(controlPanelLayout)
 
@@ -80,7 +105,7 @@ class PlotWindow(QtGui.QWidget):
         self.canvas.setParent(self)
         self.xvalues = np.arange(self.nsamples)
         self.maxXvalue = max(self.xvalues)
-        axesList = []
+        self.axesList = []
         self.waveformList = []
         for i in range(8):
             axes = self.fig.add_subplot(4, 2, i+1)
@@ -92,7 +117,7 @@ class PlotWindow(QtGui.QWidget):
             axes.set_axis_bgcolor('k')
             axes.axis([0,self.nsamples,0,2**16-1], fontsize=10)
             waveform = axes.plot(np.arange(self.nsamples), np.array([2**15]*self.nsamples), color='#8fdb90')
-            axesList.append(axes)
+            self.axesList.append(axes)
             self.waveformList.append(waveform)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
@@ -135,6 +160,15 @@ class PlotWindow(QtGui.QWidget):
         self.canvas.draw()
 
     def refresh(self):
+        xmin = int(self.xRangeMin.text())
+        xmax = int(self.xRangeMax.text())
+        ymin = int(self.yRangeMin.text())
+        ymax = int(self.yRangeMax.text())
+        for axes in self.axesList:
+            axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
+        self.canvas.draw()
+
+    def returnState(self):
         pass
 
     def closeEvent(self, event):
