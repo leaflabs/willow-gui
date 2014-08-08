@@ -14,6 +14,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
 
+from collections import OrderedDict
+
 def createLabelLine(labelText, lineWidget):
     widget = QtGui.QWidget()
     layout = QtGui.QHBoxLayout()
@@ -31,6 +33,8 @@ class PlotWindow(QtGui.QWidget):
         self.filename = filename
         self.nsamples = nsamples
 
+        self.state = self.ChangeState()
+
         ###################
         # Control Panel
         ###################
@@ -38,28 +42,33 @@ class PlotWindow(QtGui.QWidget):
         # Number of Channels
         self.nchannelsGroupBox = QtGui.QGroupBox('Number of Channels')
         nchannelsLayout = QtGui.QVBoxLayout()
-        radButton1 = QtGui.QRadioButton('1')
-        nchannelsLayout.addWidget(radButton1)
-        radButton2 = QtGui.QRadioButton('2')
-        nchannelsLayout.addWidget(radButton2)
-        radButton4 = QtGui.QRadioButton('4')
-        nchannelsLayout.addWidget(radButton4)
-        radButton6 = QtGui.QRadioButton('6')
-        nchannelsLayout.addWidget(radButton6)
-        radButton8 = QtGui.QRadioButton('8')
-        radButton8.setChecked(True)
-        nchannelsLayout.addWidget(radButton8)
-        radButton12 = QtGui.QRadioButton('12')
-        nchannelsLayout.addWidget(radButton12)
-        radButton16 = QtGui.QRadioButton('16')
-        nchannelsLayout.addWidget(radButton16)
+
+        self.nchannelsDropdown = QtGui.QComboBox()
+        self.nchannelsLayoutDict = OrderedDict([(1,(1,1)),
+                                                (2,(2,1)),
+                                                (3,(3,1)),
+                                                (4,(4,1)),
+                                                (5,(5,1)),
+                                                (6,(3,2)),
+                                                (8,(4,2)),
+                                                (10,(5,2)),
+                                                (12,(6,2)),
+                                                (16,(4,4))
+                                    ])
+        for item in self.nchannelsLayoutDict.items():
+            self.nchannelsDropdown.addItem(str(item[0]))
+        self.nchannelsDropdown.currentIndexChanged.connect(self.flagNchannels)
+
+        nchannelsLayout.addWidget(self.nchannelsDropdown)
         self.nchannelsGroupBox.setLayout(nchannelsLayout)
 
         # Channel List
         self.channelListGroupBox = QtGui.QGroupBox('Channel List')
-        self.channelListEdit = QtGui.QTextEdit('0,1,2,3,4,5,6,7')
+        self.channelListLine = QtGui.QLineEdit('0,1,2,3,4,5,6,7')
+        self.channelListLine.editingFinished.connect(self.flagChannelList)
+        # -> is this the signal you want? consider also textChanged and textEdited
         channelListLayout = QtGui.QVBoxLayout()
-        channelListLayout.addWidget(self.channelListEdit)
+        channelListLayout.addWidget(self.channelListLine)
         self.channelListGroupBox.setLayout(channelListLayout)
         self.channelListGroupBox.setMaximumWidth(200)
 
@@ -79,6 +88,9 @@ class PlotWindow(QtGui.QWidget):
         zoomLayout.addWidget(self.yRangeMin, 1, 1)
         zoomLayout.addWidget(self.yRangeMax, 1, 2)
 
+        for widg in [self.xRangeMin, self.xRangeMax, self.yRangeMin, self.yRangeMax]:
+            widg.editingFinished.connect(self.flagZoom)
+
         self.zoomGroupBox.setLayout(zoomLayout)
         self.zoomGroupBox.setMaximumWidth(200)
 
@@ -93,42 +105,23 @@ class PlotWindow(QtGui.QWidget):
         controlPanelLayout.addWidget(self.zoomGroupBox)
         controlPanelLayout.addWidget(self.refreshButton)
         self.controlPanel.setLayout(controlPanelLayout)
+        self.controlPanel.setMaximumHeight(100)
 
         ###################
         # Matplotlib Setup
         ###################
 
-        #self.fig = Figure((5.0, 4.0), dpi=100)
-        self.fig = Figure()
-        #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self)
-        self.xvalues = np.arange(self.nsamples)
-        self.maxXvalue = max(self.xvalues)
-        self.axesList = []
-        self.waveformList = []
-        for i in range(8):
-            axes = self.fig.add_subplot(4, 2, i+1)
-            axes.set_title('Channel %d' % i, fontsize=10, fontweight='bold')
-            #axes.yaxis.set_ticklabels([])
-            #xtickLabels = axes.xaxis.get_ticklabels()
-            #axes.xaxis.set_ticklabels([0,self.maxXvalue/2, self.maxXvalue], fontsize=10)
-            axes.tick_params(labelsize=10)
-            axes.set_axis_bgcolor('k')
-            axes.axis([0,self.nsamples,0,2**16-1], fontsize=10)
-            waveform = axes.plot(np.arange(self.nsamples), np.array([2**15]*self.nsamples), color='#8fdb90')
-            self.axesList.append(axes)
-            self.waveformList.append(waveform)
-        self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
-        self.mpl_toolbar = NavigationToolbar(self.canvas, self)
+        self.importData()
+        self.initializeMPL()
+        self.updateChannels()
 
+        self.mpl_toolbar = NavigationToolbar(self.canvas, self)
         self.mplLayout = QtGui.QVBoxLayout()
         self.mplLayout.addWidget(self.canvas)
         self.mplLayout.addWidget(self.mpl_toolbar)
         self.mplWindow = QtGui.QWidget()
         self.mplWindow.setLayout(self.mplLayout)
 
-        self.canvas.draw()
 
         ###################
         # Top-level stuff
@@ -143,7 +136,6 @@ class PlotWindow(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
         self.resize(1600,800)
 
-        self.importData()
 
     def importData(self):
         f = h5py.File(self.filename)
@@ -155,11 +147,42 @@ class PlotWindow(QtGui.QWidget):
             self.data[:,i] = dset[i][3][:1024]
         pbar.finish()
 
-        for i in range(8):
-            self.waveformList[i][0].set_data(self.xvalues, self.data[96+i,:])
+    def initializeMPL(self):
+        #self.fig = Figure((5.0, 4.0), dpi=100)
+        self.fig = Figure()
+        #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.setParent(self)
+        self.xvalues = np.arange(self.nsamples)
+        self.axesList = []
+        self.waveformList = []
+
+    def updateChannels(self):
+        nchannels = int(self.nchannelsDropdown.currentText())
+        nrows, ncols = self.nchannelsLayoutDict[nchannels]
+        channelList = [int(s) for s in str(self.channelListLine.text()).split(',')]
+        xmin = int(self.xRangeMin.text())
+        xmax = int(self.xRangeMax.text())
+        ymin = int(self.yRangeMin.text())
+        ymax = int(self.yRangeMax.text())
+        if len(channelList) > nchannels:
+            self.parent.parent.statusBox.append('Warning: Truncating channel list to %d channels' % nchannels)
+        for i in range(nchannels):
+            axes = self.fig.add_subplot(nrows, ncols, i+1)
+            axes.set_title('Channel %d' % channelList[i], fontsize=10, fontweight='bold')
+            #axes.yaxis.set_ticklabels([])
+            #xtickLabels = axes.xaxis.get_ticklabels()
+            #axes.xaxis.set_ticklabels([0,self.maxXvalue/2, self.maxXvalue], fontsize=10)
+            axes.tick_params(labelsize=10)
+            axes.set_axis_bgcolor('k')
+            axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
+            waveform = axes.plot(np.arange(self.nsamples), np.array([2**15]*self.nsamples), color='#8fdb90')
+            self.axesList.append(axes)
+            self.waveformList.append(waveform)
+        self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
         self.canvas.draw()
 
-    def refresh(self):
+    def updateZoom(self):
         xmin = int(self.xRangeMin.text())
         xmax = int(self.xRangeMax.text())
         ymin = int(self.yRangeMin.text())
@@ -168,8 +191,26 @@ class PlotWindow(QtGui.QWidget):
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
         self.canvas.draw()
 
-    def returnState(self):
-        pass
+    def flagNchannels(self):
+        self.state.channelsChanged = True
+
+    def flagChannelList(self):
+        self.state.channelListChanged = True
+
+    def flagZoom(self):
+        self.state.zoomChanged = True
+
+    def refresh(self):
+        if self.state.channelsChanged:
+            self.updateChannels()
+        elif self.state.zoomChanged:
+            self.updateZoom()
+
+    class ChangeState():
+
+        def __init__(self):
+            self.channelsChanged = False
+            self.zoomChanged = False
 
     def closeEvent(self, event):
         print 'closing'
