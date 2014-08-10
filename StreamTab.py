@@ -13,7 +13,7 @@ class StreamTab(QtGui.QWidget):
 
         self.description = QtGui.QLabel('Configure your live streaming '
                                         'parameters, then click Launch to '
-                                        'launch the viewing window.')
+                                        'open a viewing window.')
 
         self.chipLine = QtGui.QLineEdit('3')
         self.chanLine = QtGui.QLineEdit('3')

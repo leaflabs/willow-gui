@@ -19,6 +19,8 @@ class RecordTab(QtGui.QWidget):
         super(RecordTab, self).__init__(None)
         self.parent = parent
 
+        self.description = QtGui.QLabel("Record an experiment on the datanode's disk storage.")
+
         self.startButton = QtGui.QPushButton('Start')
         self.startButton.clicked.connect(self.startRecording)
         self.stopButton = QtGui.QPushButton('Stop')
@@ -28,6 +30,9 @@ class RecordTab(QtGui.QWidget):
         self.streamCheckbox.stateChanged.connect(self.toggleStream)
 
         self.layout = QtGui.QVBoxLayout()
+        self.layout.addSpacing(20)
+        self.layout.addWidget(self.description)
+        self.layout.addSpacing(20)
         self.layout.addWidget(self.streamCheckbox)
         self.layout.addWidget(self.startButton)
         self.layout.addWidget(self.stopButton)
