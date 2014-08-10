@@ -26,12 +26,13 @@ def createLabelLine(labelText, lineWidget):
 
 class PlotWindow(QtGui.QWidget):
 
-    def __init__(self, parent, filename, nsamples):
+    def __init__(self, parent, filename, sampleRange):
         super(PlotWindow, self).__init__(None)
 
         self.parent = parent
         self.filename = filename
-        self.nsamples = nsamples
+        self.sampleRange = sampleRange
+        self.importData()
 
         self.state = self.ChangeState()
 
@@ -119,7 +120,6 @@ class PlotWindow(QtGui.QWidget):
         # Matplotlib Setup
         ###################
 
-        self.importData()
         self.initializeMPL()
         self.updateChannels()
 
@@ -140,7 +140,7 @@ class PlotWindow(QtGui.QWidget):
         self.layout.addWidget(self.mplWindow)
         self.setLayout(self.layout)
 
-        self.setWindowTitle('WiredLeaf Plotting Window')
+        self.setWindowTitle('Plotting: %s' % self.filename)
         self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
         self.resize(1600,800)
 
@@ -148,6 +148,10 @@ class PlotWindow(QtGui.QWidget):
     def importData(self):
         f = h5py.File(self.filename)
         dset = f['wired-dataset']
+        if self.sampleRange == -1:
+            self.sampleRange = [0, len(dset)-1]
+        self.nsamples = self.sampleRange[1] - self.sampleRange[0] + 1
+        self.sampleNumbers = np.arange(self.sampleRange[0], self.sampleRange[1])
         self.data = np.zeros((1024,self.nsamples), dtype='uint16')
         pbar = ProgressBar(maxval=self.nsamples-1).start()
         for i in range(self.nsamples):
