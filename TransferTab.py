@@ -4,6 +4,7 @@ import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from binarySearch import getExperimentCookie, findExperimentBoundary
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -24,35 +25,58 @@ class TransferTab(QtGui.QWidget):
         super(TransferTab, self).__init__(None)
         self.parent = parent
 
+        self.description = QtGui.QLabel("Transfer an experiment from the datanode's disk to your filesystem.")
+
         self.binarySearchButton = QtGui.QPushButton('Determine Length of Experiment on Disk')
         self.binarySearchButton.clicked.connect(self.binarySearch)
 
         self.nsampLine = QtGui.QLineEdit()
-        self.dirLine = QtGui.QLineEdit(DATA_DIR)
-        self.filenameLine = QtGui.QLineEdit()
+
+        self.filenameBrowseWidget = self.FilenameBrowseWidget(self)
+
         self.transferButton = QtGui.QPushButton('Transfer Data')
         self.transferButton.clicked.connect(self.transferData)
 
         self.layout = QtGui.QVBoxLayout()
+        self.layout.addSpacing(20)
+        self.layout.addWidget(self.description)
+        self.layout.addSpacing(20)
         self.layout.addWidget(self.binarySearchButton)
         self.layout.addSpacing(20)
         self.layout.addWidget(QtGui.QLabel('Number of Samples (blank indicates entire experiment):'))
         self.layout.addWidget(self.nsampLine)
-        self.layout.addWidget(QtGui.QLabel('Directory:'))
-        self.layout.addWidget(self.dirLine)
         self.layout.addWidget(QtGui.QLabel('Filename:'))
-        self.layout.addWidget(self.filenameLine)
+        self.layout.addWidget(self.filenameBrowseWidget)
         self.layout.addSpacing(20)
         self.layout.addWidget(self.transferButton)
         self.setLayout(self.layout)
 
     def binarySearch(self):
-        self.parent.statusBox.append('This does nothing yet')
+        cookie = getExperimentCookie(0)
+        boundary = findExperimentBoundary(cookie, 0, int(125e6))
+        if boundary>0:
+            print 'Boundary for experiment %d occurs at BSI = %d' % (cookie, boundary)
+
+    class FilenameBrowseWidget(QtGui.QWidget):
+
+        def __init__(self, parent):
+            super(parent.FilenameBrowseWidget, self).__init__()
+            self.filenameLine = QtGui.QLineEdit()
+            self.browseButton = QtGui.QPushButton('Browse')
+            self.browseButton.clicked.connect(self.browse)
+            self.layout = QtGui.QHBoxLayout()
+            self.layout.addWidget(self.filenameLine)
+            self.layout.addWidget(self.browseButton)
+            self.setLayout(self.layout)
+
+        def browse(self):
+            filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', DATA_DIR)
+            self.filenameLine.setText(filename)
 
     def transferData(self):
-        if self.parent.isDaemonRunning:
-            filename = os.path.join(str(self.dirLine.text()), str(self.filenameLine.text()))
-            nsamples_text = self.nsampLine.text()
+        if self.parent.state.isDaemonRunning():
+            filename = str(self.filenameBrowseWidget.filenameLine.text())
+            nsamples_text = str(self.nsampLine.text())
             if isBlank(nsamples_text):
                 nsamples = None
             else:
