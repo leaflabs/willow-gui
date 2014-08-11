@@ -22,9 +22,9 @@ class SnapshotTab(QtGui.QWidget):
         super(SnapshotTab, self).__init__(None)
         self.parent = parent
 
-        self.description = QtGui.QLabel('Take a snapshot - a short recording from all 1024 channels, saved directly your filesystem.')
+        self.description = QtGui.QLabel('Take a snapshot: a short recording from all 1024 channels, saved directly your filesystem.')
 
-        self.nsampLine = QtGui.QLineEdit('30000')
+        self.nsamplesWidget = self.NSamplesWidget(self)
         self.filenameBrowseWidget = self.FilenameBrowseWidget(self)
         self.recordButton = QtGui.QPushButton('Take a Snapshot')
         self.recordButton.clicked.connect(self.takeSnapshot)
@@ -36,12 +36,10 @@ class SnapshotTab(QtGui.QWidget):
         self.layout.addSpacing(20)
         self.layout.addWidget(self.description)
         self.layout.addSpacing(20)
-        self.layout.addWidget(QtGui.QLabel('Number of Samples:'))
-        self.layout.addWidget(self.nsampLine)
-        self.layout.addWidget(QtGui.QLabel('Filename:'))
+        self.layout.addWidget(self.nsamplesWidget)
         self.layout.addWidget(self.filenameBrowseWidget)
-        self.layout.addWidget(self.recordButton)
         self.layout.addSpacing(20)
+        self.layout.addWidget(self.recordButton)
         self.layout.addWidget(self.plotRecentButton)
 
         self.setLayout(self.layout)
@@ -56,6 +54,7 @@ class SnapshotTab(QtGui.QWidget):
             self.browseButton = QtGui.QPushButton('Browse')
             self.browseButton.clicked.connect(self.browse)
             self.layout = QtGui.QHBoxLayout()
+            self.layout.addWidget(QtGui.QLabel('Filename:'))
             self.layout.addWidget(self.filenameLine)
             self.layout.addWidget(self.browseButton)
             self.setLayout(self.layout)
@@ -63,6 +62,16 @@ class SnapshotTab(QtGui.QWidget):
         def browse(self):
             filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', DATA_DIR)
             self.filenameLine.setText(filename)
+
+    class NSamplesWidget(QtGui.QWidget):
+
+        def __init__(self, parent):
+            super(parent.NSamplesWidget, self).__init__()
+            self.nsamplesLine = QtGui.QLineEdit()
+            self.layout = QtGui.QHBoxLayout()
+            self.layout.addWidget(QtGui.QLabel('Number of samples:'))
+            self.layout.addWidget(self.nsamplesLine)
+            self.setLayout(self.layout)
 
     def takeSnapshot(self):
         filename = str(self.filenameBrowseWidget.filenameLine.text())

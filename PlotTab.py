@@ -76,7 +76,7 @@ class PlotTab(QtGui.QWidget):
 
         def __init__(self, parent):
             super(parent.NSamplesWidget, self).__init__()
-            self.allDataButton = QtGui.QRadioButton('All teh data')
+            self.allDataButton = QtGui.QRadioButton('All data')
             self.allDataButton.setChecked(True)
             self.allDataButton.clicked.connect(self.disableSubsetLines)
             self.subsetButton = QtGui.QRadioButton('Subset:')
