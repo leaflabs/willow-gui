@@ -1,5 +1,6 @@
 from PyQt4 import QtCore, QtGui
 import os, sys, h5py
+
 import numpy as np
 
 from progressbar import ProgressBar
@@ -15,6 +16,7 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as Naviga
 from matplotlib.figure import Figure
 
 from collections import OrderedDict
+from WaterfallPlotWindow import WaterfallPlotWindow
 
 def createLabelLine(labelText, lineWidget):
     widget = QtGui.QWidget()
@@ -78,8 +80,8 @@ class PlotWindow(QtGui.QWidget):
         self.zoomGroupBox = QtGui.QGroupBox('Zoom Control')
         zoomLayout = QtGui.QGridLayout()
 
-        self.xRangeMin= QtGui.QLineEdit('0')
-        self.xRangeMax = QtGui.QLineEdit(str(self.nsamples))
+        self.xRangeMin= QtGui.QLineEdit(str(self.sampleRange[0]))
+        self.xRangeMax = QtGui.QLineEdit(str(self.sampleRange[1]))
         zoomLayout.addWidget(QtGui.QLabel('X-Range:'), 0, 0)
         zoomLayout.addWidget(self.xRangeMin, 0, 1)
         zoomLayout.addWidget(self.xRangeMax, 0, 2)
@@ -107,12 +109,16 @@ class PlotWindow(QtGui.QWidget):
         tmp.addWidget(self.defaultButton)
         self.buttons.setLayout(tmp)
 
+        self.waterfallPlotButton = QtGui.QPushButton('Waterfall Plot')
+        self.waterfallPlotButton.clicked.connect(self.launchWaterfall)
+
         self.controlPanel = QtGui.QWidget()
         controlPanelLayout = QtGui.QHBoxLayout()
         controlPanelLayout.addWidget(self.nchannelsGroupBox)
         controlPanelLayout.addWidget(self.channelListGroupBox)
         controlPanelLayout.addWidget(self.zoomGroupBox)
         controlPanelLayout.addWidget(self.buttons)
+        controlPanelLayout.addWidget(self.waterfallPlotButton)
         self.controlPanel.setLayout(controlPanelLayout)
         self.controlPanel.setMaximumHeight(100)
 
@@ -151,7 +157,7 @@ class PlotWindow(QtGui.QWidget):
         if self.sampleRange == -1:
             self.sampleRange = [0, len(dset)-1]
         self.nsamples = self.sampleRange[1] - self.sampleRange[0] + 1
-        self.sampleNumbers = np.arange(self.sampleRange[0], self.sampleRange[1])
+        self.sampleNumbers = np.arange(self.sampleRange[0], self.sampleRange[1]+1)
         self.data = np.zeros((1024,self.nsamples), dtype='uint16')
         pbar = ProgressBar(maxval=self.nsamples-1).start()
         for i in range(self.nsamples):
@@ -165,7 +171,6 @@ class PlotWindow(QtGui.QWidget):
         #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
-        self.xvalues = np.arange(self.nsamples)
 
     def updateChannels(self):
         nchannels = int(self.nchannelsDropdown.currentText())
@@ -190,8 +195,7 @@ class PlotWindow(QtGui.QWidget):
             axes.tick_params(labelsize=10)
             axes.set_axis_bgcolor('k')
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
-            waveform = axes.plot(self.xvalues, self.data[channel,:], color='#8fdb90')
-            #waveform = axes.plot(self.xvalues, np.array([2**15-1]*self.nsamples, dtype='uint16'), color='#8fdb90')
+            waveform = axes.plot(self.sampleNumbers, self.data[channel,:], color='#8fdb90')
             self.axesList.append(axes)
             self.waveformList.append(waveform)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
@@ -207,6 +211,10 @@ class PlotWindow(QtGui.QWidget):
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
         self.canvas.draw()
         self.state.zoomChanged = False
+
+    def launchWaterfall(self):
+        self.waterfallPlotWindow = WaterfallPlotWindow(self)
+        self.waterfallPlotWindow.show()
 
     def flagNchannels(self):
         self.state.channelsChanged = True
@@ -226,8 +234,8 @@ class PlotWindow(QtGui.QWidget):
     def setDefaults(self):
         self.nchannelsDropdown.setCurrentIndex(6)
         self.channelListLine.setText('96, 97, 98, 99, 100, 101, 102, 103')
-        self.xRangeMin.setText('0')
-        self.xRangeMax.setText(str(self.nsamples))
+        self.xRangeMin.setText(str(self.sampleRange[0]))
+        self.xRangeMax.setText(str(self.sampleRange[1]))
         self.yRangeMin.setText('0')
         self.yRangeMax.setText(str(2**16-1))
         self.state.channelsChanged = True
