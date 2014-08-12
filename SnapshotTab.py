@@ -22,7 +22,7 @@ class SnapshotTab(QtGui.QWidget):
         super(SnapshotTab, self).__init__(None)
         self.parent = parent
 
-        self.description = QtGui.QLabel('Take a snapshot: a short recording from all 1024 channels, saved directly your filesystem.')
+        self.description = QtGui.QLabel('Take a snapshot: a short recording from all 1024 channels, saved directly to your filesystem.')
 
         self.nsamplesWidget = self.NSamplesWidget(self)
         self.filenameBrowseWidget = self.FilenameBrowseWidget(self)
