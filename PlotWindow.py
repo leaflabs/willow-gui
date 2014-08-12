@@ -36,91 +36,15 @@ class PlotWindow(QtGui.QWidget):
         self.sampleRange = sampleRange
         self.importData()
 
-        self.state = self.ChangeState()
 
         ###################
         # Control Panel
         ###################
 
-        # Number of Channels
-        self.nchannelsGroupBox = QtGui.QGroupBox('Number of Channels')
-        nchannelsLayout = QtGui.QVBoxLayout()
 
-        self.nchannelsDropdown = QtGui.QComboBox()
-        self.nchannelsLayoutDict = OrderedDict([(1,(1,1)),
-                                                (2,(2,1)),
-                                                (3,(3,1)),
-                                                (4,(4,1)),
-                                                (5,(5,1)),
-                                                (6,(3,2)),
-                                                (8,(4,2)),
-                                                (10,(5,2)),
-                                                (12,(6,2)),
-                                                (16,(4,4))
-                                    ])
-        for item in self.nchannelsLayoutDict.items():
-            self.nchannelsDropdown.addItem(str(item[0]))
-        self.nchannelsDropdown.setCurrentIndex(6)
-        self.nchannelsDropdown.currentIndexChanged.connect(self.flagNchannels)
+        ### Control Panel
 
-        nchannelsLayout.addWidget(self.nchannelsDropdown)
-        self.nchannelsGroupBox.setLayout(nchannelsLayout)
-
-        # Channel List
-        self.channelListGroupBox = QtGui.QGroupBox('Channel List')
-        self.channelListLine = QtGui.QLineEdit('96, 97, 98, 99, 100, 101, 102, 103')
-        self.channelListLine.editingFinished.connect(self.flagChannelList)
-        # -> is this the signal you want? consider also textChanged and textEdited
-        channelListLayout = QtGui.QVBoxLayout()
-        channelListLayout.addWidget(self.channelListLine)
-        self.channelListGroupBox.setLayout(channelListLayout)
-        self.channelListGroupBox.setMaximumWidth(300)
-
-        # Zoom Control
-        self.zoomGroupBox = QtGui.QGroupBox('Zoom Control')
-        zoomLayout = QtGui.QGridLayout()
-
-        self.xRangeMin= QtGui.QLineEdit(str(self.sampleRange[0]))
-        self.xRangeMax = QtGui.QLineEdit(str(self.sampleRange[1]))
-        zoomLayout.addWidget(QtGui.QLabel('X-Range:'), 0, 0)
-        zoomLayout.addWidget(self.xRangeMin, 0, 1)
-        zoomLayout.addWidget(self.xRangeMax, 0, 2)
-
-        self.yRangeMin = QtGui.QLineEdit('0')
-        self.yRangeMax = QtGui.QLineEdit('65535')
-        zoomLayout.addWidget(QtGui.QLabel('Y-Range:'),1,0)
-        zoomLayout.addWidget(self.yRangeMin, 1, 1)
-        zoomLayout.addWidget(self.yRangeMax, 1, 2)
-
-        for widg in [self.xRangeMin, self.xRangeMax, self.yRangeMin, self.yRangeMax]:
-            widg.editingFinished.connect(self.flagZoom)
-
-        self.zoomGroupBox.setLayout(zoomLayout)
-        self.zoomGroupBox.setMaximumWidth(200)
-
-        # Buttons
-        self.refreshButton = QtGui.QPushButton('Refresh')
-        self.refreshButton.clicked.connect(self.refresh)
-        self.defaultButton = QtGui.QPushButton('Default Settings')
-        self.defaultButton.clicked.connect(self.setDefaults)
-        self.buttons = QtGui.QWidget()
-        tmp = QtGui.QVBoxLayout()
-        tmp.addWidget(self.refreshButton)
-        tmp.addWidget(self.defaultButton)
-        self.buttons.setLayout(tmp)
-
-        self.waterfallPlotButton = QtGui.QPushButton('Waterfall Plot')
-        self.waterfallPlotButton.clicked.connect(self.launchWaterfall)
-
-        self.controlPanel = QtGui.QWidget()
-        controlPanelLayout = QtGui.QHBoxLayout()
-        controlPanelLayout.addWidget(self.nchannelsGroupBox)
-        controlPanelLayout.addWidget(self.channelListGroupBox)
-        controlPanelLayout.addWidget(self.zoomGroupBox)
-        controlPanelLayout.addWidget(self.buttons)
-        controlPanelLayout.addWidget(self.waterfallPlotButton)
-        self.controlPanel.setLayout(controlPanelLayout)
-        self.controlPanel.setMaximumHeight(100)
+        self.controlPanel = self.ControlPanel(self)
 
         ###################
         # Matplotlib Setup
@@ -150,6 +74,135 @@ class PlotWindow(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
         self.resize(1600,800)
 
+    class ControlPanel(QtGui.QWidget):
+
+        def __init__(self, parent):
+            super(parent.ControlPanel, self).__init__()
+            self.parent = parent
+            self.channelsGroup = self.ChannelsGroup(self)
+            self.zoomGroup = self.ZoomGroup(self)
+            self.waterfallButton = QtGui.QPushButton('Waterfall')
+            self.waterfallButton.clicked.connect(self.parent.launchWaterfall)
+            self.layout = QtGui.QHBoxLayout()
+            self.layout.addWidget(self.channelsGroup)
+            self.layout.addWidget(self.zoomGroup)
+            self.layout.addWidget(self.waterfallButton)
+            self.setLayout(self.layout)
+            self.setMaximumHeight(175)
+
+        class ChannelsGroup(QtGui.QGroupBox):
+
+            def __init__(self, parent):
+                super(parent.ChannelsGroup, self).__init__()
+                self.parent = parent
+                self.setTitle('Channel Control')
+
+                self.nchannelsDropdown = QtGui.QComboBox()
+                self.nchannelsLayoutDict = OrderedDict([(1,(1,1)),
+                                                        (2,(2,1)),
+                                                        (3,(3,1)),
+                                                        (4,(4,1)),
+                                                        (5,(5,1)),
+                                                        (6,(3,2)),
+                                                        (8,(4,2)),
+                                                        (10,(5,2)),
+                                                        (12,(6,2)),
+                                                        (16,(4,4))
+                                            ])
+                for item in self.nchannelsLayoutDict.items():
+                    self.nchannelsDropdown.addItem(str(item[0]))
+                self.nchannelsDropdown.setCurrentIndex(6)
+                self.nchannelsDropdown.currentIndexChanged.connect(self.handleNChannelChange)
+
+                self.bankSpinBox = QtGui.QSpinBox()
+                nchannels = int(self.nchannelsDropdown.currentText())
+                self.bankSpinBox.setMaximum(1023//nchannels)
+                self.bankSpinBox.valueChanged.connect(self.handleBankChange)
+
+                self.layout = QtGui.QVBoxLayout()
+                self.layout.addWidget(QtGui.QLabel('Number of Channels:'))
+                self.layout.addWidget(self.nchannelsDropdown)
+                self.layout.addWidget(QtGui.QLabel('Bank:'))
+                self.layout.addWidget(self.bankSpinBox)
+                self.setLayout(self.layout)
+                self.setMaximumWidth(220)
+
+            def handleNChannelChange(self, index):
+                nchannels = int(self.nchannelsDropdown.currentText())
+                self.bankSpinBox.setMaximum(1023//nchannels)
+                self.parent.parent.updateChannels()
+
+            def handleBankChange(self):
+                self.parent.parent.updateChannels()
+
+        class ZoomGroup(QtGui.QGroupBox):
+
+            def __init__(self, parent):
+                super(parent.ZoomGroup, self).__init__()
+                self.parent = parent
+                self.setTitle('Zoom Control')
+                xmin = self.parent.parent.sampleRange[0]
+                xmax = self.parent.parent.sampleRange[1]
+                ymin = 0
+                ymax = 2**16-1
+                self.xminLine = QtGui.QLineEdit(str(xmin))
+                self.xmaxLine = QtGui.QLineEdit(str(xmax))
+                self.yminLine = QtGui.QLineEdit(str(ymin))
+                self.ymaxLine = QtGui.QLineEdit(str(ymax))
+                grid = QtGui.QWidget()
+                gridLayout = QtGui.QGridLayout()
+                gridLayout.addWidget(QtGui.QLabel('X-Range:'), 0,0)
+                gridLayout.addWidget(self.xminLine, 0,1)
+                gridLayout.addWidget(self.xmaxLine, 0,2)
+                gridLayout.addWidget(QtGui.QLabel('X-Range:'), 1,0)
+                gridLayout.addWidget(self.yminLine, 1,1)
+                gridLayout.addWidget(self.ymaxLine, 1,2)
+                grid.setLayout(gridLayout)
+
+                self.refreshButton = QtGui.QPushButton('Refresh')
+                self.refreshButton.clicked.connect(self.parent.parent.updateZoom)
+                self.defaultButton = QtGui.QPushButton('Default')
+                self.defaultButton.clicked.connect(self.parent.parent.defaultZoom)
+                buttons = QtGui.QWidget()
+                buttonLayout = QtGui.QHBoxLayout()
+                buttonLayout.addWidget(self.refreshButton)
+                buttonLayout.addWidget(self.defaultButton)
+                buttons.setLayout(buttonLayout)
+
+                self.layout = QtGui.QVBoxLayout()
+                self.layout.addWidget(grid)
+                self.layout.addWidget(buttons)
+
+                self.setLayout(self.layout)
+                self.setMaximumWidth(220)
+
+                """
+                for widg in [self.xminLine, self.xmaxLine, self.yminLine, self.ymaxLine]:
+                    widg.editingFinished.connect(self.flagZoom)
+                """
+
+        class ButtonStack(QtGui.QWidget):
+            """
+            No longer used?
+            """
+
+            def __init__(self, parent):
+                super(parent.ButtonStack, self).__init__()
+                self.parent = parent
+                self.refreshButton = QtGui.QPushButton('Refresh')
+                self.refreshButton.clicked.connect(self.parent.refresh)
+                self.defaultButton = QtGui.QPushButton('Default')
+                self.defaultButton.clicked.connect(self.parent.default)
+                self.waterfallButton = QtGui.QPushButton('Waterfall')
+                self.waterfallButton.clicked.connect(self.parent.launchWaterfall)
+                self.layout = QtGui.QVBoxLayout()
+                self.layout.addWidget(self.refreshButton)
+                self.layout.addWidget(self.defaultButton)
+                self.layout.addWidget(self.waterfallButton)
+                self.setLayout(self.layout)
+
+        def launchWaterfall(self):
+            self.parent.launchWaterfall()
 
     def importData(self):
         f = h5py.File(self.filename)
@@ -173,15 +226,16 @@ class PlotWindow(QtGui.QWidget):
         self.canvas.setParent(self)
 
     def updateChannels(self):
-        nchannels = int(self.nchannelsDropdown.currentText())
-        nrows, ncols = self.nchannelsLayoutDict[nchannels]
-        channelList = [int(s) for s in str(self.channelListLine.text()).split(',')]
-        xmin = int(self.xRangeMin.text())
-        xmax = int(self.xRangeMax.text())
-        ymin = int(self.yRangeMin.text())
-        ymax = int(self.yRangeMax.text())
-        if len(channelList) > nchannels:
-            self.parent.parent.statusBox.append('Warning: Truncating channel list to %d channels' % nchannels)
+        channelsGroup = self.controlPanel.channelsGroup
+        zoomGroup = self.controlPanel.zoomGroup
+        nchannels = int(channelsGroup.nchannelsDropdown.currentText())
+        nrows, ncols = channelsGroup.nchannelsLayoutDict[nchannels]
+        bank = int(channelsGroup.bankSpinBox.value())
+        channelList = range(bank*nchannels,(bank+1)*nchannels)
+        xmin = int(zoomGroup.xminLine.text())
+        xmax = int(zoomGroup.xmaxLine.text())
+        ymin = int(zoomGroup.yminLine.text())
+        ymax = int(zoomGroup.ymaxLine.text())
         self.fig.clear()
         self.axesList = []
         self.waveformList = []
@@ -200,53 +254,50 @@ class PlotWindow(QtGui.QWidget):
             self.waveformList.append(waveform)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
         self.canvas.draw()
-        self.state.channelsChanged = False
 
     def updateZoom(self):
-        xmin = int(self.xRangeMin.text())
-        xmax = int(self.xRangeMax.text())
-        ymin = int(self.yRangeMin.text())
-        ymax = int(self.yRangeMax.text())
+        zoomGroup = self.controlPanel.zoomGroup
+        xmin = int(zoomGroup.xminLine.text())
+        xmax = int(zoomGroup.xmaxLine.text())
+        ymin = int(zoomGroup.yminLine.text())
+        ymax = int(zoomGroup.ymaxLine.text())
         for axes in self.axesList:
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
         self.canvas.draw()
-        self.state.zoomChanged = False
 
-    def launchWaterfall(self):
-        self.waterfallPlotWindow = WaterfallPlotWindow(self)
-        self.waterfallPlotWindow.show()
-
-    def flagNchannels(self):
-        self.state.channelsChanged = True
-
-    def flagChannelList(self):
-        self.state.channelsChanged = True
-
-    def flagZoom(self):
-        self.state.zoomChanged = True
-
-    def refresh(self):
-        if self.state.channelsChanged:
-            self.updateChannels()
-        elif self.state.zoomChanged:
-            self.updateZoom()
-
-    def setDefaults(self):
+    def defaultZoom(self):
+        """
         self.nchannelsDropdown.setCurrentIndex(6)
         self.channelListLine.setText('96, 97, 98, 99, 100, 101, 102, 103')
         self.xRangeMin.setText(str(self.sampleRange[0]))
         self.xRangeMax.setText(str(self.sampleRange[1]))
         self.yRangeMin.setText('0')
         self.yRangeMax.setText(str(2**16-1))
-        self.state.channelsChanged = True
         self.updateChannels()
+        """
+        zoomGroup = self.controlPanel.zoomGroup
+        zoomGroup.xminLine.setText(str(self.sampleRange[0]))
+        zoomGroup.xmaxLine.setText(str(self.sampleRange[1]))
+        zoomGroup.yminLine.setText(str(0))
+        zoomGroup.ymaxLine.setText(str(2**16-1))
+        self.updateZoom()
 
-    class ChangeState():
+    def launchWaterfall(self):
+        self.waterfallPlotWindow = WaterfallPlotWindow(self)
+        self.waterfallPlotWindow.show()
 
-        def __init__(self):
-            self.channelsChanged = False
-            self.zoomChanged = False
+    """
+    def refresh(self):
+        self.updateChannels()
+        self.updateZoom()
+    """
 
     def closeEvent(self, event):
         print 'closing'
 
+if __name__=='__main__':
+    app = QtGui.QApplication(sys.argv)
+    main = PlotWindow(None, '/home/chrono/sng/data/justin/neuralRecording_10sec.h5', [0,5000])
+    main.show()
+    app.exec_()
+    #main.exit()

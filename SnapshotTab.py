@@ -83,7 +83,7 @@ class SnapshotTab(QtGui.QWidget):
                     # TODO why doesn't this show up until after do_control_cmds returns??
                     self.parent.statusBox.append('Taking snapshot...') 
 
-                    nsamples = int(self.nsampLine.text())
+                    nsamples = int(self.nsamplesWidget.nsamplesLine.text())
 
                     cmds = []
 
