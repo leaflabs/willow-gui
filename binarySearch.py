@@ -78,20 +78,30 @@ def findExperimentBoundary(cookie, leftBracket, rightBracket):
         return leftBracket
     else:
         newBracket = (leftBracket+rightBracket)//2
-        #testCookie = getExperimentCookie1920(newBracket)
         result = queryDisk(newBracket)
-        """
-        if testCookie<0:
-            print 'Error occured while retrieving cookie'
-            return -1
-        """
-        # hmm.. a zero result is still a different exp cookie, so we can proceed
         if result==cookie:
             leftBracket = newBracket
         else:
             rightBracket = newBracket
         return findExperimentBoundary(cookie, leftBracket, rightBracket)
 
+def findExperimentBoundary_pbar(cookie, leftBracket, rightBracket, pbar, step):
+    """
+    pbar is the progressbar object
+    step gets incremented with each recursion
+    """
+    if (rightBracket-leftBracket)==1:
+        return leftBracket
+    else:
+        newBracket = (leftBracket+rightBracket)//2
+        result = queryDisk(newBracket)
+        if result==cookie:
+            leftBracket = newBracket
+        else:
+            rightBracket = newBracket
+        print step
+        pbar.setValue(step)
+        return findExperimentBoundary_pbar(cookie, leftBracket, rightBracket, pbar, step+1)
 
 if __name__=='__main__':
     cookie = getExperimentCookie(0)
