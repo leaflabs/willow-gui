@@ -4,7 +4,8 @@ import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from binarySearch import getExperimentCookie, findExperimentBoundary
+from binarySearch import getExperimentCookie, findExperimentBoundary_pbar
+from ProgressBarWindow import ProgressBarWindow
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -30,6 +31,8 @@ class TransferTab(QtGui.QWidget):
         self.binarySearchButton = QtGui.QPushButton('Determine Length of Experiment on Disk')
         self.binarySearchButton.clicked.connect(self.binarySearch)
 
+        self.bsResultLabel = QtGui.QLabel('(click above for experiment length)')
+
         self.nsampLine = QtGui.QLineEdit()
 
         self.filenameBrowseWidget = self.FilenameBrowseWidget(self)
@@ -42,6 +45,7 @@ class TransferTab(QtGui.QWidget):
         self.layout.addWidget(self.description)
         self.layout.addSpacing(20)
         self.layout.addWidget(self.binarySearchButton)
+        self.layout.addWidget(self.bsResultLabel)
         self.layout.addSpacing(20)
         self.layout.addWidget(QtGui.QLabel('Number of Samples (blank indicates entire experiment):'))
         self.layout.addWidget(self.nsampLine)
@@ -52,10 +56,15 @@ class TransferTab(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def binarySearch(self):
+        progressBarWindow = ProgressBarWindow(26, 'Analyzing disk for experiment length...')
+        progressBarWindow.show()
         cookie = getExperimentCookie(0)
-        boundary = findExperimentBoundary(cookie, 0, int(125e6))
+        boundary = findExperimentBoundary_pbar(cookie, 0, int(125e6), progressBarWindow.progressBar, 0)
         if boundary>0:
-            print 'Boundary for experiment %d occurs at BSI = %d' % (cookie, boundary)
+            self.bsResultLabel.setText('Experiment on disk is %d samples, '
+                                        'or %5.2f minutes worth of data.\n'
+                                        'Experiment cookie is %d' % (boundary, boundary/1.8e6, cookie))
+            #print 'Boundary for experiment %d occurs at BSI = %d' % (cookie, boundary)
 
     class FilenameBrowseWidget(QtGui.QWidget):
 

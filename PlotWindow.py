@@ -4,6 +4,7 @@ import os, sys, h5py
 import numpy as np
 
 from progressbar import ProgressBar
+from ProgressBarWindow import ProgressBarWindow
 
 from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
@@ -154,7 +155,7 @@ class PlotWindow(QtGui.QWidget):
                 gridLayout.addWidget(QtGui.QLabel('X-Range:'), 0,0)
                 gridLayout.addWidget(self.xminLine, 0,1)
                 gridLayout.addWidget(self.xmaxLine, 0,2)
-                gridLayout.addWidget(QtGui.QLabel('X-Range:'), 1,0)
+                gridLayout.addWidget(QtGui.QLabel('Y-Range:'), 1,0)
                 gridLayout.addWidget(self.yminLine, 1,1)
                 gridLayout.addWidget(self.ymaxLine, 1,2)
                 grid.setLayout(gridLayout)
@@ -212,11 +213,11 @@ class PlotWindow(QtGui.QWidget):
         self.nsamples = self.sampleRange[1] - self.sampleRange[0] + 1
         self.sampleNumbers = np.arange(self.sampleRange[0], self.sampleRange[1]+1)
         self.data = np.zeros((1024,self.nsamples), dtype='uint16')
-        pbar = ProgressBar(maxval=self.nsamples-1).start()
+        progressBarWindow = ProgressBarWindow(self.nsamples, 'Importing data...')
+        progressBarWindow.show()
         for i in range(self.nsamples):
-            pbar.update(i)
             self.data[:,i] = dset[i][3][:1024]
-        pbar.finish()
+            progressBarWindow.update(i)
 
     def initializeMPL(self):
         #self.fig = Figure((5.0, 4.0), dpi=100)
