@@ -103,6 +103,7 @@ class MainWindow(QtGui.QWidget):
         self.setWindowTitle('WiredLeaf Control Panel')
         self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
         self.resize(400,400)
+        self.center()
 
         ###
 
@@ -120,6 +121,11 @@ class MainWindow(QtGui.QWidget):
             subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
         if self.state.isDaemonRunning():
             subprocess.call(['killall', 'leafysd'])
+
+    def center(self):
+        windowCenter = self.frameGeometry().center()
+        screenCenter = QtGui.QDesktopWidget().availableGeometry().center()
+        self.move(screenCenter-windowCenter)
 
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
