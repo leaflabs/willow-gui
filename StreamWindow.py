@@ -127,67 +127,49 @@ class StreamWindow(QtGui.QWidget):
         resps = do_control_cmds(cmds)
 
     def startStreaming(self):
-        if self.isStreaming:
-            print 'already streaming'
+        if self.parent.parent.state.isRecording():
+            self.parent.parent.statusBox.append('Cannot start streaming while recording is in progress.')
         else:
-            self.toggleForwarding(True)
-            self.toggleStdin(True)
-            print 'started streaming'
-            self.isStreaming = True
-            self.parent.parent.state.setDaqRunning(True)
-
-    def stopStreaming(self):
-        if self.isStreaming:
-            self.toggleStdin(False)
-            self.toggleForwarding(False)
-            print 'stopped streaming'
-            self.isStreaming = False 
-            self.parent.parent.state.setDaqRunning(False)
-        else:
-            print 'already not streaming'
-
-    def toggleStream(self):
-        if (self.parent.isDaemonRunning and not self.parent.isDaqRunning):
-            if self.streamCheckbox.isChecked():
-                self.setSubsamples()
+            if self.parent.parent.isConnected():
                 self.toggleForwarding(True)
                 self.toggleStdin(True)
-                self.parent.statusBox.append('Started streaming.')
-            else:
+                self.isStreaming = True
+                self.parent.parent.state.setStreaming(True)
+                self.parent.parent.statusBox.append('Started streaming.')
+
+    def stopStreaming(self):
+        if self.parent.parent.state.isRecording():
+            self.parent.parent.statusBox.append('Cannot stop streaming while recording is in progress.')
+        else:
+            if self.parent.parent.isConnected():
                 self.toggleStdin(False)
                 self.toggleForwarding(False)
-                self.parent.statusBox.append('Stopped streaming.')
-        else:
-            #TODO gray-out the checkbox when this condition is met
-            self.parent.statusBox.append('Make sure daemon is started, and DAQ is NOT running!')
-            self.streamCheckbox.setChecked(False) #TODO bug: this still gets checked 1 in 3 times (??)
+                self.isStreaming = False 
+                self.parent.parent.state.setStreaming(False)
+                self.parent.parent.statusBox.append('Stopped streaming.')
 
     def toggleForwarding(self, enable):
-        #if self.parent.isDaqRunning:
-        if False:
-            self.parent.statusBox.append('Turn off acquisition before streaming!')
+        cmds = []
+        cmd = ControlCommand(type=ControlCommand.FORWARD)
+        if enable:
+            cmd.forward.sample_type = BOARD_SUBSAMPLE
+            cmd.forward.force_daq_reset = True # !!! Make sure you're not already acquiring!!!
+            try:
+                aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
+            except socket.error:
+                self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
+                sys.exit(1)
+            cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
+            cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+            cmd.forward.enable = True
+            cmds.append(cmd)
         else:
-            cmds = []
-            cmd = ControlCommand(type=ControlCommand.FORWARD)
-            if enable:
-                cmd.forward.sample_type = BOARD_SUBSAMPLE
-                cmd.forward.force_daq_reset = True # !!! Make sure you're not already acquiring!!!
-                try:
-                    aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
-                except socket.error:
-                    self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-                    sys.exit(1)
-                cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-                cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
-                cmd.forward.enable = True
-                cmds.append(cmd)
-            else:
-                cmd.forward.enable = False
-                cmds.append(cmd)
-                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-                cmd.acquire.enable = False
-                cmds.append(cmd)
-            resps = do_control_cmds(cmds)
+            cmd.forward.enable = False
+            cmds.append(cmd)
+            cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+            cmd.acquire.enable = False
+            cmds.append(cmd)
+        resps = do_control_cmds(cmds)
 
     def toggleStdin(self, enable):
         if enable:

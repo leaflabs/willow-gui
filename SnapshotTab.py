@@ -76,9 +76,9 @@ class SnapshotTab(QtGui.QWidget):
     def takeSnapshot(self):
         filename = str(self.filenameBrowseWidget.filenameLine.text())
         if filename:
-            if self.parent.state.isDaemonRunning():
-                if self.parent.state.isDaqRunning():
-                    self.parent.statusBox.append('Cannot issue ControlCmd because DAQ is currently running.')
+            if self.parent.isConnected():
+                if self.parent.state.isRecording():
+                    self.parent.statusBox.append('Cannot take snapshot while recording is in progress.')
                 else:
                     # TODO why doesn't this show up until after do_control_cmds returns??
                     self.parent.statusBox.append('Taking snapshot...') 
@@ -112,12 +112,14 @@ class SnapshotTab(QtGui.QWidget):
                     cmds.append(cmd)
 
                     resps = do_control_cmds(cmds)
-
-                    if True: # TODO test for resps here
+                    success = True
+                    success = success and (resps[0].type==2)
+                    success = success and (resps[1].type==3 and resps[1].store.status==1)
+                    if success:
                         self.parent.statusBox.append('Saved %d samples to %s' % (nsamples, filename))
                         self.mostRecentFilename = filename
-            else:
-                self.parent.statusBox.append('Daemon is not running.')
+                    else:
+                        self.parent.statusBox.append('Something went wrong')
         else:
             self.parent.statusBox.append('Please enter target filename.')
 

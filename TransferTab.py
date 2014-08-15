@@ -83,7 +83,7 @@ class TransferTab(QtGui.QWidget):
             self.filenameLine.setText(filename)
 
     def transferData(self):
-        if self.parent.state.isDaemonRunning():
+        if self.parent.isConnected():
             filename = str(self.filenameBrowseWidget.filenameLine.text())
             nsamples_text = str(self.nsampLine.text())
             if isBlank(nsamples_text):
@@ -91,18 +91,6 @@ class TransferTab(QtGui.QWidget):
             else:
                 nsamples = int(nsamples_text)
             self.parent.statusBox.append('Transferring...')
-            # old
-            """
-            status1 = subprocess.call([self.acquireDotPy, 'start'])
-            status2 = subprocess.call([self.acquireDotPy, 'save_stream', filename, nsamp])
-            status3 = subprocess.call([self.acquireDotPy, 'stop'])
-            if (status1==1 or status2==1 or status3==1):
-                self.parent.statusBox.append('Error')
-            else:
-                self.parent.statusBox.append('Saved '+nsamp+' samples to: '+filename)
-                self.mostRecentFilename = filename
-            """
-            # new
             cmd = ControlCommand(type=ControlCommand.STORE)
             cmd.store.start_sample = 0
             if nsamples:

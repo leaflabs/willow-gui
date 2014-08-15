@@ -21,6 +21,10 @@ class RecordTab(QtGui.QWidget):
 
         self.description = QtGui.QLabel("Record an experiment on the datanode's disk storage.")
 
+        self.statusBar = QtGui.QLabel('Not Recording')
+        self.statusBar.setAlignment(QtCore.Qt.AlignCenter)
+        self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
+
         self.progressBar = QtGui.QProgressBar()
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(125e6)  # TODO what is this number exactly?
@@ -37,6 +41,8 @@ class RecordTab(QtGui.QWidget):
         self.layout = QtGui.QVBoxLayout()
         self.layout.addSpacing(20)
         self.layout.addWidget(self.description)
+        self.layout.addSpacing(20)
+        self.layout.addWidget(self.statusBar)
         self.layout.addSpacing(20)
         self.layout.addWidget(QtGui.QLabel('Disk Usage:'))
         self.layout.addWidget(self.progressBar)
@@ -61,30 +67,43 @@ class RecordTab(QtGui.QWidget):
             self.progressBar.setValue(diskIndex)
 
     def startRecording(self):
-        if self.parent.state.isDaemonRunning():
-            if self.withStreaming:
-                self.parent.statusBox.append('No recording with streaming yet')
-            else:
+        if self.parent.state.isStreaming():
+            self.parent.statusBox.append('Cannot start recording while streaming is in progress.')
+        else:
+            if self.parent.isConnected():
+                # TODO double-check that this is state-safe
                 self.progressBar.setValue(0)
                 cmd = ControlCommand(type=ControlCommand.ACQUIRE)
                 cmd.acquire.exp_cookie = long(time())
                 cmd.acquire.start_sample = 0
                 cmd.acquire.enable = True
                 resp = do_control_cmd(cmd)
-                self.parent.statusBox.append('Started recording')
-                self.timer.start(5000)
-        else:
-            self.parent.statusBox.append('Please start daemon first.')
+                if resp.type==2:
+                    self.parent.state.setRecording(True)
+                    self.parent.statusBox.append('Started recording')
+                    self.timer.start(5000)
+                    self.statusBar.setText('Recording')
+                    self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
+                else:
+                    self.parent.statusBox.append('Something went wrong')
 
     def stopRecording(self):
-        if self.parent.state.isDaemonRunning():
-            cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-            cmd.acquire.enable = False
-            resp = do_control_cmd(cmd)
-            self.parent.statusBox.append('Stopped recording')
-            self.timer.stop()
-        else:
-            self.parent.statusBox.append('Please start daemon first.')
+        if self.parent.state.isStreaming():
+            self.parent.statusBox.append('Cannot stop recording while streaming is in progress.')
+        else:    
+            if self.parent.isConnected():
+                # TODO double-check that this is state-safe
+                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+                cmd.acquire.enable = False
+                resp = do_control_cmd(cmd)
+                if resp.type==2:
+                    self.parent.state.setRecording(False)
+                    self.parent.statusBox.append('Stopped recording')
+                    self.timer.stop()
+                    self.statusBar.setText('Not Recording')
+                    self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
+                else:
+                    self.parent.statusBox.append('Something went wrong')
 
     def toggleStream(self):
         if self.streamCheckbox.isChecked():

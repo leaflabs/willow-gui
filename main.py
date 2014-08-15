@@ -22,12 +22,19 @@ from TransferTab import TransferTab
 from PlotTab import PlotTab
 
 from parameters import DAEMON_DIR, DATA_DIR
+sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+from daemon_control import *
+
+oFile = open('oFile', 'w')
+eFile = open('eFile', 'w')
 
 class WiredLeafState():
 
-    def __init__(self, daemonRunning=False, daqRunning=False):
+    def __init__(self, daemonRunning=False, daqRunning=False, streaming=False, recording=False):
         self.daemonRunning = daemonRunning
         self.daqRunning = daqRunning
+        self.streaming = streaming
+        self.recording = recording
 
     def setDaemonRunning(self, value):
         self.daemonRunning = value
@@ -35,11 +42,23 @@ class WiredLeafState():
     def setDaqRunning(self, value):
         self.daqRunning = value
 
+    def setStreaming(self, value):
+        self.streaming = value
+
+    def setRecording(self, value):
+        self.recording = value
+
     def isDaemonRunning(self):
         return self.daemonRunning
 
     def isDaqRunning(self):
         return self.daqRunning
+
+    def isStreaming(self):
+        return self.streaming
+
+    def isRecording(self):
+        return self.recording
 
 
 class MainWindow(QtGui.QWidget):
@@ -107,13 +126,32 @@ class MainWindow(QtGui.QWidget):
 
         ###
 
-        self.state = WiredLeafState(daemonRunning=False, daqRunning=False)
+        self.state = WiredLeafState(daemonRunning=False, daqRunning=False, streaming=False, recording=False)
         self.startDaemon()
 
     def startDaemon(self):
-        subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
+        #subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
+        self.daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
+                                                '-N', '-A', '192.168.1.2'], stdout=oFile, stderr=eFile)
         self.state.setDaemonRunning(True)
         self.statusBox.append('Daemon started.')
+
+    def isDaemonRunning(self):
+        rc = self.daemonProcess.poll()
+        return rc==None
+
+    def isConnected(self):
+        if self.isDaemonRunning():
+            cmd = ControlCommand(type=ControlCommand.PING_DNODE)
+            resp = do_control_cmd(cmd)
+            if resp.type==2:
+                return True
+            else:
+                self.statusBox.append('Datanode is not connected!')
+                return False
+        else:
+            self.statusBox.append('Daemon is not running!')
+            return False
 
     def exit(self):
         print 'Cleaning up, then exiting..'
