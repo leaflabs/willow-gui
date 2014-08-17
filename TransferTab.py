@@ -56,15 +56,15 @@ class TransferTab(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def binarySearch(self):
-        progressBarWindow = ProgressBarWindow(26, 'Analyzing disk for experiment length...')
-        progressBarWindow.show()
-        cookie = getExperimentCookie(0)
-        boundary = findExperimentBoundary_pbar(cookie, 0, int(125e6), progressBarWindow.progressBar, 0)
-        if boundary>0:
-            self.bsResultLabel.setText('Experiment on disk is %d samples, '
-                                        'or %5.2f minutes worth of data.\n'
-                                        'Experiment cookie is %d' % (boundary, boundary/1.8e6, cookie))
-            #print 'Boundary for experiment %d occurs at BSI = %d' % (cookie, boundary)
+        if self.parent.isConnected():
+            progressBarWindow = ProgressBarWindow(26, 'Analyzing disk for experiment length...')
+            progressBarWindow.show()
+            cookie = getExperimentCookie(0)
+            boundary = findExperimentBoundary_pbar(cookie, 0, int(125e6), progressBarWindow.progressBar, 0)
+            if boundary>0:
+                self.bsResultLabel.setText('Experiment on disk is %d samples, '
+                                            'or %5.2f minutes worth of data.\n'
+                                            'Experiment cookie is %d' % (boundary, boundary/1.8e6, cookie))
 
     class FilenameBrowseWidget(QtGui.QWidget):
 
@@ -99,8 +99,6 @@ class TransferTab(QtGui.QWidget):
             cmd.store.path = filename
             resp = do_control_cmd(cmd)
             self.parent.statusBox.append('Transfer Complete')
-        else:
-            self.parent.statusBox.append('Daemon is not running.')
 
     def plotFromFile(self, filename):
         f = h5py.File(filename)
