@@ -188,5 +188,4 @@ class StreamWindow(QtGui.QWidget):
 
     def closeEvent(self, event):
         self.stopStreaming()
-        print 'closing'
 
