@@ -127,33 +127,27 @@ class StreamWindow(QtGui.QWidget):
         resps = do_control_cmds(cmds)
 
     def startStreaming(self):
-        if self.parent.parent.state.isRecording():
-            self.parent.parent.statusBox.append('Cannot start streaming while recording is in progress.')
-        else:
-            if self.parent.parent.isConnected():
-                self.toggleForwarding(True)
-                self.toggleStdin(True)
-                self.isStreaming = True
-                self.parent.parent.state.setStreaming(True)
-                self.parent.parent.statusBox.append('Started streaming.')
+        if self.parent.parent.isConnected():
+            self.toggleForwarding(True, self.parent.parent.state.isRecording())
+            self.toggleStdin(True)
+            self.isStreaming = True
+            self.parent.parent.state.setStreaming(True)
+            self.parent.parent.statusBox.append('Started streaming.')
 
     def stopStreaming(self):
-        if self.parent.parent.state.isRecording():
-            self.parent.parent.statusBox.append('Cannot stop streaming while recording is in progress.')
-        else:
-            if self.parent.parent.isConnected():
-                self.toggleStdin(False)
-                self.toggleForwarding(False)
-                self.isStreaming = False 
-                self.parent.parent.state.setStreaming(False)
-                self.parent.parent.statusBox.append('Stopped streaming.')
+        if self.parent.parent.isConnected():
+            self.toggleStdin(False)
+            self.toggleForwarding(False, self.parent.parent.state.isRecording())
+            self.isStreaming = False 
+            self.parent.parent.state.setStreaming(False)
+            self.parent.parent.statusBox.append('Stopped streaming.')
 
-    def toggleForwarding(self, enable):
+    def toggleForwarding(self, enable, recording):
         cmds = []
         cmd = ControlCommand(type=ControlCommand.FORWARD)
         if enable:
             cmd.forward.sample_type = BOARD_SUBSAMPLE
-            cmd.forward.force_daq_reset = True # !!! Make sure you're not already acquiring!!!
+            cmd.forward.force_daq_reset = not recording # if recording, then DAQ is already running
             try:
                 aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
             except socket.error:

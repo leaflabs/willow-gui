@@ -13,6 +13,12 @@ from daemon_control import *
 
 BSI_INTERVAL = 1920
 
+# more parameters
+DEFAULT_FORWARD_ADDR = '127.0.0.1'
+DEFAULT_FORWARD_PORT = 7654      # for proto2bytes
+CHANNELS_PER_CHIP = 32
+CHIPS_PER_DATANODE = 32
+
 class RecordTab(QtGui.QWidget):
 
     def __init__(self, parent):
@@ -67,43 +73,93 @@ class RecordTab(QtGui.QWidget):
             self.progressBar.setValue(diskIndex)
 
     def startRecording(self):
-        if self.parent.state.isStreaming():
-            self.parent.statusBox.append('Cannot start recording while streaming is in progress.')
-        else:
-            if self.parent.isConnected():
-                # TODO double-check that this is state-safe
-                self.progressBar.setValue(0)
-                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-                cmd.acquire.exp_cookie = long(time())
-                cmd.acquire.start_sample = 0
-                cmd.acquire.enable = True
-                resp = do_control_cmd(cmd)
-                if resp.type==2:
-                    self.parent.state.setRecording(True)
-                    self.parent.statusBox.append('Started recording')
-                    self.timer.start(5000)
-                    self.statusBar.setText('Recording')
-                    self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
-                else:
-                    self.parent.statusBox.append('Something went wrong')
+        if self.parent.isConnected():
+            self.progressBar.setValue(0)
+
+            cmds = []
+
+            if self.parent.state.isStreaming():
+                cmd = ControlCommand(type=ControlCommand.FORWARD)
+                cmd.forward.enable = False
+                cmds.append(cmd)
+
+            cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+            cmd.acquire.exp_cookie = long(time())
+            cmd.acquire.start_sample = 0
+            cmd.acquire.enable = True
+            cmds.append(cmd)
+
+            if self.parent.state.isStreaming():
+                cmd = ControlCommand(type=ControlCommand.FORWARD)
+                cmd.forward.sample_type = BOARD_SUBSAMPLE
+                cmd.forward.force_daq_reset = False
+                try:
+                    aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
+                except socket.error:
+                    self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
+                    sys.exit(1)
+                cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
+                cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+                cmd.forward.enable = True
+                cmds.append(cmd)
+
+            resps = do_control_cmds(cmds)
+            # TODO implement resp-checking
+            self.parent.state.setRecording(True)
+            self.parent.statusBox.append('Started recording')
+            self.timer.start(5000)
+            self.statusBar.setText('Recording')
+            self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
+            """
+            if resp.type==2:
+                self.parent.state.setRecording(True)
+                self.parent.statusBox.append('Started recording')
+                self.timer.start(5000)
+                self.statusBar.setText('Recording')
+                self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
+            else:
+                self.parent.statusBox.append('Something went wrong')
+            """
 
     def stopRecording(self):
-        if self.parent.state.isStreaming():
-            self.parent.statusBox.append('Cannot stop recording while streaming is in progress.')
-        else:    
-            if self.parent.isConnected():
-                # TODO double-check that this is state-safe
-                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-                cmd.acquire.enable = False
-                resp = do_control_cmd(cmd)
-                if resp.type==2:
-                    self.parent.state.setRecording(False)
-                    self.parent.statusBox.append('Stopped recording')
-                    self.timer.stop()
-                    self.statusBar.setText('Not Recording')
-                    self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
-                else:
-                    self.parent.statusBox.append('Something went wrong')
+        if self.parent.isConnected():
+            cmds = []
+
+            cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+            cmd.acquire.enable = False
+            cmds.append(cmd)
+
+            if self.parent.state.isStreaming():
+                cmd = ControlCommand(type=ControlCommand.FORWARD)
+                cmd.forward.sample_type = BOARD_SUBSAMPLE
+                cmd.forward.force_daq_reset = True
+                try:
+                    aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
+                except socket.error:
+                    self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
+                    sys.exit(1)
+                cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
+                cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+                cmd.forward.enable = True
+                cmds.append(cmd)
+
+            resps = do_control_cmds(cmds)
+            # TODO implement resp-checking
+            self.parent.state.setRecording(False)
+            self.parent.statusBox.append('Stopped recording')
+            self.timer.stop()
+            self.statusBar.setText('Not Recording')
+            self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
+            """
+            if resp.type==2:
+                self.parent.state.setRecording(False)
+                self.parent.statusBox.append('Stopped recording')
+                self.timer.stop()
+                self.statusBar.setText('Not Recording')
+                self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
+            else:
+                self.parent.statusBox.append('Something went wrong')
+            """
 
     def toggleStream(self):
         if self.streamCheckbox.isChecked():
