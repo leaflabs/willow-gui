@@ -154,9 +154,10 @@ class StreamWindow(QtGui.QWidget):
         else:
             cmd.forward.enable = False
             cmds.append(cmd)
-            cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-            cmd.acquire.enable = False
-            cmds.append(cmd)
+            if not recording:
+                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
+                cmd.acquire.enable = False
+                cmds.append(cmd)
         resps = do_control_cmds(cmds)
 
     def toggleStdin(self, enable):
