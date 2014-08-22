@@ -99,7 +99,6 @@ def findExperimentBoundary_pbar(cookie, leftBracket, rightBracket, pbar, step):
             leftBracket = newBracket
         else:
             rightBracket = newBracket
-        print step
         pbar.setValue(step)
         return findExperimentBoundary_pbar(cookie, leftBracket, rightBracket, pbar, step+1)
 
