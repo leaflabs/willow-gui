@@ -90,7 +90,10 @@ class SnapshotTab(QtGui.QWidget):
                     cmd = ControlCommand(type=ControlCommand.FORWARD)
                     # issuing this command seems like overkill, but right now it's
                     # the only way to start the DAQ without saving to SATA
-                    cmd.forward.sample_type = BOARD_SUBSAMPLE
+
+                    #cmd.forward.sample_type = BOARD_SUBSAMPLE
+                    cmd.forward.sample_type = BOARD_SAMPLE
+
                     cmd.forward.force_daq_reset = True
                     try:
                         aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
@@ -115,6 +118,7 @@ class SnapshotTab(QtGui.QWidget):
                     success = True
                     success = success and (resps[0].type==2)
                     success = success and (resps[1].type==3 and resps[1].store.status==1)
+                    success = success and (resps[2].type==2)
                     if success:
                         self.parent.statusBox.append('Saved %d samples to %s' % (nsamples, filename))
                         self.mostRecentFilename = filename
