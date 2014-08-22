@@ -2,7 +2,7 @@ from PyQt4 import QtCore, QtGui
 import subprocess, os, sys
 import numpy as np
 
-from parameters import DAEMON_DIR, DATA_DIR
+from parameters import *
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
 
@@ -11,12 +11,6 @@ import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
-
-# more parameters
-DEFAULT_FORWARD_ADDR = '127.0.0.1'
-DEFAULT_FORWARD_PORT = 7654      # for proto2bytes
-CHANNELS_PER_CHIP = 32
-CHIPS_PER_DATANODE = 32
 
 class StreamWindow(QtGui.QWidget):
 
@@ -152,7 +146,7 @@ class StreamWindow(QtGui.QWidget):
                 aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
             except socket.error:
                 self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-                sys.exit(1)
+                return
             cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
             cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
             cmd.forward.enable = True

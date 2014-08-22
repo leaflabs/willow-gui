@@ -6,15 +6,10 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from PlotWindow import PlotWindow 
 
-from parameters import DAEMON_DIR, DATA_DIR
+from parameters import *
 
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
-
-DEFAULT_FORWARD_ADDR = '127.0.0.1'
-DEFAULT_FORWARD_PORT = 7654      # for proto2bytes
-CHANNELS_PER_CHIP = 32
-CHIPS_PER_DATANODE = 32
 
 class SnapshotTab(QtGui.QWidget):
 
@@ -99,7 +94,7 @@ class SnapshotTab(QtGui.QWidget):
                         aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
                     except socket.error:
                         self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-                        sys.exit(1)
+                        return
                     cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
                     cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
                     cmd.forward.enable = True
@@ -116,9 +111,9 @@ class SnapshotTab(QtGui.QWidget):
 
                     resps = do_control_cmds(cmds)
                     success = True
-                    success = success and (resps[0].type==2)
-                    success = success and (resps[1].type==3 and resps[1].store.status==1)
-                    success = success and (resps[2].type==2)
+                    success = success and (resps[0].type==ControlResponse.SUCCESS)
+                    success = success and (resps[1].type==ControlResponse.STORE_FINISHED and resps[1].store.status==ControlResStore.DONE)
+                    success = success and (resps[2].type==ControlResponse.SUCCESS)
                     if success:
                         self.parent.statusBox.append('Saved %d samples to %s' % (nsamples, filename))
                         self.mostRecentFilename = filename

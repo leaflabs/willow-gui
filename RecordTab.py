@@ -6,18 +6,10 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from time import time
 
-from parameters import DAEMON_DIR, DATA_DIR
+from parameters import *
 
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
-
-BSI_INTERVAL = 1920
-
-# more parameters
-DEFAULT_FORWARD_ADDR = '127.0.0.1'
-DEFAULT_FORWARD_PORT = 7654      # for proto2bytes
-CHANNELS_PER_CHIP = 32
-CHIPS_PER_DATANODE = 32
 
 class RecordTab(QtGui.QWidget):
 
@@ -97,7 +89,7 @@ class RecordTab(QtGui.QWidget):
                     aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
                 except socket.error:
                     self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-                    sys.exit(1)
+                    return
                 cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
                 cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
                 cmd.forward.enable = True
@@ -110,16 +102,6 @@ class RecordTab(QtGui.QWidget):
             self.timer.start(5000)
             self.statusBar.setText('Recording')
             self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
-            """
-            if resp.type==2:
-                self.parent.state.setRecording(True)
-                self.parent.statusBox.append('Started recording')
-                self.timer.start(5000)
-                self.statusBar.setText('Recording')
-                self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
-            else:
-                self.parent.statusBox.append('Something went wrong')
-            """
 
     def stopRecording(self):
         if self.parent.isConnected():
@@ -137,7 +119,7 @@ class RecordTab(QtGui.QWidget):
                     aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
                 except socket.error:
                     self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-                    sys.exit(1)
+                    return
                 cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
                 cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
                 cmd.forward.enable = True
