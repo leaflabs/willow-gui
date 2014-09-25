@@ -39,6 +39,7 @@ class AcquireTab(QtGui.QWidget):
         self.recordWidget = self.RecordWidget(self)
 
         self.layout = QtGui.QVBoxLayout()
+        self.layout.addSpacing(20)
         self.layout.addWidget(self.description)
         self.layout.addSpacing(20)
         self.layout.addWidget(self.streamButton)
@@ -103,6 +104,7 @@ class AcquireTab(QtGui.QWidget):
             self.layout.addWidget(self.stopButton, 3,1,1,1)
 
             self.setLayout(self.layout)
+            self.setMinimumHeight(200)
 
             self.timer = QtCore.QTimer()
             self.timer.timeout.connect(self.updateProgressBar)
