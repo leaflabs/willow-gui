@@ -19,7 +19,8 @@ class PlotTab(QtGui.QWidget):
         super(PlotTab, self).__init__(None)
         self.parent = parent
 
-        self.description = QtGui.QLabel('Import a data file, and view the data in an interactive plotting window.')
+        self.description = QtGui.QLabel(
+            '<i>Import a data file, and view the data in an interactive plotting window.</i>')
 
         self.filenameBrowseWidget = self.FilenameBrowseWidget(self)
         self.nsamplesWidget = self.NSamplesWidget(self)

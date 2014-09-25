@@ -26,7 +26,8 @@ class TransferTab(QtGui.QWidget):
         super(TransferTab, self).__init__(None)
         self.parent = parent
 
-        self.description = QtGui.QLabel("Transfer an experiment from the datanode's disk to your filesystem.")
+        self.description = QtGui.QLabel(
+            "<i>Transfer an experiment from the datanode's disk to your filesystem.</i>")
 
         self.binarySearchButton = QtGui.QPushButton('Determine Length of Experiment on Disk')
         self.binarySearchButton.clicked.connect(self.binarySearch)
@@ -46,13 +47,14 @@ class TransferTab(QtGui.QWidget):
         self.layout.addSpacing(20)
         self.layout.addWidget(self.binarySearchButton)
         self.layout.addWidget(self.bsResultLabel)
-        self.layout.addSpacing(20)
+        self.layout.addSpacing(40)
         self.layout.addWidget(QtGui.QLabel('Number of Samples (blank indicates entire experiment):'))
         self.layout.addWidget(self.nsampLine)
         self.layout.addWidget(QtGui.QLabel('Filename:'))
         self.layout.addWidget(self.filenameBrowseWidget)
-        self.layout.addSpacing(20)
+        self.layout.addSpacing(40)
         self.layout.addWidget(self.transferButton)
+        self.layout.addWidget(QtGui.QLabel('Note: GUI will freeze until transfer is complete'))
         self.setLayout(self.layout)
 
     def binarySearch(self):
@@ -98,5 +100,5 @@ class TransferTab(QtGui.QWidget):
             # (else leave missing which indicates whole experiment)
             cmd.store.path = filename
             resp = do_control_cmd(cmd)
-            self.parent.statusBox.append('Transfer Complete')
+            self.parent.statusBox.append('Transfer Complete: %s', filename)
 

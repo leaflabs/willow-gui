@@ -49,7 +49,7 @@ class WaterfallPlotWindow(QtGui.QWidget):
     def drawSpectrogram(self):
         self.axes = self.fig.add_subplot(111)
         self.axesImage = self.axes.imshow(self.data, cm.gist_ncar, aspect='auto')
-        self.fig.colorbar(self.axesImage, use_gridspec=True)
+        self.colorbar = self.fig.colorbar(self.axesImage, use_gridspec=True)
 
     class ControlPanel(QtGui.QWidget):
 
@@ -58,11 +58,14 @@ class WaterfallPlotWindow(QtGui.QWidget):
             self.parent = parent
             self.zoomWidget = self.ZoomWidget(self)
             self.zoomWidget.setMaximumWidth(200)
+            self.colorBarWidget = self.ColorBarWidget(self)
+            self.colorBarWidget.setMaximumWidth(200)
             self.refreshButton = QtGui.QPushButton('Refresh')
             self.refreshButton.clicked.connect(self.refresh)
             self.refreshButton.setMaximumWidth(200)
             self.layout = QtGui.QHBoxLayout()
             self.layout.addWidget(self.zoomWidget)
+            self.layout.addWidget(self.colorBarWidget)
             self.layout.addWidget(self.refreshButton)
             self.setLayout(self.layout)
             self.setMaximumHeight(100)
@@ -89,12 +92,30 @@ class WaterfallPlotWindow(QtGui.QWidget):
                 self.layout.addWidget(self.ymaxLine, 1,2)
                 self.setLayout(self.layout)
 
+        class ColorBarWidget(QtGui.QWidget):
+
+            def __init__(self, parent):
+                super(parent.ColorBarWidget, self).__init__()
+                self.parent = parent
+                self.minLine = QtGui.QLineEdit(str(np.min(self.parent.parent.data)))
+                self.maxLine = QtGui.QLineEdit(str(np.max(self.parent.parent.data)))
+                self.layout = QtGui.QGridLayout()
+                self.layout.addWidget(QtGui.QLabel('ColorBar Min:'), 0,0)
+                self.layout.addWidget(self.minLine, 0,1)
+                self.layout.addWidget(QtGui.QLabel('ColorBar Max:'), 1,0)
+                self.layout.addWidget(self.maxLine, 1,1)
+                self.setLayout(self.layout)
+
         def refresh(self):
             xmin = int(self.zoomWidget.xminLine.text())
             xmax = int(self.zoomWidget.xmaxLine.text())
             ymin = int(self.zoomWidget.yminLine.text())
             ymax = int(self.zoomWidget.ymaxLine.text())
             self.parent.axes.axis([xmin, xmax, ymin, ymax])
+            vmin = int(self.colorBarWidget.minLine.text())
+            vmax = int(self.colorBarWidget.maxLine.text())
+            #self.parent.colorbar.set_clim(vmin=vmin, vmax=vmax)
+            self.parent.axesImage.set_clim(vmin, vmax)
             self.parent.canvas.draw()
 
 

@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess, os, sys
+import subprocess, os, sys, socket
 import numpy as np
 
 from parameters import *
@@ -11,6 +11,8 @@ import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
+
+from StateManagement import checkState, changeState, DaemonControlError
 
 class StreamWindow(QtGui.QWidget):
 
@@ -91,8 +93,6 @@ class StreamWindow(QtGui.QWidget):
         self.setWindowTitle('WiredLeaf Live Streaming')
         self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
 
-        self.isStreaming = False
-
     def setSubsamples_cherryPick(self):
         """
         Right now proto2bytes only allows subsample channels to all be on one chip
@@ -121,48 +121,26 @@ class StreamWindow(QtGui.QWidget):
         resps = do_control_cmds(cmds)
 
     def startStreaming(self):
-        if self.parent.parent.isConnected():
-            self.toggleForwarding(True, self.parent.parent.state.isRecording())
+        try:
+            changeState('start streaming')
             self.toggleStdin(True)
-            self.isStreaming = True
-            self.parent.parent.state.setStreaming(True)
             self.parent.parent.statusBox.append('Started streaming.')
+        except socket.error, DaemonControlError:
+            pass # error messages printed by changeState
 
     def stopStreaming(self):
-        if self.parent.parent.isConnected():
+        try:
             self.toggleStdin(False)
-            self.toggleForwarding(False, self.parent.parent.state.isRecording())
-            self.isStreaming = False 
-            self.parent.parent.state.setStreaming(False)
+            changeState('stop streaming')
             self.parent.parent.statusBox.append('Stopped streaming.')
-
-    def toggleForwarding(self, enable, recording):
-        cmds = []
-        cmd = ControlCommand(type=ControlCommand.FORWARD)
-        if enable:
-            cmd.forward.sample_type = BOARD_SUBSAMPLE
-            cmd.forward.force_daq_reset = not recording # if recording, then DAQ is already running
-            try:
-                aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
-            except socket.error:
-                self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-                return
-            cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-            cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
-            cmd.forward.enable = True
-            cmds.append(cmd)
-        else:
-            cmd.forward.enable = False
-            cmds.append(cmd)
-            if not recording:
-                cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-                cmd.acquire.enable = False
-                cmds.append(cmd)
-        resps = do_control_cmds(cmds)
+        except socket.error, DaemonControlError:
+            pass # error messages printed by changeState
 
     def toggleStdin(self, enable):
         if enable:
-            self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s', '-c', str(self.chan)], stdout=subprocess.PIPE)
+            # why does this still print GAPs?
+            self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s',
+                '-c', str(self.chan)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.timer.start(self.fp)
         else:
             self.timer.stop()
@@ -176,5 +154,6 @@ class StreamWindow(QtGui.QWidget):
         self.canvas.draw()
 
     def closeEvent(self, event):
-        self.stopStreaming()
+        if checkState() & 0b001:
+            self.stopStreaming()
 

@@ -15,9 +15,7 @@ from matplotlib.figure import Figure
 
 from PyQt4 import QtCore, QtGui
 
-from RecordTab import RecordTab
-from SnapshotTab import SnapshotTab
-from StreamTab import StreamTab
+from AcquireTab import AcquireTab
 from TransferTab import TransferTab
 from PlotTab import PlotTab
 
@@ -27,39 +25,6 @@ from daemon_control import *
 
 oFile = open('oFile', 'w')
 eFile = open('eFile', 'w')
-
-class WiredLeafState():
-
-    def __init__(self, daemonRunning=False, daqRunning=False, streaming=False, recording=False):
-        self.daemonRunning = daemonRunning
-        self.daqRunning = daqRunning
-        self.streaming = streaming
-        self.recording = recording
-
-    def setDaemonRunning(self, value):
-        self.daemonRunning = value
-
-    def setDaqRunning(self, value):
-        self.daqRunning = value
-
-    def setStreaming(self, value):
-        self.streaming = value
-
-    def setRecording(self, value):
-        self.recording = value
-
-    def isDaemonRunning(self):
-        return self.daemonRunning
-
-    def isDaqRunning(self):
-        return self.daqRunning
-
-    def isStreaming(self):
-        return self.streaming
-
-    def isRecording(self):
-        return self.recording
-
 
 class MainWindow(QtGui.QWidget):
 
@@ -74,14 +39,8 @@ class MainWindow(QtGui.QWidget):
 
         self.tabDialog = QtGui.QTabWidget()
 
-        self.streamTab = StreamTab(self)
-        self.tabDialog.addTab(self.streamTab, 'Stream')
-
-        self.snapshotTab = SnapshotTab(self)
-        self.tabDialog.addTab(self.snapshotTab, 'Snapshot')
-
-        self.recordTab = RecordTab(self)
-        self.tabDialog.addTab(self.recordTab, 'Record')
+        self.acquireTab= AcquireTab(self)
+        self.tabDialog.addTab(self.acquireTab, 'Acquire')
 
         self.transferTab = TransferTab(self)
         self.tabDialog.addTab(self.transferTab, 'Transfer')
@@ -126,14 +85,12 @@ class MainWindow(QtGui.QWidget):
 
         ###
 
-        self.state = WiredLeafState(daemonRunning=False, daqRunning=False, streaming=False, recording=False)
         self.startDaemon()
 
     def startDaemon(self):
         #subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
         self.daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
                                                 '-N', '-A', '192.168.1.2'], stdout=oFile, stderr=eFile)
-        self.state.setDaemonRunning(True)
         self.statusBox.append('Daemon started.')
 
     def isDaemonRunning(self):
@@ -155,10 +112,7 @@ class MainWindow(QtGui.QWidget):
 
     def exit(self):
         print 'Cleaning up, then exiting..'
-        if self.state.isDaqRunning():
-            subprocess.call([DAEMON_DIR+'util/acquire.py', 'stop'])
-        if self.state.isDaemonRunning():
-            subprocess.call(['killall', 'leafysd'])
+        subprocess.call(['killall', 'leafysd'])
 
     def center(self):
         windowCenter = self.frameGeometry().center()
