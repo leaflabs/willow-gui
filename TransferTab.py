@@ -100,5 +100,5 @@ class TransferTab(QtGui.QWidget):
             # (else leave missing which indicates whole experiment)
             cmd.store.path = filename
             resp = do_control_cmd(cmd)
-            self.parent.statusBox.append('Transfer Complete: %s', filename)
+            self.parent.statusBox.append('Transfer Complete: %s' % filename)
 
