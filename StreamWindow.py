@@ -125,16 +125,20 @@ class StreamWindow(QtGui.QWidget):
             changeState('start streaming')
             self.toggleStdin(True)
             self.parent.parent.statusBox.append('Started streaming.')
-        except socket.error, DaemonControlError:
-            pass # error messages printed by changeState
+        except socket.error:
+            self.parent.parent.statusBox.append('Socker error.')
+        except DaemonControlError:
+            self.parent.parent.statusBox.append('Daemon control error.')
 
     def stopStreaming(self):
         try:
-            self.toggleStdin(False)
             changeState('stop streaming')
+            self.toggleStdin(False)
             self.parent.parent.statusBox.append('Stopped streaming.')
-        except socket.error, DaemonControlError:
-            pass # error messages printed by changeState
+        except socket.error:
+            self.parent.parent.statusBox.append('Socker error.')
+        except DaemonControlError:
+            self.parent.parent.statusBox.append('Daemon control error.')
 
     def toggleStdin(self, enable):
         if enable:
