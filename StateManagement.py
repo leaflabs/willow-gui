@@ -29,6 +29,9 @@ class DaemonControlError(Exception):
 class StateChangeError(Exception):
     pass
 
+class AlreadyError(Exception):
+    pass
+
 
 def checkState():
     """
@@ -77,8 +80,8 @@ def toggleStreaming(enable, state):
     cmd = ControlCommand(type=ControlCommand.FORWARD)
     if enable:
         if streaming:
-            print 'Alreading streaming!'
-            return
+            print 'Already streaming!'
+            raise AlreadyError
         elif snapshotting:
             # warning: nothing exists to set snapshotting=True yet
             print 'Cannot start stream while snapshot in progress'
@@ -98,7 +101,7 @@ def toggleStreaming(enable, state):
     else:
         if not streaming:
             print 'Already not streaming!'
-            return
+            raise AlreadyError
         elif snapshotting:
             # warning: nothing exists to set snapshotting=True yet
             print "Cannot do this while shapshot is in progress"
@@ -190,7 +193,7 @@ def toggleRecording(enable, state):
     if enable:
         if recording:
             print 'Already recording!'
-            return
+            raise AlreadyError
         elif snapshotting:
             print "Cannot do this while shapshot is in progress"
             return
@@ -222,7 +225,7 @@ def toggleRecording(enable, state):
     else:
         if not recording:
             print 'Already not recording!'
-            return
+            raise AlreadyError
         elif snapshotting:
             print "Cannot do this while shapshot is in progress"
             return

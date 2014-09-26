@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
 
-from StateManagement import checkState, changeState, DaemonControlError
+from StateManagement import *
 
 class StreamWindow(QtGui.QWidget):
 
@@ -36,7 +36,7 @@ class StreamWindow(QtGui.QWidget):
         self.canvas.setParent(self)
         self.axes = self.fig.add_subplot(111)
         self.axes.set_title('Chip %d, Channel %d' % (self.chip, chan))
-        self.axes.yaxis.set_ticklabels([])
+        #self.axes.yaxis.set_ticklabels([])
         self.axes.set_axis_bgcolor('k')
         self.axes.axis([0,30000,0,2**16-1])
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
@@ -125,6 +125,9 @@ class StreamWindow(QtGui.QWidget):
             changeState('start streaming')
             self.toggleStdin(True)
             self.parent.parent.statusBox.append('Started streaming.')
+        except AlreadyError:
+            self.toggleStdin(True)
+            self.parent.parent.statusBox.append('Hardware was already streaming')
         except socket.error:
             self.parent.parent.statusBox.append('Socker error.')
         except DaemonControlError:
@@ -135,6 +138,9 @@ class StreamWindow(QtGui.QWidget):
             changeState('stop streaming')
             self.toggleStdin(False)
             self.parent.parent.statusBox.append('Stopped streaming.')
+        except AlreadyError:
+            self.toggleStdin(False)
+            self.parent.parent.statusBox.append('Hardware was already not streaming')
         except socket.error:
             self.parent.parent.statusBox.append('Socker error.')
         except DaemonControlError:
