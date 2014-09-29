@@ -42,9 +42,6 @@ class PlotWindow(QtGui.QWidget):
         # Control Panel
         ###################
 
-
-        ### Control Panel
-
         self.controlPanel = self.ControlPanel(self)
 
         ###################
@@ -204,26 +201,6 @@ class PlotWindow(QtGui.QWidget):
                                     self.refreshButton, self.defaultButton]:
                         widg.setEnabled(True)
 
-        class ButtonStack(QtGui.QWidget):
-            """
-            No longer used?
-            """
-
-            def __init__(self, parent):
-                super(parent.ButtonStack, self).__init__()
-                self.parent = parent
-                self.refreshButton = QtGui.QPushButton('Refresh')
-                self.refreshButton.clicked.connect(self.parent.refresh)
-                self.defaultButton = QtGui.QPushButton('Default')
-                self.defaultButton.clicked.connect(self.parent.default)
-                self.waterfallButton = QtGui.QPushButton('Waterfall')
-                self.waterfallButton.clicked.connect(self.parent.launchWaterfall)
-                self.layout = QtGui.QVBoxLayout()
-                self.layout.addWidget(self.refreshButton)
-                self.layout.addWidget(self.defaultButton)
-                self.layout.addWidget(self.waterfallButton)
-                self.setLayout(self.layout)
-
         def launchWaterfall(self):
             self.parent.launchWaterfall()
 
@@ -240,11 +217,11 @@ class PlotWindow(QtGui.QWidget):
         for i in range(self.nsamples):
             self.data[:,i] = dset[i][3][:1024]
             progressBarWindow.update(i)
+        self.data_uv = (np.array(self.data, dtype='float')-2**15)*0.2
 
     def initializeMPL(self):
         #self.fig = Figure((5.0, 4.0), dpi=100)
         self.fig = Figure()
-        #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
 
@@ -262,12 +239,8 @@ class PlotWindow(QtGui.QWidget):
             channel = self.channelList[i]
             axes = self.fig.add_subplot(nrows, ncols, i+1)
             axes.set_title('Channel %d' % channel, fontsize=10, fontweight='bold')
-            #axes.yaxis.set_ticklabels([])
-            #xtickLabels = axes.xaxis.get_ticklabels()
-            #axes.xaxis.set_ticklabels([0,self.maxXvalue/2, self.maxXvalue], fontsize=10)
-            axes.tick_params(labelsize=10)
             axes.set_axis_bgcolor('k')
-            waveform = axes.plot(self.sampleNumbers, self.data[channel,:], color='#8fdb90')
+            waveform = axes.plot(self.sampleNumbers, self.data_uv[channel,:], color='#8fdb90')
             self.axesList.append(axes)
             self.waveformList.append(waveform)
         self.updateZoom()
@@ -284,13 +257,11 @@ class PlotWindow(QtGui.QWidget):
         elif zoomGroup.mode == 'auto':
             xmin = self.sampleRange[0]
             xmax = self.sampleRange[1]
-            ymin_hard = np.min(self.data[self.channelList,:])
-            ymax_hard = np.max(self.data[self.channelList,:])
+            ymin_hard = np.min(self.data_uv[self.channelList,:])
+            ymax_hard = np.max(self.data_uv[self.channelList,:])
             deltay = ymax_hard - ymin_hard
             ymin = ymin_hard - deltay//2
-            if ymin < 0: ymin = 0
             ymax = ymax_hard + deltay//2
-            if ymax > 2**16-1: ymax = 2**16-1
             zoomGroup.xminLine.setText(str(xmin))
             zoomGroup.xmaxLine.setText(str(xmax))
             zoomGroup.yminLine.setText(str(ymin))
@@ -299,7 +270,7 @@ class PlotWindow(QtGui.QWidget):
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
 
     def updateZoom_redraw(self):
-        # this is stupid; trouble with default arguments 20140929
+        # this is stupid; trouble with default argument redraw 20140929
         zoomGroup = self.controlPanel.zoomGroup
         if zoomGroup.mode == 'manual':
             xmin = int(zoomGroup.xminLine.text())
@@ -309,8 +280,8 @@ class PlotWindow(QtGui.QWidget):
         elif zoomGroup.mode == 'auto':
             xmin = self.sampleRange[0]
             xmax = self.sampleRange[1]
-            ymin_hard = np.min(self.data[self.channelList,:])
-            ymax_hard = np.max(self.data[self.channelList,:])
+            ymin_hard = np.min(self.data_uv[self.channelList,:])
+            ymax_hard = np.max(self.data_uv[self.channelList,:])
             deltay = ymax_hard - ymin_hard
             ymin = ymin_hard - deltay//2
             if ymin < 0: ymin = 0
@@ -324,16 +295,13 @@ class PlotWindow(QtGui.QWidget):
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
         self.canvas.draw()
 
+    def calculateYTicks(self, ymin, ymax):
+        if ((ymin < 2**15) and (ymax > 2**15)):
+            if (2**15-ymin) < (ymax-2**15):
+                ytick_locs = np.linspace(ymin, ymax, 5)
+                ytick_lbls = ['%3.2f uv' % ((cnt-2**15)*0.2) for cnt in ytick_locs]
+
     def defaultZoom(self):
-        """
-        self.nchannelsDropdown.setCurrentIndex(6)
-        self.channelListLine.setText('96, 97, 98, 99, 100, 101, 102, 103')
-        self.xRangeMin.setText(str(self.sampleRange[0]))
-        self.xRangeMax.setText(str(self.sampleRange[1]))
-        self.yRangeMin.setText('0')
-        self.yRangeMax.setText(str(2**16-1))
-        self.updateChannels()
-        """
         zoomGroup = self.controlPanel.zoomGroup
         zoomGroup.xminLine.setText(str(self.sampleRange[0]))
         zoomGroup.xmaxLine.setText(str(self.sampleRange[1]))
@@ -353,4 +321,3 @@ if __name__=='__main__':
     main = PlotWindow(None, '/home/chrono/sng/data/justin/neuralRecording_10sec.h5', [0,5000])
     main.show()
     app.exec_()
-    #main.exit()

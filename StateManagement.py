@@ -235,7 +235,6 @@ def toggleRecording(enable, state):
             cmds.append(cmd)
 
             if streaming:
-                print 'turning streaming back on again..'
                 # turn streaming back on again
                 cmd = ControlCommand(type=ControlCommand.FORWARD)
                 cmd.forward.sample_type = BOARD_SUBSAMPLE
