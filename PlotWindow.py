@@ -276,7 +276,6 @@ class PlotWindow(QtGui.QWidget):
 
     def updateZoom(self):
         zoomGroup = self.controlPanel.zoomGroup
-        print 'zoom mode is %s' % zoomGroup.mode
         if zoomGroup.mode == 'manual':
             xmin = int(zoomGroup.xminLine.text())
             xmax = int(zoomGroup.xmaxLine.text())
@@ -297,13 +296,11 @@ class PlotWindow(QtGui.QWidget):
             zoomGroup.yminLine.setText(str(ymin))
             zoomGroup.ymaxLine.setText(str(ymax))
         for axes in self.axesList:
-            print axes, xmin, xmax, ymin, ymax
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
 
     def updateZoom_redraw(self):
         # this is stupid; trouble with default arguments 20140929
         zoomGroup = self.controlPanel.zoomGroup
-        print 'zoom mode is %s' % zoomGroup.mode
         if zoomGroup.mode == 'manual':
             xmin = int(zoomGroup.xminLine.text())
             xmax = int(zoomGroup.xmaxLine.text())
@@ -324,7 +321,6 @@ class PlotWindow(QtGui.QWidget):
             zoomGroup.yminLine.setText(str(ymin))
             zoomGroup.ymaxLine.setText(str(ymax))
         for axes in self.axesList:
-            print axes, xmin, xmax, ymin, ymax
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
         self.canvas.draw()
 

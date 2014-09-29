@@ -48,7 +48,7 @@ class WaterfallPlotWindow(QtGui.QWidget):
 
     def drawSpectrogram(self):
         self.axes = self.fig.add_subplot(111)
-        self.axesImage = self.axes.imshow(self.data, cm.gist_ncar, aspect='auto')
+        self.axesImage = self.axes.imshow(self.data, cm.hot, aspect='auto')
         self.colorbar = self.fig.colorbar(self.axesImage, use_gridspec=True)
 
     class ControlPanel(QtGui.QWidget):
