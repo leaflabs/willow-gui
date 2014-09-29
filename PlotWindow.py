@@ -89,7 +89,7 @@ class PlotWindow(QtGui.QWidget):
             self.layout.addWidget(self.zoomGroup)
             self.layout.addWidget(self.waterfallButton)
             self.setLayout(self.layout)
-            self.setMaximumHeight(175)
+            self.setMaximumHeight(200)
 
         class ChannelsGroup(QtGui.QGroupBox):
 
@@ -146,22 +146,31 @@ class PlotWindow(QtGui.QWidget):
                 xmax = self.parent.parent.sampleRange[1]
                 ymin = 0
                 ymax = 2**16-1
+                #
+                self.autoButton = QtGui.QRadioButton('Auto')
+                self.autoButton.setChecked(True)
+                self.mode = 'auto'
+                self.autoButton.toggled.connect(self.switchModes)
+                self.manualButton = QtGui.QRadioButton('Manual')
+                self.manualButton.toggled.connect(self.switchModes)
                 self.xminLine = QtGui.QLineEdit(str(xmin))
                 self.xmaxLine = QtGui.QLineEdit(str(xmax))
                 self.yminLine = QtGui.QLineEdit(str(ymin))
                 self.ymaxLine = QtGui.QLineEdit(str(ymax))
                 grid = QtGui.QWidget()
                 gridLayout = QtGui.QGridLayout()
-                gridLayout.addWidget(QtGui.QLabel('X-Range:'), 0,0)
-                gridLayout.addWidget(self.xminLine, 0,1)
-                gridLayout.addWidget(self.xmaxLine, 0,2)
-                gridLayout.addWidget(QtGui.QLabel('Y-Range:'), 1,0)
-                gridLayout.addWidget(self.yminLine, 1,1)
-                gridLayout.addWidget(self.ymaxLine, 1,2)
+                gridLayout.addWidget(self.autoButton, 0,0)
+                gridLayout.addWidget(self.manualButton, 0,1)
+                gridLayout.addWidget(QtGui.QLabel('X-Range:'), 1,0)
+                gridLayout.addWidget(self.xminLine, 1,1)
+                gridLayout.addWidget(self.xmaxLine, 1,2)
+                gridLayout.addWidget(QtGui.QLabel('Y-Range:'), 2,0)
+                gridLayout.addWidget(self.yminLine, 2,1)
+                gridLayout.addWidget(self.ymaxLine, 2,2)
                 grid.setLayout(gridLayout)
 
                 self.refreshButton = QtGui.QPushButton('Refresh')
-                self.refreshButton.clicked.connect(self.parent.parent.updateZoom)
+                self.refreshButton.clicked.connect(self.parent.parent.updateZoom_redraw)
                 self.defaultButton = QtGui.QPushButton('Default')
                 self.defaultButton.clicked.connect(self.parent.parent.defaultZoom)
                 buttons = QtGui.QWidget()
@@ -175,12 +184,25 @@ class PlotWindow(QtGui.QWidget):
                 self.layout.addWidget(buttons)
 
                 self.setLayout(self.layout)
-                self.setMaximumWidth(220)
+                self.setMaximumWidth(300)
 
-                """
-                for widg in [self.xminLine, self.xmaxLine, self.yminLine, self.ymaxLine]:
-                    widg.editingFinished.connect(self.flagZoom)
-                """
+                self.switchModes()
+
+            def switchModes(self):
+                if self.autoButton.isChecked():
+                    self.mode = 'auto'
+                    for widg in [self.xminLine, self.xmaxLine, self.yminLine, self.ymaxLine,
+                                    self.refreshButton, self.defaultButton]:
+                        widg.setEnabled(False)
+                    try:
+                        self.parent.parent.updateZoom_redraw()
+                    except AttributeError:
+                        print 'Caught AttributeError'
+                elif self.manualButton.isChecked():
+                    self.mode = 'manual'
+                    for widg in [self.xminLine, self.xmaxLine, self.yminLine, self.ymaxLine,
+                                    self.refreshButton, self.defaultButton]:
+                        widg.setEnabled(True)
 
         class ButtonStack(QtGui.QWidget):
             """
@@ -232,16 +254,12 @@ class PlotWindow(QtGui.QWidget):
         nchannels = int(channelsGroup.nchannelsDropdown.currentText())
         nrows, ncols = channelsGroup.nchannelsLayoutDict[nchannels]
         bank = int(channelsGroup.bankSpinBox.value())
-        channelList = range(bank*nchannels,(bank+1)*nchannels)
-        xmin = int(zoomGroup.xminLine.text())
-        xmax = int(zoomGroup.xmaxLine.text())
-        ymin = int(zoomGroup.yminLine.text())
-        ymax = int(zoomGroup.ymaxLine.text())
+        self.channelList = range(bank*nchannels,(bank+1)*nchannels)
         self.fig.clear()
         self.axesList = []
         self.waveformList = []
         for i in range(nchannels):
-            channel = channelList[i]
+            channel = self.channelList[i]
             axes = self.fig.add_subplot(nrows, ncols, i+1)
             axes.set_title('Channel %d' % channel, fontsize=10, fontweight='bold')
             #axes.yaxis.set_ticklabels([])
@@ -249,20 +267,64 @@ class PlotWindow(QtGui.QWidget):
             #axes.xaxis.set_ticklabels([0,self.maxXvalue/2, self.maxXvalue], fontsize=10)
             axes.tick_params(labelsize=10)
             axes.set_axis_bgcolor('k')
-            axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
             waveform = axes.plot(self.sampleNumbers, self.data[channel,:], color='#8fdb90')
             self.axesList.append(axes)
             self.waveformList.append(waveform)
+        self.updateZoom()
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
         self.canvas.draw()
 
     def updateZoom(self):
         zoomGroup = self.controlPanel.zoomGroup
-        xmin = int(zoomGroup.xminLine.text())
-        xmax = int(zoomGroup.xmaxLine.text())
-        ymin = int(zoomGroup.yminLine.text())
-        ymax = int(zoomGroup.ymaxLine.text())
+        print 'zoom mode is %s' % zoomGroup.mode
+        if zoomGroup.mode == 'manual':
+            xmin = int(zoomGroup.xminLine.text())
+            xmax = int(zoomGroup.xmaxLine.text())
+            ymin = int(zoomGroup.yminLine.text())
+            ymax = int(zoomGroup.ymaxLine.text())
+        elif zoomGroup.mode == 'auto':
+            xmin = self.sampleRange[0]
+            xmax = self.sampleRange[1]
+            ymin_hard = np.min(self.data[self.channelList,:])
+            ymax_hard = np.max(self.data[self.channelList,:])
+            deltay = ymax_hard - ymin_hard
+            ymin = ymin_hard - deltay//2
+            if ymin < 0: ymin = 0
+            ymax = ymax_hard + deltay//2
+            if ymax > 2**16-1: ymax = 2**16-1
+            zoomGroup.xminLine.setText(str(xmin))
+            zoomGroup.xmaxLine.setText(str(xmax))
+            zoomGroup.yminLine.setText(str(ymin))
+            zoomGroup.ymaxLine.setText(str(ymax))
         for axes in self.axesList:
+            print axes, xmin, xmax, ymin, ymax
+            axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
+
+    def updateZoom_redraw(self):
+        # this is stupid; trouble with default arguments 20140929
+        zoomGroup = self.controlPanel.zoomGroup
+        print 'zoom mode is %s' % zoomGroup.mode
+        if zoomGroup.mode == 'manual':
+            xmin = int(zoomGroup.xminLine.text())
+            xmax = int(zoomGroup.xmaxLine.text())
+            ymin = int(zoomGroup.yminLine.text())
+            ymax = int(zoomGroup.ymaxLine.text())
+        elif zoomGroup.mode == 'auto':
+            xmin = self.sampleRange[0]
+            xmax = self.sampleRange[1]
+            ymin_hard = np.min(self.data[self.channelList,:])
+            ymax_hard = np.max(self.data[self.channelList,:])
+            deltay = ymax_hard - ymin_hard
+            ymin = ymin_hard - deltay//2
+            if ymin < 0: ymin = 0
+            ymax = ymax_hard + deltay//2
+            if ymax > 2**16-1: ymax = 2**16-1
+            zoomGroup.xminLine.setText(str(xmin))
+            zoomGroup.xmaxLine.setText(str(xmax))
+            zoomGroup.yminLine.setText(str(ymin))
+            zoomGroup.ymaxLine.setText(str(ymax))
+        for axes in self.axesList:
+            print axes, xmin, xmax, ymin, ymax
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
         self.canvas.draw()
 
@@ -286,12 +348,6 @@ class PlotWindow(QtGui.QWidget):
     def launchWaterfall(self):
         self.waterfallPlotWindow = WaterfallPlotWindow(self)
         self.waterfallPlotWindow.show()
-
-    """
-    def refresh(self):
-        self.updateChannels()
-        self.updateZoom()
-    """
 
     def closeEvent(self, event):
         print 'closing'
