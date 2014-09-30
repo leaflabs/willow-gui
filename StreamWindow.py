@@ -14,14 +14,33 @@ from matplotlib.figure import Figure
 
 from StateManagement import *
 
+def calculateTicks(axisrange):
+    delta = axisrange[1] - axisrange[0]
+    # delta must be greater than 1 but less than 100000; check for this somewhere
+    increments = [10**i for i in range(4,-1,-1)]
+    i = 0
+    increment = None
+    while not increment:
+        inc = increments[i]
+        if delta > 3*inc:
+            increment = inc
+        i += 1
+    multiple = axisrange[0]//increment
+    tick0 = (multiple+1)*increment
+    ticks = range(tick0, axisrange[1], increment)
+    return ticks
+
 class StreamWindow(QtGui.QWidget):
 
-    def __init__(self, parent, chip, chan):
+    def __init__(self, parent, chip, chan, yrange_uV, refreshRate):
         super(StreamWindow, self).__init__(None)
 
         self.parent = parent
         self.chip = chip
         self.chan= chan
+        self.yrange_uV = yrange_uV
+        self.yrange_cnts = [int(y*5+2**15) for y in self.yrange_uV]
+        self.refreshRate = refreshRate
 
         self.setSubsamples_byChip(self.chip)
 
@@ -31,14 +50,21 @@ class StreamWindow(QtGui.QWidget):
 
         #self.fig = Figure((5.0, 4.0), dpi=100)
         self.fig = Figure()
-        #self.fig.subplots_adjust(left=0.,bottom=0.,right=1.,top=1., wspace=0.04, hspace=0.1)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         self.axes = self.fig.add_subplot(111)
         self.axes.set_title('Chip %d, Channel %d' % (self.chip, chan))
-        #self.axes.yaxis.set_ticklabels([])
+        self.axes.set_ylabel('microVolts')
+        self.axes.set_xlabel('Samples')
         self.axes.set_axis_bgcolor('k')
-        self.axes.axis([0,30000,0,2**16-1])
+        self.axes.axis([0, 30000, self.yrange_cnts[0], self.yrange_cnts[1]])
+
+        yticks_uV = calculateTicks(self.yrange_uV)
+        yticklabels = [str(tick) for tick in yticks_uV]
+        yticks = [int(tick*5+2**15) for tick in yticks_uV]
+        self.axes.set_yticks(yticks)
+        self.axes.set_yticklabels(yticklabels)
+
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
 
         self.mplLayout = QtGui.QVBoxLayout()
@@ -56,7 +82,7 @@ class StreamWindow(QtGui.QWidget):
         ###############################
 
         sr = 30000  # sample rate
-        fr = 30      # frame rate
+        fr = self.refreshRate      # frame rate
         self.fp = 1000//fr  # frame period
         n = 30000   # number of samples to display
         self.nrefresh = sr//fr   # new samples collected before refresh
@@ -167,3 +193,5 @@ class StreamWindow(QtGui.QWidget):
         if checkState() & 0b001:
             self.stopStreaming()
 
+if __name__ == '__main__':
+    print calculateTicks([-535,788])

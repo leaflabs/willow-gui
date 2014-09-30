@@ -3,6 +3,7 @@ from PyQt4 import QtCore, QtGui
 from StreamWindow import StreamWindow
 from PlotWindow import PlotWindow 
 from SnapshotDialog import SnapshotParametersDialog, SnapshotProgressDialog
+from StreamDialog import StreamDialog
 from StateManagement import changeState
 
 from parameters import *
@@ -52,12 +53,12 @@ class AcquireTab(QtGui.QWidget):
         self.plotWindows = []
 
     def launchStreamWindow(self):
-        result, ok = QtGui.QInputDialog.getText(self, 'Configure Stream', 'Channel Number:')
+        channel, ymin, ymax, refreshRate, ok = StreamDialog.getParams()
         if ok:
-            channel = int(result)
             chip = channel//32
             chan = channel%32
-            self.streamWindow = StreamWindow(self, chip, chan)
+            yrange = [ymin, ymax]
+            self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate)
             self.streamWindow.show()
 
     def takeSnapshot(self):
