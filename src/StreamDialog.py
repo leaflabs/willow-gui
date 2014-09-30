@@ -39,7 +39,7 @@ class StreamDialog(QtGui.QDialog):
 
         self.setLayout(layout)
         self.setWindowTitle('Stream Window Parameters')
-        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(500,100)
 
 

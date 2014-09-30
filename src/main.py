@@ -23,19 +23,13 @@ from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
 
-oFile = open('oFile', 'w')
-eFile = open('eFile', 'w')
+oFile = open('../log/oFile', 'w')
+eFile = open('../log/eFile', 'w')
 
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-
-        """        
-        self.logo = QtGui.QLabel()
-        self.logo.setPixmap(QtGui.QPixmap('newlogo.png'))
-        self.logo.setAlignment(QtCore.Qt.AlignHCenter)
-        """
 
         self.tabDialog = QtGui.QTabWidget()
 
@@ -79,7 +73,7 @@ class MainWindow(QtGui.QWidget):
 
         self.setLayout(mainLayout)
         self.setWindowTitle('WiredLeaf Control Panel')
-        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(400,400)
         self.center()
 

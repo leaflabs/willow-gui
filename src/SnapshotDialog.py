@@ -43,7 +43,7 @@ class SnapshotParametersDialog(QtGui.QDialog):
 
         self.setLayout(layout)
         self.setWindowTitle('Snapshot Parameters')
-        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(800,100)
 
     def getParams(self):

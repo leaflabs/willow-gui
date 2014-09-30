@@ -69,7 +69,7 @@ class PlotWindow(QtGui.QWidget):
         self.setLayout(self.layout)
 
         self.setWindowTitle('Plotting: %s' % self.filename)
-        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(1600,800)
 
     class ControlPanel(QtGui.QWidget):

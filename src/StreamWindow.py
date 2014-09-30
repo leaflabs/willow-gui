@@ -117,7 +117,7 @@ class StreamWindow(QtGui.QWidget):
         self.setLayout(self.layout)
 
         self.setWindowTitle('WiredLeaf Live Streaming')
-        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
 
     def setSubsamples_cherryPick(self):
         """

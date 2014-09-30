@@ -20,7 +20,7 @@ class ProgressBarWindow(QtGui.QWidget):
         self.setLayout(self.layout)
 
         self.setWindowTitle('Progress Bar')
-        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.center()
 
     def update(self, val):

@@ -37,7 +37,7 @@ class WaterfallPlotWindow(QtGui.QWidget):
         self.setLayout(self.layout)
 
         self.setWindowTitle('Waterfall Plot: %s' % self.parent.filename)
-        self.setWindowIcon(QtGui.QIcon('round_logo_60x60.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(1600,500)
 
     def initializeMPL(self):
