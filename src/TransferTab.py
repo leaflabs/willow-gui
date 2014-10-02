@@ -54,7 +54,7 @@ class TransferTab(QtGui.QWidget):
         self.layout.addWidget(self.filenameBrowseWidget)
         self.layout.addSpacing(20)
         self.layout.addWidget(self.transferButton)
-        self.layout.addWidget(QtGui.QLabel('Note: GUI will freeze until transfer is complete'))
+        self.layout.addWidget(QtGui.QLabel('Note: GUI will be unvailable until transfer is complete'))
         self.setLayout(self.layout)
 
     def binarySearch(self):

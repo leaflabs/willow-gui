@@ -1,0 +1,15 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{System Overview}{}% 2
+\BOOKMARK [1][-]{section.3}{Setup}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Obtaining the GUI}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Dependencies}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.3}{Configuration}{section.3}% 6
+\BOOKMARK [1][-]{section.4}{Usage}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{Acquire Tab}{section.4}% 8
+\BOOKMARK [3][-]{subsubsection.4.1.1}{Streaming}{subsection.4.1}% 9
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Snapshots}{subsection.4.1}% 10
+\BOOKMARK [3][-]{subsubsection.4.1.3}{Recording}{subsection.4.1}% 11
+\BOOKMARK [2][-]{subsection.4.2}{Transfer Tab}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.3}{Plot Tab}{section.4}% 13
+\BOOKMARK [3][-]{subsubsection.4.3.1}{Plot Window}{subsection.4.3}% 14
+\BOOKMARK [3][-]{subsubsection.4.3.2}{Waterfall Plot Window}{subsection.4.3}% 15

@@ -133,7 +133,7 @@ class AcquireTab(QtGui.QWidget):
         def updateProgressBar(self):
             resp = do_control_cmd(reg_read(2, 7)) # SATA module, Last Write Index (4B)
             if resp is None or resp.type != 255:
-                self.parent.statusBox.append("%s\nNo response! Is daemon running?" % resp)
+                self.parent.parent.statusBox.append("%s\nNo response! Is daemon running?" % resp)
             else:
                 diskIndex = resp.reg_io.val
                 self.progressBar.setValue(diskIndex)
