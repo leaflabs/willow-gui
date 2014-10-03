@@ -83,6 +83,7 @@ class MainWindow(QtGui.QWidget):
 
     def startDaemon(self):
         #subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
+	subprocess.call(['killall', 'leafysd'])
         self.daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
                                                 '-N', '-A', '192.168.1.2', '-I', 'eth0'], stdout=oFile, stderr=eFile)
         self.statusBox.append('Daemon started.')
