@@ -73,8 +73,10 @@ class AcquireTab(QtGui.QWidget):
                     plotWindow.show()
             except StateChangeError:
                 self.parent.statusBox.append("Can't take snapshot while streaming.")
-            except socket.error, DaemonControlError:
-                pass # error messages printed by changeState
+            except socket.error:
+                self.parent.statusBox.append('Socket error: Could not connect to daemon.')
+            except DaemonControlError:
+                self.parent.statusBox.append('Daemon control error.')
 
     class RecordWidget(QtGui.QWidget):
 

@@ -144,7 +144,14 @@ class StreamWindow(QtGui.QWidget):
             chan = chipchan[1] & 0b00011111
             cmds.append(reg_write(MOD_DAQ, DAQ_SUBSAMP_CHIP0+i,
                            (chip << 8) | chan))
-        resps = do_control_cmds(cmds)
+        try:
+            resps = do_control_cmds(cmds)
+            for resp in resps:
+                if resp.type==ControlResponse.ERR:
+                    self.parent.parent.statusBox.append('Daemon control error.')
+                    return
+        except socket.error:
+            self.parent.parent.statusBox.append('Socket error: Could not connect to daemon')
 
     def startStreaming(self):
         try:
@@ -155,7 +162,7 @@ class StreamWindow(QtGui.QWidget):
             self.toggleStdin(True)
             self.parent.parent.statusBox.append('Hardware was already streaming')
         except socket.error:
-            self.parent.parent.statusBox.append('Socker error.')
+            self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
         except DaemonControlError:
             self.parent.parent.statusBox.append('Daemon control error.')
 
@@ -168,19 +175,23 @@ class StreamWindow(QtGui.QWidget):
             self.toggleStdin(False)
             self.parent.parent.statusBox.append('Hardware was already not streaming')
         except socket.error:
-            self.parent.parent.statusBox.append('Socker error.')
+            self.parent.parent.statusBox.append('Socker error: Could not connect to daemon.')
         except DaemonControlError:
             self.parent.parent.statusBox.append('Daemon control error.')
+        except AttributeError:
+            self.parent.parent.statusBox.append('AttributeError: Pipe object does not exist')
 
     def toggleStdin(self, enable):
         if enable:
-            # why does this still print GAPs?
             self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s',
                 '-c', str(self.chan)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.timer.start(self.fp)
         else:
             self.timer.stop()
-            self.proto2bytes_po.kill()
+            try:
+                self.proto2bytes_po.kill()
+            except AttributeError:
+                pass
 
     def updatePlot(self):
         for i in range(self.nrefresh):
@@ -193,5 +204,3 @@ class StreamWindow(QtGui.QWidget):
         if checkState() & 0b001:
             self.stopStreaming()
 
-if __name__ == '__main__':
-    print calculateTicks([-535,788])

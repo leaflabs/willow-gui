@@ -23,15 +23,63 @@ from daemon_control import *
 
 
 class DaemonControlError(Exception):
+    """
+    What this means is that the the daemon responded properly but with an
+    error message. That error message can be further categorized into TYPE,
+    but this is not yet implemented.
+    """
     pass
 
 
 class StateChangeError(Exception):
+    """
+    This error indicates that the user has requested a state change that is
+    disallowed, given the current state.
+    """
     pass
 
 class AlreadyError(Exception):
     pass
 
+###
+
+class NO_DNODE_error(Exception):
+    pass
+
+class DAEMON_error(Exception):
+    pass
+
+class DAEMON_IO_error(Exception):
+    pass
+
+class C_VALUE_error(Exception):
+    pass
+
+class C_PROTO_error(Exception):
+    pass
+
+class D_PROTO_error(Exception):
+    pass
+
+class DNODE_error(Exception):
+    pass
+
+class DNODE_ASYNC_error(Exception):
+    pass
+
+class DNODE_DIED_error(Exception):
+    pass
+
+ERROR_DICT = {  0 : NO_DNODE_error,
+                1 : DAEMON_error,
+                6 : DAEMON_IO_error,
+                8 : C_VALUE_error,
+                2 : C_PROTO_error,
+                3 : D_PROTO_error,
+                4 : DNODE_error,
+                5 : DNODE_ASYNC_error,
+                7 : DNODE_DIED_error
+                }
 
 def checkState():
     """
@@ -71,7 +119,7 @@ def checkState_long():
     print 'checkState_long vals = ', vals
 
 
-def toggleStreaming(enable, state):
+def toggleStreaming(enable, state, debug=False):
     streaming = bool(state & 0b001)
     snapshotting = bool(state & 0b010)
     recording = bool(state & 0b100)
@@ -80,7 +128,6 @@ def toggleStreaming(enable, state):
     cmd = ControlCommand(type=ControlCommand.FORWARD)
     if enable:
         if streaming:
-            print 'Already streaming!'
             raise AlreadyError
         elif snapshotting:
             # warning: nothing exists to set snapshotting=True yet
@@ -100,7 +147,6 @@ def toggleStreaming(enable, state):
             cmds.append(cmd)
     else:
         if not streaming:
-            print 'Already not streaming!'
             raise AlreadyError
         elif snapshotting:
             # warning: nothing exists to set snapshotting=True yet
@@ -113,8 +159,12 @@ def toggleStreaming(enable, state):
                 cmd = ControlCommand(type=ControlCommand.ACQUIRE)
                 cmd.acquire.enable = False
                 cmds.append(cmd)
+    ###
     resps = do_control_cmds(cmds)
-    #TODO check resps in a robust way, raise DaemonControlError if bad
+    for resp in resps:
+        if resp.type==ControlResponse.ERR:
+            raise DaemonControlError
+            # raise ERROR_DICT[resp.err.code]
 
 
 def takeSnapshot(nsamples, filename, state):
@@ -181,7 +231,14 @@ def takeSnapshot(nsamples, filename, state):
         cmd.acquire.enable = False
         cmds.append(cmd)
     resps = do_control_cmds(cmds)
-    #TODO check resps in a robust way, raise DaemonControlError if bad
+    for resp in resps:
+        if resp.type==ControlResponse.ERR:
+            raise DaemonControlError
+    for resp in resps:
+        if resp.type==ControlResponse.STORE_FINISHED:
+            print 'Store response status = %d' % resp.store.status
+            print 'nsamples = %d' % resp.store.nsamples
+            # raise ERROR_DICT[resp.err.code]
 
 
 def toggleRecording(enable, state):
@@ -267,7 +324,7 @@ def changeState(instruction, nsamples=None, filename=None, debug=False):
         try:
             state = checkState()
             if debug: print 'Current state: %s' % bin(state)
-            toggleStreaming(enable, state)
+            toggleStreaming(enable, state, debug=debug)
         except socket.error:
             print "Can't open connection to daemon"
             raise
