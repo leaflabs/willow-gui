@@ -236,9 +236,12 @@ def takeSnapshot(nsamples, filename, state):
             raise DaemonControlError
     for resp in resps:
         if resp.type==ControlResponse.STORE_FINISHED:
-            print 'Store response status = %d' % resp.store.status
-            print 'nsamples = %d' % resp.store.nsamples
-            # raise ERROR_DICT[resp.err.code]
+            if resp.store.status==ControlResStore.DONE:
+                return resp.store.nsamples
+            elif resp.store.status==ControlResStore.PKTDROP:
+                return resp.store.nsamples
+            else:
+                raise DaemonControlError
 
 
 def toggleRecording(enable, state):
@@ -336,7 +339,7 @@ def changeState(instruction, nsamples=None, filename=None, debug=False):
             if nsamples and filename:
                 state = checkState()
                 if debug: print 'Current state: %s' % bin(state)
-                takeSnapshot(nsamples, filename, state)
+                return takeSnapshot(nsamples, filename, state)
             else:
                 print 'please specify nsamples and filename'
                 return
