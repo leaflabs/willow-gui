@@ -92,6 +92,9 @@ def checkState():
     cmds.append(reg_read(3,9))
     cmds.append(reg_read(3,11))
     resps = do_control_cmds(cmds)
+    for resp in resps:
+        if resp.type==ControlResponse.ERR:
+            raise DaemonControlError
     vals = [resp.reg_io.val for resp in resps]
     if vals == [0,0]:
         # idle
@@ -243,6 +246,21 @@ def takeSnapshot(nsamples, filename, state):
             else:
                 raise DaemonControlError
 
+def doTransfer(nsamples=None, filename=None, state=None):
+    streaming = bool(state & 0b001)
+    snapshotting = bool(state & 0b010)
+    recording = bool(state & 0b100)
+    ###
+    if streaming or snapshotting or recording:
+        raise StateChangeError
+    cmd = ControlCommand(type=ControlCommand.STORE)
+    cmd.store.start_sample = 0
+    if nsamples:
+        cmd.store.nsamples = nsamples
+    # (else leave missing which indicates whole experiment)
+    cmd.store.path = filename
+    resp = do_control_cmd(cmd)
+
 
 def toggleRecording(enable, state):
     streaming = bool(state & 0b001)
@@ -252,9 +270,9 @@ def toggleRecording(enable, state):
     cmds = []
     if enable:
         if recording:
-            print 'Already recording!'
             raise AlreadyError
         elif snapshotting:
+            # warning: nothing exists to set shapshotting=True
             print "Cannot do this while shapshot is in progress"
             return
         else:
@@ -284,10 +302,8 @@ def toggleRecording(enable, state):
                 cmds.append(cmd)
     else:
         if not recording:
-            print 'Already not recording!'
             raise AlreadyError
         elif snapshotting:
-            print "Cannot do this while shapshot is in progress"
             return
         else:
             cmd = ControlCommand(type=ControlCommand.ACQUIRE)
@@ -309,16 +325,29 @@ def toggleRecording(enable, state):
                 cmd.forward.enable = True
                 cmds.append(cmd)
     resps = do_control_cmds(cmds)
-    #TODO check resps in a robust way, raise DaemonControlError if bad
+    for resp in resps:
+        if resp.type==ControlResponse.ERR:
+            raise DaemonControlError
 
 
 def changeState(instruction, nsamples=None, filename=None, debug=False):
+    """
+    Currently supported instructions:
+        start streaming
+        stop streaming
+        start recording
+        stop recording
+        take snapshot
+        do transfer
+    """
     verb, mode = instruction.split()
     if verb == 'start':
         enable = True
     elif verb == 'stop':
         enable = False
     elif verb == 'take':
+        enable = None
+    elif verb == 'do':
         enable = None
     else:
         print 'invalid verb: %s' % verb
@@ -329,10 +358,8 @@ def changeState(instruction, nsamples=None, filename=None, debug=False):
             if debug: print 'Current state: %s' % bin(state)
             toggleStreaming(enable, state, debug=debug)
         except socket.error:
-            print "Can't open connection to daemon"
             raise
         except DaemonControlError:
-            print "Daemon reported errors"
             raise
     elif mode == 'snapshot':
         if verb == 'take':
@@ -352,10 +379,17 @@ def changeState(instruction, nsamples=None, filename=None, debug=False):
             if debug: print 'Current state: %s' % bin(state)
             toggleRecording(enable, state)
         except socket.error:
-            print "Can't open connection to daemon"
             raise
         except DaemonControlError:
-            print "Daemon reported errors"
+            raise
+    elif mode == 'transfer':
+        try:
+            state = checkState()
+            if debug: print 'Current state: %s' % bin(state)
+            doTransfer(nsamples, filename, state)
+        except socket.error:
+            raise
+        except DaemonControlError:
             raise
     else:
         print 'invalid mode: %s' % mode

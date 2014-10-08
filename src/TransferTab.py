@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import subprocess, h5py, os, sys
+import subprocess, h5py, os, sys, socket
 import numpy as np
 from progressbar import ProgressBar
 import matplotlib.pyplot as plt
@@ -11,6 +11,8 @@ from parameters import DAEMON_DIR, DATA_DIR
 
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
+
+from StateManagement import changeState, StateChangeError, DaemonControlError
 
 def isBlank(string):
     if len(string)==0:
@@ -58,6 +60,21 @@ class TransferTab(QtGui.QWidget):
         self.setLayout(self.layout)
 
     def binarySearch(self):
+        try:
+            progressBarWindow = ProgressBarWindow(26, 'Analyzing disk for experiment length...')
+            progressBarWindow.show()
+            cookie = getExperimentCookie(0)
+            boundary = findExperimentBoundary_pbar(cookie, 0, int(125e6), progressBarWindow.progressBar, 0)
+            if boundary>0:
+                self.bsResultLabel.setText('Experiment on disk is %d samples, '
+                                            'or %5.2f minutes worth of data.\n'
+                                            'Experiment cookie is %d' % (boundary, boundary/1.8e6, cookie))
+        except socket.error:
+            self.parent.statusBox.append('Socket error: Could not connect to daemon')
+        except DaemonControlError:
+            self.parent.statusBox.append('Daemon control error.')
+
+    def binarySearch_old(self):
         if self.parent.isConnected():
             progressBarWindow = ProgressBarWindow(26, 'Analyzing disk for experiment length...')
             progressBarWindow.show()
@@ -85,20 +102,19 @@ class TransferTab(QtGui.QWidget):
             self.filenameLine.setText(filename)
 
     def transferData(self):
-        if self.parent.isConnected():
-            filename = str(self.filenameBrowseWidget.filenameLine.text())
-            nsamples_text = str(self.nsampLine.text())
-            if isBlank(nsamples_text):
-                nsamples = None
-            else:
-                nsamples = int(nsamples_text)
-            self.parent.statusBox.append('Transferring...')
-            cmd = ControlCommand(type=ControlCommand.STORE)
-            cmd.store.start_sample = 0
-            if nsamples:
-                cmd.store.nsamples = nsamples
-            # (else leave missing which indicates whole experiment)
-            cmd.store.path = filename
-            resp = do_control_cmd(cmd)
+        filename = str(self.filenameBrowseWidget.filenameLine.text())
+        nsamples_text = str(self.nsampLine.text())
+        if isBlank(nsamples_text):
+            nsamples = None
+        else:
+            nsamples = int(nsamples_text)
+        try:
+            changeState('do transfer', nsamples, filename)
             self.parent.statusBox.append('Transfer Complete: %s' % filename)
+        except StateChangeError:
+            self.parent.statusBox.append('For now, cannot do transfer while hardware is active.')
+        except socket.error:
+            self.parent.statusBox.append('Socket error: Could not connect to daemon.')
+        except DaemonControlError:
+            self.parent.statusBox.append('Daemon control error.')
 

@@ -10,7 +10,7 @@ from parameters import *
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
 
-from StateManagement import checkState, changeState, DaemonControlError, StateChangeError
+from StateManagement import checkState, changeState, AlreadyError, DaemonControlError, StateChangeError
 
 class MessageWindow(QtGui.QWidget):
 
@@ -98,10 +98,9 @@ class AcquireTab(QtGui.QWidget):
             self.progressBar.setMaximum(125e6)  # TODO what is this number exactly?
             self.progressBar.setValue(0)
             
-            self.startButton = QtGui.QRadioButton('Start')
+            self.startButton = QtGui.QPushButton('Start Recording')
             self.startButton.clicked.connect(self.startRecording)
-            self.stopButton = QtGui.QRadioButton('Stop')
-            self.stopButton.setChecked(True)
+            self.stopButton = QtGui.QPushButton('Stop Recording')
             self.stopButton.clicked.connect(self.stopRecording)
 
             self.layout = QtGui.QGridLayout()
@@ -124,8 +123,15 @@ class AcquireTab(QtGui.QWidget):
                 self.statusBar.setText('Recording')
                 self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
                 self.parent.parent.statusBox.append('Started recording.')
-            except socket.error, DaemonControlError:
-                pass # error messages printed by changeState
+            except AlreadyError:
+                self.parent.parent.statusBox.append('Already recording.')
+                self.timer.start(5000)
+                self.statusBar.setText('Recording')
+                self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
+            except socket.error:
+                self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
+            except DaemonControlError:
+                self.parent.parent.statusBox.append('Daemon Control Error.')
 
         def stopRecording(self):
             try:
@@ -134,8 +140,15 @@ class AcquireTab(QtGui.QWidget):
                 self.statusBar.setText('Not Recording')
                 self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
                 self.parent.parent.statusBox.append('Stopped recording.')
-            except socket.error, DaemonControlError:
-                pass # error messages printed by changeState
+            except AlreadyError:
+                self.parent.parent.statusBox.append('Already not recording.')
+                self.timer.stop()
+                self.statusBar.setText('Not Recording')
+                self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
+            except socket.error:
+                self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
+            except DaemonControlError:
+                self.parent.parent.statusBox.append('Daemon Control Error.')
 
         def updateProgressBar(self):
             resp = do_control_cmd(reg_read(2, 7)) # SATA module, Last Write Index (4B)

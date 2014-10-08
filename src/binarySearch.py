@@ -3,6 +3,7 @@
 import os, h5py, time, sys
 from parameters import DAEMON_DIR, DATA_DIR
 
+from StateManagement import DaemonControlError
 
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
@@ -20,8 +21,7 @@ def getExperimentCookie(bsi):
     ###
     resp = do_control_cmd(cmd)
     if resp.type==1:
-        print 'ControlCommand failed with Error Code %d: %s' % (resp.err.code, ERRORS[resp.err.code])
-        return -1
+        raise DaemonControlError
     elif resp.type==3:
         if resp.store.status==1:
             f = h5py.File('tmp.h5')
@@ -52,11 +52,11 @@ def queryDisk(bsi, verbose=False):
     cmd.store.path = os.path.join(os.getcwd(), 'tmp.h5')
     ###
     resp = do_control_cmd(cmd)
-    if resp.type==1:
+    if resp.type==ControlResponse.ERR:
         if verbose: print 'ControlCommand failed with Error Code %d: %s' % (resp.err.code, ERRORS[resp.err.code])
         return -1
     elif resp.type==3:
-        if resp.store.status==1:
+        if resp.store.status==ControlResStore.DONE:
             # board sample found
             f = h5py.File('tmp.h5')
             dset = f['wired-dataset']
