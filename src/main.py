@@ -23,6 +23,8 @@ from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
 
+if not os.path.isdir('../log'):
+    os.mkdir('../log')
 oFile = open('../log/oFile', 'w')
 eFile = open('../log/eFile', 'w')
 
