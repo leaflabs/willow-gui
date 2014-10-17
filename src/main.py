@@ -5,7 +5,7 @@ WiredLeaf Control Panel GUI
 Created on 20140522 by Chris Chronopoulos.
 """
 
-import sys, os, time, subprocess
+import sys, os, time, subprocess, socket
 
 import numpy as np
 import matplotlib
@@ -18,10 +18,12 @@ from PyQt4 import QtCore, QtGui
 from AcquireTab import AcquireTab
 from TransferTab import TransferTab
 from PlotTab import PlotTab
+from StatusBar import StatusBar
 
 from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
+from StateManagement import pingDatanode, DaemonControlError
 
 oFile = open('../log/oFile', 'w')
 eFile = open('../log/eFile', 'w')
@@ -30,6 +32,9 @@ class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+
+        self.statusBar = StatusBar()
+        self.statusBar.startWatchdog()
 
         self.tabDialog = QtGui.QTabWidget()
 
@@ -69,6 +74,7 @@ class MainWindow(QtGui.QWidget):
         self.TBSplitter.addWidget(self.bottomHalf)
 
         mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addWidget(self.statusBar)
         mainLayout.addWidget(self.TBSplitter)
 
         self.setLayout(mainLayout)
@@ -83,7 +89,7 @@ class MainWindow(QtGui.QWidget):
 
     def startDaemon(self):
         #subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
-	subprocess.call(['killall', 'leafysd'])
+        subprocess.call(['killall', 'leafysd'])
         self.daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
                                                 '-N', '-A', '192.168.1.2', '-I', 'eth0'], stdout=oFile, stderr=eFile)
         self.statusBox.append('Daemon started.')
@@ -113,6 +119,7 @@ class MainWindow(QtGui.QWidget):
         windowCenter = self.frameGeometry().center()
         screenCenter = QtGui.QDesktopWidget().availableGeometry().center()
         self.move(screenCenter-windowCenter)
+
 
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
