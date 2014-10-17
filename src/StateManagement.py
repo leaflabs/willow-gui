@@ -44,31 +44,40 @@ class AlreadyError(Exception):
 ###
 
 class NO_DNODE_error(Exception):
-    pass
+    def __str__(self):
+        return 'NO_DNODE: No datanode connected'
 
 class DAEMON_error(Exception):
-    pass
+    def __str__(self):
+        return 'DAEMON: Internal daemon error'
 
 class DAEMON_IO_error(Exception):
-    pass
+    def __str__(self):
+        return 'DAEMON_IO: Daemon I/O error'
 
 class C_VALUE_error(Exception):
-    pass
+    def __str__(self):
+        return 'C_VALUE: Invalid arguments on client control socket'
 
 class C_PROTO_error(Exception):
-    pass
+    def __str__(self):
+        return 'C_PROTO: Protocol error on client control socket'
 
 class D_PROTO_error(Exception):
-    pass
+    def __str__(self):
+        return 'D_Proto: Protocol error on datanode control socket'
 
 class DNODE_error(Exception):
-    pass
+    def __str__(self):
+        return 'DNODE: Datanode transaction failed'
 
 class DNODE_ASYNC_error(Exception):
-    pass
+    def __str__(self):
+        return 'DNODE_ASYNC: Asynchronous datanode error'
 
 class DNODE_DIED_error(Exception):
-    pass
+    def __str__(self):
+        return 'DNODE_DIED: Datanode connection died while processing request'
 
 ERROR_DICT = {  ControlResErr.NO_DNODE : NO_DNODE_error,
                 ControlResErr.DAEMON : DAEMON_error,
@@ -329,10 +338,8 @@ def changeState(instruction, nsamples=None, filename=None, debug=False):
             if debug: print 'Current state: %s' % bin(state)
             toggleStreaming(enable, state, debug=debug)
         except socket.error:
-            print "Can't open connection to daemon"
             raise
         except DaemonControlError:
-            print "Daemon reported errors"
             raise
     elif mode == 'snapshot':
         if verb == 'take':
@@ -352,10 +359,8 @@ def changeState(instruction, nsamples=None, filename=None, debug=False):
             if debug: print 'Current state: %s' % bin(state)
             toggleRecording(enable, state)
         except socket.error:
-            print "Can't open connection to daemon"
             raise
         except DaemonControlError:
-            print "Daemon reported errors"
             raise
     else:
         print 'invalid mode: %s' % mode

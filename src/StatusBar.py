@@ -2,34 +2,46 @@ import socket
 from PyQt4 import QtCore, QtGui
 from StateManagement import *   # implicitly imports * from daemon_control
 
-class StatusBar(QtGui.QStatusBar):
+GOOD_STYLE = 'QLabel {background-color: #8fdb90; font: bold}'
+UNKNOWN_STYLE = 'QLabel {background-color: gray; font: bold}'
+BAD_STYLE = 'QLabel {background-color: orange; font: bold}'
+
+class StatusBar(QtGui.QWidget):
 
     def __init__(self):
         super(StatusBar, self).__init__()
 
-        self.goodStyle = 'QLabel {background-color: #8fdb90; font: bold}'
-        self.unknownStyle = 'QLabel {background-color: gray; font: bold}'
-        self.badStyle = 'QLabel {background-color: orange; font: bold}'
-
-        self.daemonLabel = QtGui.QLabel('Daemon')
-        self.daemonLabel.setStyleSheet(self.unknownStyle)
-        self.addWidget(self.daemonLabel)
-
-        self.datanodeLabel = QtGui.QLabel('Datanode')
-        self.datanodeLabel.setStyleSheet(self.unknownStyle)
-        self.addWidget(self.datanodeLabel)
-
-        self.firmwareLabel = QtGui.QLabel('(firmware)')
-        self.firmwareLabel.setStyleSheet(self.unknownStyle)
-        self.addWidget(self.firmwareLabel)
-
-        self.errorLabel = QtGui.QLabel('(errors)')
-        self.errorLabel.setStyleSheet(self.unknownStyle)
-        self.addWidget(self.errorLabel)
+        layout = QtGui.QGridLayout()
 
         self.watchdogCheckbox = QtGui.QCheckBox('Watchdog')
         self.watchdogCheckbox.stateChanged.connect(self.toggleWatchdog)
-        self.addWidget(self.watchdogCheckbox)
+        layout.addWidget(self.watchdogCheckbox, 0,0)
+
+        self.daemonLabel = QtGui.QLabel('Daemon')
+        self.daemonLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.daemonLabel, 1,0)
+
+        self.datanodeLabel = QtGui.QLabel('Datanode')
+        self.datanodeLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.datanodeLabel, 1,1)
+
+        self.firmwareLabel = QtGui.QLabel('(firmware)')
+        self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.firmwareLabel, 2,0)
+
+        self.errorLabel = QtGui.QLabel('(errors)')
+        self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.errorLabel, 2,1)
+
+        self.streamLabel = QtGui.QLabel('Not Streaming')
+        self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.streamLabel)
+
+        self.recordLabel = QtGui.QLabel('Not Recording')
+        self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.recordLabel)
+
+        self.setLayout(layout)
 
         ###
 
@@ -54,46 +66,76 @@ class StatusBar(QtGui.QStatusBar):
     def watchdogCallback(self):
         try:
             pingDatanode()
-            self.daemonLabel.setStyleSheet(self.goodStyle)
-            self.datanodeLabel.setStyleSheet(self.goodStyle)
-            #
+            self.daemonLabel.setStyleSheet(GOOD_STYLE)
+            self.datanodeLabel.setStyleSheet(GOOD_STYLE)
+            # Firmware Label
             firmwareVersion = doRegRead(MOD_CENTRAL, CENTRAL_GIT_SHA_PIECE)
             self.firmwareLabel.setText('Firmware: %x' % firmwareVersion)
-            self.firmwareLabel.setStyleSheet(self.goodStyle)
-            #
-            errorState = doRegRead(MOD_ERR, ERR_ERR0)
-            if errorState==0:
-                self.errorLabel.setText('No Errors')
-                self.errorLabel.setStyleSheet(self.goodStyle)
+            self.firmwareLabel.setStyleSheet(GOOD_STYLE)
+            # Error Label
+            self.errorLabel.setText('No Errors')
+            self.errorLabel.setStyleSheet(GOOD_STYLE)
+            # Stream/Record
+            state = checkState()
+            if (state & 0b001):
+                self.streamLabel.setText('Streaming')
+                self.streamLabel.setStyleSheet(GOOD_STYLE)
             else:
-                self.errorLabel.setText('Errors: %s' % bin(errorState)[2:])
-                self.errorLabel.setStyleSheet(self.alertStyle)
+                self.streamLabel.setText('Not Streaming')
+                self.streamLabel.setStyleSheet(GOOD_STYLE)
+            if (state & 0b100):
+                self.recordLabel.setText('Recording')
+                self.recordLabel.setStyleSheet(GOOD_STYLE)
+            else:
+                self.recordLabel.setText('Not Recording')
+                self.recordLabel.setStyleSheet(GOOD_STYLE)
         except socket.error:
-            self.daemonLabel.setStyleSheet(self.badStyle)
-            self.datanodeLabel.setStyleSheet(self.unknownStyle)
+            self.daemonLabel.setStyleSheet(BAD_STYLE)
+            self.datanodeLabel.setStyleSheet(UNKNOWN_STYLE)
             self.firmwareLabel.setText('Firmware: xxxxxxxx')
-            self.firmwareLabel.setStyleSheet(self.unknownStyle)
+            self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
             self.errorLabel.setText('(errors)')
-            self.errorLabel.setStyleSheet(self.unknownStyle)
-        except (NO_DNODE_error, DNODE_DIED_error):
+            self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
+            self.streamLabel.setText('stream unknown')
+            self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
+            self.recordLabel.setText('record unknown')
+            self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
+        except (NO_DNODE_error, DNODE_DIED_error) as e:
             # datanode is not connected
-            self.daemonLabel.setStyleSheet(self.goodStyle)
-            self.datanodeLabel.setStyleSheet(self.badStyle)
+            self.daemonLabel.setStyleSheet(GOOD_STYLE)
+            self.datanodeLabel.setStyleSheet(BAD_STYLE)
             self.firmwareLabel.setText('Firmware: xxxxxxxx')
-            self.firmwareLabel.setStyleSheet(self.unknownStyle)
+            self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
             self.errorLabel.setText('(errors)')
-            self.errorLabel.setStyleSheet(self.unknownStyle)
+            self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
+            self.streamLabel.setText('stream unknown')
+            self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
+            self.recordLabel.setText('record unknown')
+            self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
         except DNODE_error:
             # datanode is connected, but there is an error condition on the board
-            self.daemonLabel.setStyleSheet(self.goodStyle)
-            self.datanodeLabel.setStyleSheet(self.goodStyle)
+            self.daemonLabel.setStyleSheet(GOOD_STYLE)
+            self.datanodeLabel.setStyleSheet(GOOD_STYLE)
             #
             firmwareVersion = doRegRead(MOD_CENTRAL, CENTRAL_GIT_SHA_PIECE)
             self.firmwareLabel.setText('Firmware: %x' % firmwareVersion)
-            self.firmwareLabel.setStyleSheet(self.goodStyle)
+            self.firmwareLabel.setStyleSheet(GOOD_STYLE)
             #
             errorState = doRegRead(MOD_ERR, ERR_ERR0)
-            self.errorLabel.setText('Errors: %s' % bin(errorState)[2:])
-            self.errorLabel.setStyleSheet(self.badStyle)
+            self.errorLabel.setText('Errors: %s' % bin(errorState)[2:].zfill(6))
+            self.errorLabel.setStyleSheet(BAD_STYLE)
+            state = checkState()
+            if (state & 0b001):
+                self.streamLabel.setText('Streaming')
+                self.streamLabel.setStyleSheet(GOOD_STYLE)
+            else:
+                self.streamLabel.setText('Not Streaming')
+                self.streamLabel.setStyleSheet(GOOD_STYLE)
+            if (state & 0b100):
+                self.recordLabel.setText('Recording')
+                self.recordLabel.setStyleSheet(GOOD_STYLE)
+            else:
+                self.recordLabel.setText('Not Recording')
+                self.recordLabel.setStyleSheet(GOOD_STYLE)
 
 
