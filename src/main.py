@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-WiredLeaf Control Panel GUI
-Created on 20140522 by Chris Chronopoulos.
+Willow Control Panel GUI
+Initiated on 20140522 by Chris Chronopoulos (chrono@leaflabs.com)
 """
 
 import sys, os, time, subprocess, socket
@@ -23,7 +23,6 @@ from StatusBar import StatusBar
 from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
-from StateManagement import pingDatanode, DaemonControlError
 
 oFile = open('../log/oFile', 'w')
 eFile = open('../log/eFile', 'w')
@@ -78,9 +77,9 @@ class MainWindow(QtGui.QWidget):
         mainLayout.addWidget(self.TBSplitter)
 
         self.setLayout(mainLayout)
-        self.setWindowTitle('WiredLeaf Control Panel')
+        self.setWindowTitle('Willow Control Panel')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-        self.resize(400,400)
+        self.resize(400,200)
         self.center()
 
         ###

@@ -10,7 +10,8 @@ from parameters import *
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
 
-from StateManagement import checkState, changeState, AlreadyError, DaemonControlError, StateChangeError
+import hwif
+import CustomExceptions as ex
 
 class MessageWindow(QtGui.QWidget):
 
@@ -61,11 +62,11 @@ class AcquireTab(QtGui.QWidget):
             self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate)
             self.streamWindow.show()
 
-    def takeSnapshot(self):
+    def takeSnapshot_old(self):
         nsamples_requested, filename, plot, ok = SnapshotParametersDialog.getSnapshotParams()
         if ok:
             try:
-                nsamples_actual= changeState('take snapshot', nsamples=nsamples_requested, filename=filename)
+                nsamples_actual = changeState('take snapshot', nsamples=nsamples_requested, filename=filename)
                 if nsamples_actual == nsamples_requested:
                     self.parent.statusBox.append('Snapshot complete. Saved %d samples to: %s' %
                                                     (nsamples_actual, filename))
@@ -83,15 +84,33 @@ class AcquireTab(QtGui.QWidget):
             except DaemonControlError:
                 self.parent.statusBox.append('Daemon control error.')
 
+    def takeSnapshot(self):
+        nsamples_requested, filename, plot, ok = SnapshotParametersDialog.getSnapshotParams()
+        if ok:
+            try:
+                nsamples_actual = hwif.takeSnapshot(nsamples=nsamples_requested, filename=filename)
+                if nsamples_actual == nsamples_requested:
+                    self.parent.statusBox.append('Snapshot complete. Saved %d samples to: %s' %
+                                                    (nsamples_actual, filename))
+                else:
+                    self.parent.statusBox.append('Packets dropped. Saved %d samples to: %s' %
+                                                    (nsamples_actual, filename))
+                if plot:
+                    plotWindow = PlotWindow(self, filename, [0,nsamples_actual-1])
+                    self.plotWindows.append(plotWindow)
+                    plotWindow.show()
+            except ex.StateChangeError:
+                self.parent.statusBox.append("Can't take snapshot while streaming.")
+            except socket.error:
+                self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
+            except tuple(ex.ERROR_DICT.values()) as e:
+                self.parent.parent.statusBox.append('Error: %s' % e)
+
     class RecordWidget(QtGui.QWidget):
 
         def __init__(self, parent):
             super(AcquireTab.RecordWidget, self).__init__() # does this work?
             self.parent = parent
-
-            self.statusBar = QtGui.QLabel('Not Recording')
-            self.statusBar.setAlignment(QtCore.Qt.AlignCenter)
-            self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
 
             self.progressBar = QtGui.QProgressBar()
             self.progressBar.setMinimum(0)
@@ -104,51 +123,42 @@ class AcquireTab(QtGui.QWidget):
             self.stopButton.clicked.connect(self.stopRecording)
 
             self.layout = QtGui.QGridLayout()
-            self.layout.addWidget(self.statusBar, 0,0,1,2)
-            self.layout.addWidget(QtGui.QLabel('Disk Usage:'), 1,0,1,2)
-            self.layout.addWidget(self.progressBar, 2,0,1,2)
-            self.layout.addWidget(self.startButton, 3,0,1,1)
-            self.layout.addWidget(self.stopButton, 3,1,1,1)
+            self.layout.addWidget(QtGui.QLabel('Disk Usage:'), 0,0,1,2)
+            self.layout.addWidget(self.progressBar, 1,0,1,2)
+            self.layout.addWidget(self.startButton, 2,0,1,1)
+            self.layout.addWidget(self.stopButton, 2,1,1,1)
 
             self.setLayout(self.layout)
-            self.setMinimumHeight(200)
+            self.setMinimumHeight(100)
 
             self.timer = QtCore.QTimer()
             self.timer.timeout.connect(self.updateProgressBar)
 
         def startRecording(self):
             try:
-                changeState('start recording')
+                hwif.startRecording()
                 self.timer.start(5000)
-                self.statusBar.setText('Recording')
-                self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
                 self.parent.parent.statusBox.append('Started recording.')
-            except AlreadyError:
+            except ex.AlreadyError:
                 self.parent.parent.statusBox.append('Already recording.')
                 self.timer.start(5000)
-                self.statusBar.setText('Recording')
-                self.statusBar.setStyleSheet('QLabel {background-color: red; font: bold}')
             except socket.error:
                 self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
-            except DaemonControlError:
-                self.parent.parent.statusBox.append('Daemon Control Error.')
+            except tuple(ex.ERROR_DICT.values()) as e:
+                self.parent.parent.statusBox.append('Error: %s' % e)
 
         def stopRecording(self):
             try:
-                changeState('stop recording')
+                hwif.stopRecording()
                 self.timer.stop()
-                self.statusBar.setText('Not Recording')
-                self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
                 self.parent.parent.statusBox.append('Stopped recording.')
-            except AlreadyError:
+            except ex.AlreadyError:
                 self.parent.parent.statusBox.append('Already not recording.')
                 self.timer.stop()
-                self.statusBar.setText('Not Recording')
-                self.statusBar.setStyleSheet('QLabel {background-color: gray; font: bold}')
             except socket.error:
                 self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
-            except DaemonControlError:
-                self.parent.parent.statusBox.append('Daemon Control Error.')
+            except tuple(ex.ERROR_DICT.values()) as e:
+                self.parent.parent.statusBox.append('Error: %s' % e)
 
         def updateProgressBar(self):
             resp = do_control_cmd(reg_read(2, 7)) # SATA module, Last Write Index (4B)

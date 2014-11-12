@@ -1,10 +1,13 @@
 import socket
 from PyQt4 import QtCore, QtGui
-from StateManagement import *   # implicitly imports * from daemon_control
+#from StateManagement import *   # implicitly imports * from daemon_control
+import hwif
 
 GOOD_STYLE = 'QLabel {background-color: #8fdb90; font: bold}'
 UNKNOWN_STYLE = 'QLabel {background-color: gray; font: bold}'
 BAD_STYLE = 'QLabel {background-color: orange; font: bold}'
+STREAM_STYLE = 'QLabel {background-color: rgb(0,191,255); font: bold}'
+RECORD_STYLE = 'QLabel {background-color: red; font: bold}'
 
 class StatusBar(QtGui.QWidget):
 
@@ -64,78 +67,62 @@ class StatusBar(QtGui.QWidget):
         self.watchdogTimer.stop()
 
     def watchdogCallback(self):
-        try:
-            pingDatanode()
+        vitals = hwif.checkVitals()
+
+        tmp = vitals['daemon']
+        if tmp == True:
             self.daemonLabel.setStyleSheet(GOOD_STYLE)
+        elif tmp == False:
+            self.daemonLabel.setStyleSheet(BAD_STYLE)
+        elif tmp == None:
+            self.daemonLabel.setStyleSheet(UNKNOWN_STYLE)
+
+        tmp = vitals['datanode']
+        if tmp == True:
             self.datanodeLabel.setStyleSheet(GOOD_STYLE)
-            # Firmware Label
-            firmwareVersion = doRegRead(MOD_CENTRAL, CENTRAL_GIT_SHA_PIECE)
-            self.firmwareLabel.setText('Firmware: %x' % firmwareVersion)
+        elif tmp == False:
+            self.datanodeLabel.setStyleSheet(BAD_STYLE)
+        elif tmp == None:
+            self.datanodeLabel.setStyleSheet(UNKNOWN_STYLE)
+
+        tmp = vitals['firmware']
+        if tmp == None:
+            self.firmwareLabel.setText('(firmware)')
+            self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
+        else:
+            self.firmwareLabel.setText('Firmware: %x' % tmp)
             self.firmwareLabel.setStyleSheet(GOOD_STYLE)
-            # Error Label
+
+        tmp = vitals['errors']
+        if tmp == None:
+            self.errorLabel.setText('(errors)')
+            self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
+        elif tmp == 0:
             self.errorLabel.setText('No Errors')
             self.errorLabel.setStyleSheet(GOOD_STYLE)
-            # Stream/Record
-            state = checkState()
-            if (state & 0b001):
-                self.streamLabel.setText('Streaming')
-                self.streamLabel.setStyleSheet(GOOD_STYLE)
-            else:
-                self.streamLabel.setText('Not Streaming')
-                self.streamLabel.setStyleSheet(GOOD_STYLE)
-            if (state & 0b100):
-                self.recordLabel.setText('Recording')
-                self.recordLabel.setStyleSheet(GOOD_STYLE)
-            else:
-                self.recordLabel.setText('Not Recording')
-                self.recordLabel.setStyleSheet(GOOD_STYLE)
-        except socket.error:
-            self.daemonLabel.setStyleSheet(BAD_STYLE)
-            self.datanodeLabel.setStyleSheet(UNKNOWN_STYLE)
-            self.firmwareLabel.setText('Firmware: xxxxxxxx')
-            self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
-            self.errorLabel.setText('(errors)')
-            self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
-            self.streamLabel.setText('stream unknown')
-            self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
-            self.recordLabel.setText('record unknown')
-            self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
-        except (NO_DNODE_error, DNODE_DIED_error) as e:
-            # datanode is not connected
-            self.daemonLabel.setStyleSheet(GOOD_STYLE)
-            self.datanodeLabel.setStyleSheet(BAD_STYLE)
-            self.firmwareLabel.setText('Firmware: xxxxxxxx')
-            self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
-            self.errorLabel.setText('(errors)')
-            self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
-            self.streamLabel.setText('stream unknown')
-            self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
-            self.recordLabel.setText('record unknown')
-            self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
-        except DNODE_error:
-            # datanode is connected, but there is an error condition on the board
-            self.daemonLabel.setStyleSheet(GOOD_STYLE)
-            self.datanodeLabel.setStyleSheet(GOOD_STYLE)
-            #
-            firmwareVersion = doRegRead(MOD_CENTRAL, CENTRAL_GIT_SHA_PIECE)
-            self.firmwareLabel.setText('Firmware: %x' % firmwareVersion)
-            self.firmwareLabel.setStyleSheet(GOOD_STYLE)
-            #
-            errorState = doRegRead(MOD_ERR, ERR_ERR0)
-            self.errorLabel.setText('Errors: %s' % bin(errorState)[2:].zfill(6))
+        else:
+            self.errorLabel.setText('Errors: %s' % bin(tmp)[2:].zfill(6))
             self.errorLabel.setStyleSheet(BAD_STYLE)
-            state = checkState()
-            if (state & 0b001):
-                self.streamLabel.setText('Streaming')
-                self.streamLabel.setStyleSheet(GOOD_STYLE)
-            else:
-                self.streamLabel.setText('Not Streaming')
-                self.streamLabel.setStyleSheet(GOOD_STYLE)
-            if (state & 0b100):
-                self.recordLabel.setText('Recording')
-                self.recordLabel.setStyleSheet(GOOD_STYLE)
-            else:
-                self.recordLabel.setText('Not Recording')
-                self.recordLabel.setStyleSheet(GOOD_STYLE)
 
+        tmp = vitals['stream']
+        if tmp == True:
+            self.streamLabel.setText('Streaming')
+            self.streamLabel.setStyleSheet(STREAM_STYLE)
+        elif tmp == False:
+            self.streamLabel.setText('Not Streaming')
+            self.streamLabel.setStyleSheet(GOOD_STYLE)
+        elif tmp == None:
+            self.streamLabel.setText('(stream)')
+            self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
+
+        tmp = vitals['record']
+        if tmp == True:
+            self.recordLabel.setText('Recording')
+            self.recordLabel.setStyleSheet(RECORD_STYLE)
+        elif tmp == False:
+            self.recordLabel.setText('Not Recording')
+            self.recordLabel.setStyleSheet(GOOD_STYLE)
+        elif tmp == None:
+            self.recordLabel.setText('(record)')
+            self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
 
