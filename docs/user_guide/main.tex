@@ -4,7 +4,7 @@
 \input{header.tex}
 \usepackage{bm}
 
-\title{WiredLeaf GUI User Guide}
+\title{Willow GUI User Guide}
 \date{\today}
 
 \begin{document}
@@ -15,33 +15,33 @@
 \section{Introduction}
 \label{sec_intro}
 
-This is the user guide for the WiredLeaf GUI --- a desktop application for interacting with WiredLeaf, a 1024-channel electrophysiology system developed by LeafLabs (www.leaflabs.com) in collaboration with MIT's Synthetic Neurobiology Group (SNG). This document, which is contained in the source code repository in \texttt{docs/user\_guide/}, contains information for end-users. Developers should check out the developer's guide, which can be found in \texttt{docs/dev\_guide/}.
+This is the user guide for the Willow GUI --- a desktop application for interacting with Willow, a 1024-channel electrophysiology system developed by LeafLabs (www.leaflabs.com) in collaboration with MIT's Synthetic Neurobiology Group (SNG). This document, which is contained in the source code repository in \texttt{docs/user\_guide/}, contains information for end-users. Developers should check out the developer's guide, which can be found in \texttt{docs/dev\_guide/}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{System Overview}
 \label{sec_overview}
 
-WiredLeaf is based on a Spartan 6 FPGA which collects and routes data from up to 32 amplifier/digitizer chips (Intan RHD2132), each chip sampling 32 channels of electrophysiology signals. The primary purpose of the hardware is to record all 1024 channels of data directly to an SSD, which is connected via SATA interface to the WiredLeaf board. A photograph of the bare hardware, connected and ready to record from a single headstage, is shown in Figure~\ref{fig_hw}.
+Willow is based on a Spartan 6 FPGA which collects and routes data from up to 32 amplifier/digitizer chips (Intan RHD2132), each chip sampling 32 channels of electrophysiology signals. The primary purpose of the hardware is to record all 1024 channels of data directly to an SSD, which is connected via SATA interface to the Willow board. A photograph of the bare hardware, connected and ready to record from a single headstage, is shown in Figure~\ref{fig_hw}.
 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[width=6cm]{screenshots/full_setup.png}
 \end{center}
-\caption{WiredLeaf hardware with a single headstage connected.}
+\caption{Willow hardware with a single headstage connected.}
 \label{fig_hw}
 \end{figure}
 
-The WiredLeaf board communicates over TCP and UDP connections with a workstation computer running a daemon server called \texttt{leafysd}. All interactions with the hardware go through the daemon, which exposes an interface based on Google's Protocol Buffers (protobuf). The daemon repository includes command-line utilities for sending and receiving protobuf messages to and from the daemon. The GUI was designed to replace the command-line workflow with a more accessible and streamlined graphical approach.
+The Willow board communicates over TCP and UDP connections with a workstation computer running a daemon server called \texttt{leafysd}. All interactions with the hardware go through the daemon, which exposes an interface based on Google's Protocol Buffers (protobuf). The daemon repository includes command-line utilities for sending and receiving protobuf messages to and from the daemon. The GUI was designed to replace the command-line workflow with a more accessible and streamlined graphical approach.
 
-There are many layers to the full WiredLeaf system; to learn more about them in detail, see \texttt{wired-leaf-docs/user\_guide}. For the end-user, however, it is sufficient to be familiar with the basic architecture of the system. Namely, that the only robust mode of data acquisition is recording, which saves data directly to the SSD, and not to the workstation. To tighten the feedback look for data validation, there are other modes of acquisition (namely streaming and snapshots) which route data directly to the workstation, but these are not robust to data loss. For scientific experiments, the workflow is: record to SATA disk, then transfer over to a workstation for analysis. This is further explained in Section~\ref{sec_usage}.
+There are many layers to the full Willow system; to learn more about them in detail, see \texttt{wired-leaf-docs/user\_guide}. For the end-user, however, it is sufficient to be familiar with the basic architecture of the system. Namely, that the only robust mode of data acquisition is recording, which saves data directly to the SSD, and not to the workstation. To tighten the feedback look for data validation, there are other modes of acquisition (namely streaming and snapshots) which route data directly to the workstation, but these are not robust to data loss. For scientific experiments, the workflow is: record to SATA disk, then transfer over to a workstation for analysis. This is further explained in Section~\ref{sec_usage}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Setup}
 \label{sec_setup}
 
-This setup guide assumes you have already installed the daemon and configured your network; if not, refer to the WiredLeaf user guide in \texttt{wired-leaf-docs/user\_guide}.
+This setup guide assumes you have already installed the daemon and configured your network; if not, refer to the Willow user guide in \texttt{wired-leaf-docs/user\_guide}.
 
 \subsection{Obtaining the GUI}
 \label{sec_setup_obtaining}
@@ -95,7 +95,7 @@ The GUI will present its main window (Figure~\ref{fig_mainwindow}), which consis
 \subsection{Acquire Tab}
 \label{sec_usage_acquire}
 
-The first tab that is presented when the GUI starts up is the Acquire Tab. It encapsulates the tasks that deal with the data acquisition (DAQ) module on the WiredLeaf hardware. Anything that involves interaction with the Intan chips will be found in the Acquire Tab.
+The first tab that is presented when the GUI starts up is the Acquire Tab. It encapsulates the tasks that deal with the data acquisition (DAQ) module on the Willow hardware. Anything that involves interaction with the Intan chips will be found in the Acquire Tab.
 
 There are three modes of operating the DAQ: streaming, snapshot, and recording. These can be done simultaneously, with exception that you cannot take a snapshot while streaming; if you try, the GUI will refuse, printing a message to let you know.
 

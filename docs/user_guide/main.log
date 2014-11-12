@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.1.21)  1 OCT 2014 23:04
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.1.21)  12 NOV 2014 14:21
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -487,10 +487,10 @@ File: screenshots/full_setup.png Graphic file (type png)
 Package pdftex.def Info: screenshots/full_setup.png used on input line 29.
 (pdftex.def)             Requested size: 170.71652pt x 279.98987pt.
 
-Overfull \hbox (88.46028pt too wide) in paragraph at lines 37--38
-[]\OT1/cmr/m/n/10.95 There are many lay-ers to the full WiredLeaf sys-tem; to l
-earn more about them in de-tail, see \OT1/cmtt/m/n/10.95 wired-leaf-docs/user[]
-guide\OT1/cmr/m/n/10.95 .
+Overfull \hbox (71.85274pt too wide) in paragraph at lines 37--38
+[]\OT1/cmr/m/n/10.95 There are many lay-ers to the full Wil-low sys-tem; to lea
+rn more about them in de-tail, see \OT1/cmtt/m/n/10.95 wired-leaf-docs/user[]gu
+ide\OT1/cmr/m/n/10.95 .
  []
 
 [1
@@ -627,7 +627,7 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 225.
 Here is how much of TeX's memory you used:
  8355 strings out of 493307
  119787 string characters out of 6139905
- 219914 words of memory out of 5000000
+ 219908 words of memory out of 5000000
  11658 multiletter control sequences out of 15000+600000
  12436 words of font info for 46 fonts, out of 8000000 for 9000
  957 hyphenation exceptions out of 8191
@@ -639,7 +639,7 @@ ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/tex
 mf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts
 /type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on main.pdf (8 pages, 2058473 bytes).
+Output written on main.pdf (8 pages, 2058637 bytes).
 PDF statistics:
  184 PDF objects out of 1000 (max. 8388607)
  145 compressed objects within 2 object streams
