@@ -177,8 +177,20 @@ def takeSnapshot(nsamples, filename):
             else:
                 raise Exception('ControlResStore Status: %d' % resp.store.status)
 
-def doTransfer():
-    pass
+def doTransfer(nsamples=None, filename=None):
+    if isStreaming() or isRecording():
+        raise ex.StateChangeError
+    else:
+        cmd = ControlCommand(type=ControlCommand.STORE)
+        cmd.store.start_sample = 0
+        if nsamples:
+            cmd.store.nsamples = nsamples
+        # (else leave missing which indicates whole experiment)
+        cmd.store.path = filename
+        resp = do_control_cmd(cmd)
+        if resp.type==ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+
 
 def pingDatanode():
     cmd = ControlCommand(type=ControlCommand.PING_DNODE)
