@@ -62,28 +62,6 @@ class AcquireTab(QtGui.QWidget):
             self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate)
             self.streamWindow.show()
 
-    def takeSnapshot_old(self):
-        nsamples_requested, filename, plot, ok = SnapshotParametersDialog.getSnapshotParams()
-        if ok:
-            try:
-                nsamples_actual = changeState('take snapshot', nsamples=nsamples_requested, filename=filename)
-                if nsamples_actual == nsamples_requested:
-                    self.parent.statusBox.append('Snapshot complete. Saved %d samples to: %s' %
-                                                    (nsamples_actual, filename))
-                else:
-                    self.parent.statusBox.append('Packets dropped. Saved %d samples to: %s' %
-                                                    (nsamples_actual, filename))
-                if plot:
-                    plotWindow = PlotWindow(self, filename, [0,nsamples_actual-1])
-                    self.plotWindows.append(plotWindow)
-                    plotWindow.show()
-            except StateChangeError:
-                self.parent.statusBox.append("Can't take snapshot while streaming.")
-            except socket.error:
-                self.parent.statusBox.append('Socket error: Could not connect to daemon.')
-            except DaemonControlError:
-                self.parent.statusBox.append('Daemon control error.')
-
     def takeSnapshot(self):
         nsamples_requested, filename, plot, ok = SnapshotParametersDialog.getSnapshotParams()
         if ok:
