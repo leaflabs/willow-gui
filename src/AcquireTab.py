@@ -102,9 +102,9 @@ class AcquireTab(QtGui.QWidget):
             except ex.StateChangeError:
                 self.parent.statusBox.append("Can't take snapshot while streaming.")
             except socket.error:
-                self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
+                self.parent.statusBox.append('Socket error: Could not connect to daemon.')
             except tuple(ex.ERROR_DICT.values()) as e:
-                self.parent.parent.statusBox.append('Error: %s' % e)
+                self.parent.statusBox.append('Error: %s' % e)
 
     class RecordWidget(QtGui.QWidget):
 
