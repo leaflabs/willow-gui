@@ -16,10 +16,14 @@ import CustomExceptions as ex
 
 def isStreaming():
     resp = do_control_cmd(reg_read(3,9))
+    if resp.type == ControlResponse.ERR:
+        raise ex.ERROR_DICT[resp.err.code]
     return resp.reg_io.val == 1
 
 def isRecording():
     resp = do_control_cmd(reg_read(3,11))
+    if resp.type == ControlResponse.ERR:
+        raise ex.ERROR_DICT[resp.err.code]
     return resp.reg_io.val == 3
 
 def startStreaming():
