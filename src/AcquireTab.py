@@ -75,7 +75,7 @@ class AcquireTab(QtGui.QWidget):
                                                     (nsamples_actual, filename))
                 if plot:
                     plotWindow = PlotWindow(self, filename, [0,nsamples_actual-1])
-                    self.plotWindows.append(plotWindow)
+                    #self.plotWindows.append(plotWindow)
                     plotWindow.show()
             except ex.StateChangeError:
                 self.parent.statusBox.append("Can't take snapshot while streaming.")

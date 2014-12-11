@@ -52,7 +52,9 @@ class PlotTab(QtGui.QWidget):
                 sampleRange = [fromSample, toSample]
 
             plotWindow = PlotWindow(self, filename, sampleRange)
-            self.plotWindows.append(plotWindow)
+            #self.plotWindows.append(plotWindow)
+            #plotWindow.deleteLater()
+            plotWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose) # does nothing??
             plotWindow.show()
         else:
             self.parent.statusBox.append('Please enter filename to import.')
