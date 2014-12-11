@@ -117,7 +117,14 @@ class StatusBar(QtGui.QWidget):
 
         tmp = vitals['record']
         if tmp == True:
-            self.recordLabel.setText('Recording')
+            """
+            TODO
+            If vitals['record']==True, then subsequent hwif commands *should* work,
+            but this is subject to a race condition, so this should be wrapped in
+            some carefully chosen exception handlers.
+            """
+            diskIndex = hwif.doRegRead(2,7)
+            self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/125e4))
             self.recordLabel.setStyleSheet(RECORD_STYLE)
         elif tmp == False:
             self.recordLabel.setText('Not Recording')
