@@ -81,11 +81,9 @@ class AcquireTab(QtGui.QWidget):
     def startRecording(self):
         try:
             hwif.startRecording()
-            self.timer.start(5000)
             self.parent.statusBox.append('Started recording.')
         except ex.AlreadyError:
             self.parent.statusBox.append('Already recording.')
-            self.timer.start(5000)
         except socket.error:
             self.parent.statusBox.append('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
@@ -94,11 +92,9 @@ class AcquireTab(QtGui.QWidget):
     def stopRecording(self):
         try:
             hwif.stopRecording()
-            self.timer.stop()
             self.parent.statusBox.append('Stopped recording.')
         except ex.AlreadyError:
             self.parent.statusBox.append('Already not recording.')
-            self.timer.stop()
         except socket.error:
             self.parent.statusBox.append('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
