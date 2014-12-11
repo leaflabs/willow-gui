@@ -106,5 +106,5 @@ class TransferTab(QtGui.QWidget):
         except socket.error:
             self.parent.statusBox.append('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.parent.parent.statusBox.append('Error: %s' % e)
+            self.parent.statusBox.append('Error: %s' % e)
 
