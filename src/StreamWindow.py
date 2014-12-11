@@ -12,7 +12,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
 
-from StateManagement import *
+import hwif
+import CustomExceptions as ex
 
 def calculateTicks(axisrange):
     delta = axisrange[1] - axisrange[0]
@@ -116,7 +117,7 @@ class StreamWindow(QtGui.QWidget):
         self.layout.addWidget(self.mplWindow)
         self.setLayout(self.layout)
 
-        self.setWindowTitle('WiredLeaf Live Streaming')
+        self.setWindowTitle('Willow Live Streaming')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
 
     def setSubsamples_cherryPick(self):
@@ -155,29 +156,29 @@ class StreamWindow(QtGui.QWidget):
 
     def startStreaming(self):
         try:
-            changeState('start streaming')
+            hwif.startStreaming()
             self.toggleStdin(True)
             self.parent.parent.statusBox.append('Started streaming.')
-        except AlreadyError:
+        except ex.AlreadyError:
             self.toggleStdin(True)
-            self.parent.parent.statusBox.append('Hardware was already streaming')
+            self.parent.parent.statusBox.append('Already streaming')
         except socket.error:
             self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
-        except DaemonControlError:
-            self.parent.parent.statusBox.append('Daemon control error.')
+        except tuple(ex.ERROR_DICT.values()) as e:
+            self.parent.parent.statusBox.append('Error: %s' % e)
 
     def stopStreaming(self):
         try:
-            changeState('stop streaming')
+            hwif.stopStreaming()
             self.toggleStdin(False)
             self.parent.parent.statusBox.append('Stopped streaming.')
-        except AlreadyError:
+        except ex.AlreadyError:
             self.toggleStdin(False)
-            self.parent.parent.statusBox.append('Hardware was already not streaming')
+            self.parent.parent.statusBox.append('Already not streaming')
         except socket.error:
             self.parent.parent.statusBox.append('Socker error: Could not connect to daemon.')
-        except DaemonControlError:
-            self.parent.parent.statusBox.append('Daemon control error.')
+        except tuple(ex.ERROR_DICT.values()) as e:
+            self.parent.parent.statusBox.append('Error: %s' % e)
         except AttributeError:
             self.parent.parent.statusBox.append('AttributeError: Pipe object does not exist')
 
@@ -201,6 +202,6 @@ class StreamWindow(QtGui.QWidget):
         self.canvas.draw()
 
     def closeEvent(self, event):
-        if checkState() & 0b001:
+        if hwif.isStreaming():
             self.stopStreaming()
 

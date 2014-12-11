@@ -12,7 +12,8 @@ from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
 
-from StateManagement import changeState, StateChangeError, DaemonControlError
+import CustomExceptions as ex
+import hwif
 
 def isBlank(string):
     if len(string)==0:
@@ -74,17 +75,6 @@ class TransferTab(QtGui.QWidget):
         except DaemonControlError:
             self.parent.statusBox.append('Daemon control error.')
 
-    def binarySearch_old(self):
-        if self.parent.isConnected():
-            progressBarWindow = ProgressBarWindow(26, 'Analyzing disk for experiment length...')
-            progressBarWindow.show()
-            cookie = getExperimentCookie(0)
-            boundary = findExperimentBoundary_pbar(cookie, 0, int(125e6), progressBarWindow.progressBar, 0)
-            if boundary>0:
-                self.bsResultLabel.setText('Experiment on disk is %d samples, '
-                                            'or %5.2f minutes worth of data.\n'
-                                            'Experiment cookie is %d' % (boundary, boundary/1.8e6, cookie))
-
     class FilenameBrowseWidget(QtGui.QWidget):
 
         def __init__(self, parent):
@@ -109,12 +99,12 @@ class TransferTab(QtGui.QWidget):
         else:
             nsamples = int(nsamples_text)
         try:
-            changeState('do transfer', nsamples, filename)
+            hwif.doTransfer(nsamples, filename)
             self.parent.statusBox.append('Transfer Complete: %s' % filename)
-        except StateChangeError:
-            self.parent.statusBox.append('For now, cannot do transfer while hardware is active.')
+        except ex.StateChangeError:
+            self.parent.statusBox.append('Cannot do transfer while recording or streaming (temporary).')
         except socket.error:
             self.parent.statusBox.append('Socket error: Could not connect to daemon.')
-        except DaemonControlError:
-            self.parent.statusBox.append('Daemon control error.')
+        except tuple(ex.ERROR_DICT.values()) as e:
+            self.parent.statusBox.append('Error: %s' % e)
 

@@ -20,7 +20,7 @@ class StreamDialog(QtGui.QDialog):
         self.channelNumberLine = QtGui.QLineEdit('99')
         self.yminLine = QtGui.QLineEdit('-6000')
         self.ymaxLine = QtGui.QLineEdit('6000')
-        self.refreshRateLine = QtGui.QLineEdit('30')
+        self.refreshRateLine = QtGui.QLineEdit('20')
 
         self.dialogButtons = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)

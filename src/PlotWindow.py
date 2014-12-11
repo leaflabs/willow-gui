@@ -194,7 +194,7 @@ class PlotWindow(QtGui.QWidget):
                     try:
                         self.parent.parent.updateZoom_redraw()
                     except AttributeError:
-                        print 'Caught AttributeError'
+                        pass    # controlpanel won't exist upon first init, this is fine
                 elif self.manualButton.isChecked():
                     self.mode = 'manual'
                     for widg in [self.xminLine, self.xmaxLine, self.yminLine, self.ymaxLine,
