@@ -1,16 +1,5 @@
-"""
-This feels like a weird implementation; I basically followed this:
-http://stackoverflow.com/questions/18196799/how-can-i-show-a-pyqt-modal-dialog-and-get-data-out-of-its-controls-once-its-clo
-"""
-
 from PyQt4 import QtCore, QtGui
-import time, datetime, os, sys
-
 from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
-from daemon_control import *
-
-from StateManagement import checkState, changeState, DaemonControlError
 
 class StreamDialog(QtGui.QDialog):
 
@@ -43,17 +32,11 @@ class StreamDialog(QtGui.QDialog):
         self.resize(500,100)
 
 
-    def getStreamParams(self):
-        channel = int(self.channelNumberLine.text())
-        ymin = int(self.yminLine.text())
-        ymax = int(self.ymaxLine.text())
-        refreshRate = int(self.refreshRateLine.text())
-        return channel, ymin, ymax, refreshRate
-
-    @staticmethod
-    def getParams(parent=None):
-        dialog = StreamDialog(parent)
-        result = dialog.exec_()
-        params = dialog.getStreamParams()
-        return params + (result==QtGui.QDialog.Accepted,)
+    def getParams(self):
+        params = {}
+        params['channel'] = int(self.channelNumberLine.text())
+        params['ymin'] = int(self.yminLine.text())
+        params['ymax'] = int(self.ymaxLine.text())
+        params['refreshRate'] = int(self.refreshRateLine.text())
+        return params
 

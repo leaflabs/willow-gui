@@ -33,8 +33,9 @@ def calculateTicks(axisrange):
 
 class StreamWindow(QtGui.QWidget):
 
-    def __init__(self, parent, chip, chan, yrange_uV, refreshRate):
+    def __init__(self, parent, chip, chan, yrange_uV, refreshRate, statusBox):
         super(StreamWindow, self).__init__(None)
+        self.statusBox = statusBox
 
         self.parent = parent
         self.chip = chip
@@ -149,38 +150,38 @@ class StreamWindow(QtGui.QWidget):
             resps = do_control_cmds(cmds)
             for resp in resps:
                 if resp.type==ControlResponse.ERR:
-                    self.parent.parent.statusBox.append('Daemon control error.')
+                    self.statusBox.append('Daemon control error.')
                     return
         except socket.error:
-            self.parent.parent.statusBox.append('Socket error: Could not connect to daemon')
+            self.statusBox.append('Socket error: Could not connect to daemon')
 
     def startStreaming(self):
         try:
             hwif.startStreaming()
             self.toggleStdin(True)
-            self.parent.parent.statusBox.append('Started streaming.')
+            self.statusBox.append('Started streaming.')
         except ex.AlreadyError:
             self.toggleStdin(True)
-            self.parent.parent.statusBox.append('Already streaming')
+            self.statusBox.append('Already streaming')
         except socket.error:
-            self.parent.parent.statusBox.append('Socket error: Could not connect to daemon.')
+            self.statusBox.append('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.parent.parent.statusBox.append('Error: %s' % e)
+            self.statusBox.append('Error: %s' % e)
 
     def stopStreaming(self):
         try:
             hwif.stopStreaming()
             self.toggleStdin(False)
-            self.parent.parent.statusBox.append('Stopped streaming.')
+            self.statusBox.append('Stopped streaming.')
         except ex.AlreadyError:
             self.toggleStdin(False)
-            self.parent.parent.statusBox.append('Already not streaming')
+            self.statusBox.append('Already not streaming')
         except socket.error:
-            self.parent.parent.statusBox.append('Socker error: Could not connect to daemon.')
+            self.statusBox.append('Socker error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.parent.parent.statusBox.append('Error: %s' % e)
+            self.statusBox.append('Error: %s' % e)
         except AttributeError:
-            self.parent.parent.statusBox.append('AttributeError: Pipe object does not exist')
+            self.statusBox.append('AttributeError: Pipe object does not exist')
 
     def toggleStdin(self, enable):
         if enable:

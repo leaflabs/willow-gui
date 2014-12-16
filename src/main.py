@@ -15,10 +15,8 @@ from matplotlib.figure import Figure
 
 from PyQt4 import QtCore, QtGui
 
-from AcquireTab import AcquireTab
-from TransferTab import TransferTab
-from PlotTab import PlotTab
 from StatusBar import StatusBar
+from ButtonPanel import ButtonPanel
 
 from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
@@ -37,51 +35,29 @@ class MainWindow(QtGui.QWidget):
         self.statusBar = StatusBar()
         self.statusBar.startWatchdog()
 
-        self.tabDialog = QtGui.QTabWidget()
-
-        self.acquireTab= AcquireTab(self)
-        self.tabDialog.addTab(self.acquireTab, 'Acquire')
-
-        self.transferTab = TransferTab(self)
-        self.tabDialog.addTab(self.transferTab, 'Transfer')
-
-        self.plotTab = PlotTab(self)
-        self.tabDialog.addTab(self.plotTab, 'Plot')
-
-        self.tabDialog.setMovable(True)
-
-        self.topHalf = QtGui.QWidget()
-        tmp = QtGui.QVBoxLayout()
-        #tmp.addWidget(self.logo)
-        #tmp.addSpacing(10)
-        tmp.addWidget(self.tabDialog)
-        self.topHalf.setLayout(tmp)
-
         ###
 
         self.statusBox = QtGui.QTextEdit()
         self.statusBox.setReadOnly(True)
 
-        self.bottomHalf = QtGui.QWidget()
-        tmp = QtGui.QVBoxLayout()
-        tmp.addWidget(QtGui.QLabel('Message Log'))
-        tmp.addWidget(self.statusBox)
-        self.bottomHalf.setLayout(tmp)
+        ###
+
+        self.buttonPanel = ButtonPanel(self.statusBox)
 
         ###
 
-        self.TBSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.TBSplitter.addWidget(self.topHalf)
-        self.TBSplitter.addWidget(self.bottomHalf)
-
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.statusBar)
-        mainLayout.addWidget(self.TBSplitter)
+        mainLayout.addWidget(self.buttonPanel)
+        mainLayout.addWidget(QtGui.QLabel('Message Log'))
+        mainLayout.addWidget(self.statusBox)
+
+        ###
 
         self.setLayout(mainLayout)
         self.setWindowTitle('Willow Control Panel')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-        self.resize(400,200)
+        #self.resize(400,200)
         self.center()
 
         ###

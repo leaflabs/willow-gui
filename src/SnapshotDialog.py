@@ -1,21 +1,12 @@
-"""
-This feels like a weird implementation; I basically followed this:
-http://stackoverflow.com/questions/18196799/how-can-i-show-a-pyqt-modal-dialog-and-get-data-out-of-its-controls-once-its-clo
-"""
-
 from PyQt4 import QtCore, QtGui
 import time, datetime, os, sys
 
 from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
-from daemon_control import *
 
-from StateManagement import checkState, changeState, DaemonControlError
-
-class SnapshotParametersDialog(QtGui.QDialog):
+class SnapshotDialog(QtGui.QDialog):
 
     def __init__(self, parent=None):
-        super(SnapshotParametersDialog, self).__init__(parent)
+        super(SnapshotDialog, self).__init__(parent)
 
         self.nsamplesLine = QtGui.QLineEdit('30000')
         dt = datetime.datetime.fromtimestamp(time.time())
@@ -47,22 +38,16 @@ class SnapshotParametersDialog(QtGui.QDialog):
         self.resize(800,100)
 
     def getParams(self):
-        nsamples = int(self.nsamplesLine.text())
-        filename = str(self.filenameLine.text())
-        plot = self.plotCheckbox.isChecked()
-        return nsamples, filename, plot
-
-    @staticmethod
-    def getSnapshotParams(parent=None):
-        dialog = SnapshotParametersDialog(parent)
-        result = dialog.exec_()
-        params = dialog.getParams()
-        return params + (result==QtGui.QDialog.Accepted,)
+        params = {}
+        params['nsamples'] = int(self.nsamplesLine.text())
+        params['filename'] = str(self.filenameLine.text())
+        params['plot'] = self.plotCheckbox.isChecked()
+        return params
 
     def browse(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', DATA_DIR)
-        self.filenameLine.setText(filename)
-
+        if filename:
+            self.filenameLine.setText(filename)
 
 class SnapshotProgressDialog(QtGui.QDialog):
 
