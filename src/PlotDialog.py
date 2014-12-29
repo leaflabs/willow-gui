@@ -28,6 +28,7 @@ class PlotDialog(QtGui.QDialog):
         self.layout.addWidget(self.dialogButtons, 2,0)
 
         self.setLayout(self.layout)
+        self.setWindowTitle('Plot Settings')
 
     def disableSubsetLines(self):
         self.fromLine.setDisabled(True)

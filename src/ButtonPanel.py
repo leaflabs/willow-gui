@@ -8,6 +8,7 @@ from PlotWindow import PlotWindow
 from SnapshotDialog import SnapshotDialog
 from StreamDialog import StreamDialog
 from PlotDialog import PlotDialog
+from TransferDialog import TransferDialog
 
 from parameters import DAEMON_DIR, DATA_DIR
 
@@ -125,7 +126,25 @@ class ButtonPanel(QtGui.QWidget):
             self.statusBox.append('Error: %s' % e)
 
     def transferExperiment(self):
-        pass
+        dlg = TransferDialog()
+        if dlg.exec_():
+            params = dlg.getParams()
+            nsamples = params['nsamples']
+            filename = params['filename']
+            if not filename:
+                filename = '/home/chrono/sng/data/test_transfer.h5' # TODO
+            try:
+                hwif.doTransfer(nsamples, filename)
+                self.statusBox.append('Transfer complete: %s' % filename)
+            except ex.NoResponseError:
+                self.statusBox.append('Error: Could not transfer experiment becasue BSI is missing')
+                self.statusBox.append('Please specify nsamples in the Transfer Dialog and try again.')
+            except ex.StateChangeError:
+                self.statusbox.append('Cannot do transfer while recording of streaming')
+            except socket.error:
+                self.statusBox.append('Socket error: Could not connect to daemon.')
+            except tuple(ex.ERROR_DICT.values()) as e:
+                self.statusBox.append('Error: %s' % e)
 
     def launchPlotWindow(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', DATA_DIR)

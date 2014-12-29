@@ -192,8 +192,11 @@ def doTransfer(nsamples=None, filename=None):
         # (else leave missing which indicates whole experiment)
         cmd.store.path = filename
         resp = do_control_cmd(cmd)
-        if resp.type==ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
+        if resp:
+            if resp.type==ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
 
 
 def pingDatanode():
