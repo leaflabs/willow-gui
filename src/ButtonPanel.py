@@ -1,4 +1,4 @@
-import socket
+import socket, os
 from PyQt4 import QtCore, QtGui
 import hwif
 import CustomExceptions as ex
@@ -132,15 +132,15 @@ class ButtonPanel(QtGui.QWidget):
             nsamples = params['nsamples']
             filename = params['filename']
             if not filename:
-                filename = '/home/chrono/sng/data/test_transfer.h5' # TODO
+                filename = os.path.join(DATA_DIR, 'test_transfer.h5') # TODO
             try:
                 hwif.doTransfer(nsamples, filename)
                 self.statusBox.append('Transfer complete: %s' % filename)
             except ex.NoResponseError:
-                self.statusBox.append('Error: Could not transfer experiment becasue BSI is missing')
+                self.statusBox.append('Error: Could not transfer experiment because BSI is missing.')
                 self.statusBox.append('Please specify nsamples in the Transfer Dialog and try again.')
             except ex.StateChangeError:
-                self.statusbox.append('Cannot do transfer while recording of streaming')
+                self.statusbox.append('Cannot do transfer while recording or streaming')
             except socket.error:
                 self.statusBox.append('Socket error: Could not connect to daemon.')
             except tuple(ex.ERROR_DICT.values()) as e:

@@ -6,7 +6,8 @@ Setup
 
 Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-h5py python-progressbar
+    $ sudo apt-get install python-numpy python-matplotlib python-qt4 \
+	python-h5py python-progressbar
 
 Modify src/parameters.py to store the location of relevant directories on your system:
 
