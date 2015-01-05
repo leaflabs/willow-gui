@@ -134,11 +134,15 @@ class ButtonPanel(QtGui.QWidget):
             if not filename:
                 filename = os.path.join(DATA_DIR, 'test_transfer.h5') # TODO
             try:
-                hwif.doTransfer(nsamples, filename)
-                self.statusBox.append('Transfer complete: %s' % filename)
+                if (nsamples==None) and (hwif.doRegRead(3,3)==0):
+                    self.statusBox.append('Error: Could not transfer experiment because BSI is missing.')
+                    self.statusBox.append('Please specify nsamples in the Transfer Dialog and try again.')
+                else:
+                    hwif.doTransfer(nsamples, filename)
+                    self.statusBox.append('Transfer complete: %s' % filename)
             except ex.NoResponseError:
-                self.statusBox.append('Error: Could not transfer experiment because BSI is missing.')
-                self.statusBox.append('Please specify nsamples in the Transfer Dialog and try again.')
+                # should not get this anymore; delete after confirming
+                self.statusBox.append('NoResponseError - Weird!')
             except ex.StateChangeError:
                 self.statusbox.append('Cannot do transfer while recording or streaming')
             except socket.error:

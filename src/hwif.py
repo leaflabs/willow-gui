@@ -209,8 +209,9 @@ def doRegRead(module, address):
     resp = do_control_cmd(reg_read(module, address))
     if resp.type == ControlResponse.REG_IO:
         return resp.reg_io.val
-    else:
-        raise DaemonControlError
+    elif resp.type==ControlResponse.ERR:
+        raise ex.ERROR_DICT[resp.err.code]
+
 
 def checkVitals():
     vitals = {} # True means up, False means down, None means unknown
