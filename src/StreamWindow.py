@@ -101,10 +101,14 @@ class StreamWindow(QtGui.QWidget):
         # Top-level stuff
         ##################
 
-        self.startButton = QtGui.QPushButton('Start')
+        self.startButton = QtGui.QPushButton()
+        self.startButton.setIcon(QtGui.QIcon('../img/play.png'))
+        self.startButton.setIconSize(QtCore.QSize(48,48))
         self.startButton.clicked.connect(self.startStreaming)
 
-        self.stopButton = QtGui.QPushButton('Stop')
+        self.stopButton = QtGui.QPushButton()
+        self.stopButton.setIcon(QtGui.QIcon('../img/pause.png'))
+        self.stopButton.setIconSize(QtCore.QSize(48,48))
         self.stopButton.clicked.connect(self.stopStreaming)
 
         self.buttonPanel = QtGui.QWidget()
