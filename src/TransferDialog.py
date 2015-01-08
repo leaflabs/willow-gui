@@ -74,7 +74,10 @@ class TransferDialog(QtGui.QDialog):
         else:
             params['nsamples'] = None
         if self.filenameButton.isChecked():
-            params['filename'] = str(self.filenameLine.text())
+            filename = str(self.filenameLine.text())
+            if not os.path.isabs(filename):
+                filename = os.path.join(DATA_DIR, filename)
+            params['filename'] = filename
         else:
             params['filename'] = False
         return params

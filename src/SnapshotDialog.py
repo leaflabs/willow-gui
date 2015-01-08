@@ -40,7 +40,10 @@ class SnapshotDialog(QtGui.QDialog):
     def getParams(self):
         params = {}
         params['nsamples'] = int(float(self.lengthLine.text())*30000)
-        params['filename'] = str(self.filenameLine.text())
+        filename = str(self.filenameLine.text())
+        if not os.path.isabs(filename):
+            filename = os.path.join(DATA_DIR, filename)
+        params['filename'] = filename
         params['plot'] = self.plotCheckbox.isChecked()
         return params
 
