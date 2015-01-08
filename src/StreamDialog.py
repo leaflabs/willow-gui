@@ -22,7 +22,7 @@ class StreamDialog(QtGui.QDialog):
         layout.addWidget(QtGui.QLabel('Y-Range (uV):'), 1,0, 1,1)
         layout.addWidget(self.yminLine, 1,1, 1,1)
         layout.addWidget(self.ymaxLine, 1,2, 1,1)
-        layout.addWidget(QtGui.QLabel('Refresh Rate:'), 2,0, 1,1)
+        layout.addWidget(QtGui.QLabel('Refresh Rate (Hz):'), 2,0, 1,1)
         layout.addWidget(self.refreshRateLine, 2,1, 1,2)
         layout.addWidget(self.dialogButtons, 3,2, 1,2)
 

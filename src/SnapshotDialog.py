@@ -8,7 +8,7 @@ class SnapshotDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(SnapshotDialog, self).__init__(parent)
 
-        self.nsamplesLine = QtGui.QLineEdit('30000')
+        self.lengthLine = QtGui.QLineEdit('1')
         dt = datetime.datetime.fromtimestamp(time.time())
         strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
         filename = os.path.join(DATA_DIR, 'snapshot_%s.h5' % strtime)
@@ -23,8 +23,8 @@ class SnapshotDialog(QtGui.QDialog):
         self.dialogButtons.rejected.connect(self.reject)
 
         layout = QtGui.QGridLayout()
-        layout.addWidget(QtGui.QLabel('Number of Samples:'), 0,0, 1,1)
-        layout.addWidget(self.nsamplesLine, 0,1, 1,1)
+        layout.addWidget(QtGui.QLabel('Length (seconds):'), 0,0, 1,1)
+        layout.addWidget(self.lengthLine, 0,1, 1,1)
         layout.addWidget(QtGui.QLabel('Filename:'), 1,0, 1,1)
         layout.addWidget(self.filenameLine, 1,1, 1,3)
         layout.addWidget(self.browseButton, 1,4, 1,1)
@@ -39,7 +39,7 @@ class SnapshotDialog(QtGui.QDialog):
 
     def getParams(self):
         params = {}
-        params['nsamples'] = int(self.nsamplesLine.text())
+        params['nsamples'] = int(float(self.lengthLine.text())*30000)
         params['filename'] = str(self.filenameLine.text())
         params['plot'] = self.plotCheckbox.isChecked()
         return params

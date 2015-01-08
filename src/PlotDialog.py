@@ -8,11 +8,11 @@ class PlotDialog(QtGui.QDialog):
         self.allDataButton = QtGui.QRadioButton('All data')
         self.allDataButton.setChecked(True)
         self.allDataButton.clicked.connect(self.disableSubsetLines)
-        self.subsetButton = QtGui.QRadioButton('Subset:')
+        self.subsetButton = QtGui.QRadioButton('Subset (seconds):')
         self.subsetButton.clicked.connect(self.enableSubsetLines)
         self.fromLine = QtGui.QLineEdit('0')
         self.fromLine.setDisabled(True)
-        self.toLine = QtGui.QLineEdit('30000')
+        self.toLine = QtGui.QLineEdit('1')
         self.toLine.setDisabled(True)
 
         self.dialogButtons = QtGui.QDialogButtonBox(
@@ -43,5 +43,6 @@ class PlotDialog(QtGui.QDialog):
         if self.allDataButton.isChecked():
             params['sampleRange'] = -1
         else:
-            params['sampleRange'] = [int(self.fromLine.text()), int(self.toLine.text())]
+            params['sampleRange'] = [int(float(self.fromLine.text())*30000),
+                int(float(self.toLine.text())*30000)]
         return params

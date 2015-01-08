@@ -10,16 +10,16 @@ class TransferDialog(QtGui.QDialog):
 
         self.allDataButton = QtGui.QRadioButton('Entire Experiment')
         self.allDataButton.setChecked(True)
-        self.allDataButton.clicked.connect(self.disableNSamplesLine)
-        self.nsamplesButton = QtGui.QRadioButton('Number of Samples:')
-        self.nsamplesButton.clicked.connect(self.enableNSamplesLine)
-        self.nsamplesLine = QtGui.QLineEdit('30000')
-        self.nsamplesLine.setDisabled(True)
+        self.allDataButton.clicked.connect(self.disableSubsetLine)
+        self.subsetButton = QtGui.QRadioButton('Subset (seconds):')
+        self.subsetButton.clicked.connect(self.enableSubsetLine)
+        self.subsetLine = QtGui.QLineEdit('10')
+        self.subsetLine.setDisabled(True)
         self.experimentGroupBox = QtGui.QGroupBox('Experiment')
         layout = QtGui.QGridLayout()
         layout.addWidget(self.allDataButton, 0, 0)
-        layout.addWidget(self.nsamplesButton, 1, 0)
-        layout.addWidget(self.nsamplesLine, 1, 1)
+        layout.addWidget(self.subsetButton, 1, 0)
+        layout.addWidget(self.subsetLine, 1, 1)
         self.experimentGroupBox.setLayout(layout)
 
         self.autoNameButton = QtGui.QRadioButton('Name automatically')
@@ -53,11 +53,11 @@ class TransferDialog(QtGui.QDialog):
         self.setWindowTitle('Transfer Parameters')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
 
-    def disableNSamplesLine(self):
-        self.nsamplesLine.setDisabled(True)
+    def disableSubsetLine(self):
+        self.subsetLine.setDisabled(True)
 
-    def enableNSamplesLine(self):
-        self.nsamplesLine.setDisabled(False)
+    def enableSubsetLine(self):
+        self.subsetLine.setDisabled(False)
 
     def disableFilenameLine(self):
         self.filenameLine.setDisabled(True)
@@ -69,8 +69,8 @@ class TransferDialog(QtGui.QDialog):
 
     def getParams(self):
         params = {}
-        if self.nsamplesButton.isChecked():
-            params['nsamples'] = int(self.nsamplesLine.text())
+        if self.subsetButton.isChecked():
+            params['nsamples'] = int(float(self.subsetLine.text())*30000)
         else:
             params['nsamples'] = None
         if self.filenameButton.isChecked():
