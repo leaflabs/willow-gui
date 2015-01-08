@@ -1,4 +1,4 @@
-import socket, os
+import socket, os, datetime
 from PyQt4 import QtCore, QtGui
 import hwif
 import CustomExceptions as ex
@@ -11,6 +11,8 @@ from PlotDialog import PlotDialog
 from TransferDialog import TransferDialog
 
 from parameters import DAEMON_DIR, DATA_DIR
+
+import h5py
 
 class ButtonPanel(QtGui.QWidget):
 
@@ -130,19 +132,27 @@ class ButtonPanel(QtGui.QWidget):
         if dlg.exec_():
             params = dlg.getParams()
             nsamples = params['nsamples']
-            filename = params['filename']
-            if not filename:
-                filename = os.path.join(DATA_DIR, 'test_transfer.h5') # TODO
+            filename = params['filename'] # this is an absolute filename, or False
+            if filename:
+                rename = False
+            else:
+                filename = os.path.join(DATA_DIR, 'tmp_transfer.h5')
+                rename = True
             try:
                 if (nsamples==None) and (hwif.doRegRead(3,3)==0):
                     self.statusBox.append('Error: Could not transfer experiment because BSI is missing.')
                     self.statusBox.append('Please specify nsamples in the Transfer Dialog and try again.')
                 else:
                     hwif.doTransfer(nsamples, filename)
+                    if rename:
+                        tmpFilename = filename
+                        f = h5py.File(tmpFilename)
+                        timestamp = f['wired-dataset'].attrs['experiment_cookie'][0]
+                        dt = datetime.datetime.fromtimestamp(timestamp)
+                        strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+                        filename = os.path.join(DATA_DIR, 'experiment_%s.h5' % strtime)
+                        os.rename(tmpFilename, filename)
                     self.statusBox.append('Transfer complete: %s' % filename)
-            except ex.NoResponseError:
-                # should not get this anymore; delete after confirming
-                self.statusBox.append('NoResponseError - Weird!')
             except ex.StateChangeError:
                 self.statusbox.append('Cannot do transfer while recording or streaming')
             except socket.error:
