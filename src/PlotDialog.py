@@ -15,6 +15,9 @@ class PlotDialog(QtGui.QDialog):
         self.toLine = QtGui.QLineEdit('1')
         self.toLine.setDisabled(True)
 
+        self.warning = QtGui.QLabel('<b>NOTE:</b> GUI will be unresponsive until'
+            ' import completes;<br>large imports may take several minutes.')
+
         self.dialogButtons = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
         self.dialogButtons.accepted.connect(self.accept)
@@ -25,7 +28,8 @@ class PlotDialog(QtGui.QDialog):
         self.layout.addWidget(self.subsetButton, 1,0)
         self.layout.addWidget(self.fromLine, 1,1)
         self.layout.addWidget(self.toLine, 1,2)
-        self.layout.addWidget(self.dialogButtons, 2,0)
+        self.layout.addWidget(self.warning, 2,1, 1,2)
+        self.layout.addWidget(self.dialogButtons, 3,1, 1,2)
 
         self.setLayout(self.layout)
         self.setWindowTitle('Import Settings')
