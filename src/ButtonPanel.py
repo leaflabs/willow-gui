@@ -167,5 +167,7 @@ class ButtonPanel(QtGui.QWidget):
             if dlg.exec_():
                 params = dlg.getParams()
                 sampleRange = params['sampleRange']
-                plotWindow = PlotWindow(self, str(filename), sampleRange)
-                plotWindow.show()
+                plotWindow = PlotWindow(self, str(filename), sampleRange, self.statusBox)
+                if plotWindow.importSuccess:
+                    plotWindow.show()
+                    
