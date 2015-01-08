@@ -6,7 +6,7 @@ class StreamDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(StreamDialog, self).__init__(parent)
 
-        self.channelNumberLine = QtGui.QLineEdit('99')
+        self.channelNumberLine = QtGui.QLineEdit('0')
         self.yminLine = QtGui.QLineEdit('-6000')
         self.ymaxLine = QtGui.QLineEdit('6000')
         self.refreshRateLine = QtGui.QLineEdit('20')
