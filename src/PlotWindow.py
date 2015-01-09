@@ -85,7 +85,7 @@ class PlotWindow(QtGui.QWidget):
             self.parent = parent
             self.channelsGroup = self.ChannelsGroup(self)
             self.zoomGroup = self.ZoomGroup(self)
-            self.waterfallButton = QtGui.QPushButton('Waterfall')
+            self.waterfallButton = QtGui.QPushButton('Waterfall Plot')
             self.waterfallButton.clicked.connect(self.parent.launchWaterfall)
             self.layout = QtGui.QHBoxLayout()
             self.layout.addWidget(self.channelsGroup)
@@ -330,6 +330,6 @@ class PlotWindow(QtGui.QWidget):
 
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
-    main = PlotWindow(None, '/home/chrono/sng/data/justin/neuralRecording_10sec.h5', [0,5000])
+    main = PlotWindow(None, '/home/chrono/sng/data/justin/neuralRecording_10sec.h5', [0,5000], None)
     main.show()
     app.exec_()

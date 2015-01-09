@@ -96,7 +96,7 @@ class ButtonPanel(QtGui.QWidget):
                     self.statusBox.append('Packets dropped. Saved %d samples to: %s' %
                                                     (nsamples_actual, filename))
                 if plot:
-                    plotWindow = PlotWindow(self, filename, [0,nsamples_actual-1])
+                    plotWindow = PlotWindow(self, filename, [0,nsamples_actual-1], self.statusBox)
                     plotWindow.show()
             except ex.StateChangeError:
                 self.statusBox.append("Can't take snapshot while streaming.")

@@ -124,7 +124,7 @@ class StatusBar(QtGui.QWidget):
             some carefully chosen exception handlers.
             """
             diskIndex = hwif.doRegRead(2,7)
-            self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/125e4))
+            self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/250e4))
             self.recordLabel.setStyleSheet(RECORD_STYLE)
         elif tmp == False:
             self.recordLabel.setText('Not Recording')
