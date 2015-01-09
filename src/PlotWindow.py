@@ -86,6 +86,7 @@ class PlotWindow(QtGui.QWidget):
             self.channelsGroup = self.ChannelsGroup(self)
             self.zoomGroup = self.ZoomGroup(self)
             self.waterfallButton = QtGui.QPushButton('Waterfall Plot')
+            self.waterfallButton.setMaximumWidth(220)
             self.waterfallButton.clicked.connect(self.parent.launchWaterfall)
             self.layout = QtGui.QHBoxLayout()
             self.layout.addWidget(self.channelsGroup)
@@ -328,8 +329,3 @@ class PlotWindow(QtGui.QWidget):
     def closeEvent(self, event):
         print 'closing'
 
-if __name__=='__main__':
-    app = QtGui.QApplication(sys.argv)
-    main = PlotWindow(None, '/home/chrono/sng/data/justin/neuralRecording_10sec.h5', [0,5000], None)
-    main.show()
-    app.exec_()
