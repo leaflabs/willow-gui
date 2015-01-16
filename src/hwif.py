@@ -26,12 +26,36 @@ def isRecording():
         raise ex.ERROR_DICT[resp.err.code]
     return resp.reg_io.val == 3
 
+def getSampleType():
+    val = doRegRead(3,10)
+    if val == 0:
+        return 'subsample'
+    elif val == 1:
+        return 'boardsample'
+    else:
+        return -1
+
 def startStreaming():
     if isStreaming():
         raise ex.AlreadyError
     else:
         cmd = ControlCommand(type=ControlCommand.FORWARD)
         cmd.forward.sample_type = BOARD_SUBSAMPLE
+        cmd.forward.force_daq_reset = not isRecording() # if recording, then DAQ is already running
+        aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)   # TODO should this have its own exception?
+        cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
+        cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+        cmd.forward.enable = True
+        resp = do_control_cmd(cmd)
+        if resp.type == ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+
+def startStreaming_boardSamples():
+    if isStreaming():
+        raise ex.AlreadyError
+    else:
+        cmd = ControlCommand(type=ControlCommand.FORWARD)
+        cmd.forward.sample_type = BOARD_SAMPLE
         cmd.forward.force_daq_reset = not isRecording() # if recording, then DAQ is already running
         aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)   # TODO should this have its own exception?
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
@@ -116,28 +140,16 @@ def stopRecording():
 def takeSnapshot(nsamples, filename):
     cmds = []
     if isStreaming():
-        # can't handle this yet (GUI crashes, look into BSMP vs BSUB issue)
-        raise ex.StateChangeError
-        """
-        cmd = ControlCommand(type=ControlCommand.STORE)
-        cmd.store.path = filename
-        cmd.store.nsamples = nsamples
-        cmds.append(cmd)
-        ###
-        # need this to set sample_type back to BOARD_SAMPLE, otherwise daemon barfs forever
-        cmd = ControlCommand(type=ControlCommand.FORWARD)
-        cmd.forward.sample_type = BOARD_SAMPLE
-        cmd.forward.force_daq_reset = False # ???
-        try:
-            aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)
-        except socket.error:
-            self.parent.statusBox.append('Invalid address: ' + DEFAULT_FORWARD_ADDR)
-            return
-        cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-        cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
-        cmd.forward.enable = True
-        cmds.append(cmd)
-        """
+        sampleType = getSampleType()
+        if sampleType == 'boardsample':
+            cmd = ControlCommand(type=ControlCommand.STORE)
+            cmd.store.path = filename
+            cmd.store.nsamples = nsamples
+            cmds.append(cmd)
+        elif sampleType == 'subsample':
+            raise ex.StateChangeError   #TODO implement a work-around for this
+        else:
+            print 'unrecognized sample type received!'
     elif isRecording():
         # if not streaming, but recording...
         cmd = ControlCommand(type=ControlCommand.STORE)
@@ -210,6 +222,11 @@ def doRegRead(module, address):
     if resp.type == ControlResponse.REG_IO:
         return resp.reg_io.val
     elif resp.type==ControlResponse.ERR:
+        raise ex.ERROR_DICT[resp.err.code]
+
+def doRegWrite(module, address, data):
+    resp = do_control_cmd(reg_write(module, address, data))
+    if resp.type==ControlResponse.ERR:
         raise ex.ERROR_DICT[resp.err.code]
 
 

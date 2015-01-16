@@ -10,6 +10,9 @@ from StreamDialog import StreamDialog
 from PlotDialog import PlotDialog
 from TransferDialog import TransferDialog
 
+from ImpedanceDialog import ImpedanceDialog
+from ImpedanceThread import ImpedanceThread
+
 from parameters import DAEMON_DIR, DATA_DIR
 
 import h5py
@@ -19,6 +22,18 @@ class ButtonPanel(QtGui.QWidget):
     def __init__(self, statusBox):
         super(ButtonPanel, self).__init__()
         self.statusBox = statusBox
+
+        self.impedanceButton = QtGui.QPushButton()
+        self.impedanceButton.setIcon(QtGui.QIcon('../img/impedance.png'))
+        self.impedanceButton.setIconSize(QtCore.QSize(48,48))
+        self.impedanceButton.setToolTip('Run Impedance Test')
+        self.impedanceButton.clicked.connect(self.runImpedanceTest)
+
+        self.electroplatingButton = QtGui.QPushButton()
+        self.electroplatingButton.setIcon(QtGui.QIcon('../img/electroplating.ico'))
+        self.electroplatingButton.setIconSize(QtCore.QSize(48,48))
+        self.electroplatingButton.setToolTip('Run Electroplating')
+        self.electroplatingButton.clicked.connect(self.runElectroplating)
 
         self.streamButton = QtGui.QPushButton()
         self.streamButton.setIcon(QtGui.QIcon('../img/stream.ico'))
@@ -57,14 +72,38 @@ class ButtonPanel(QtGui.QWidget):
         self.plotButton.clicked.connect(self.launchPlotWindow)
 
         layout = QtGui.QGridLayout()
-        layout.addWidget(self.streamButton, 0,0)
-        layout.addWidget(self.snapshotButton, 0,1)
-        layout.addWidget(self.startRecordingButton, 1,0)
-        layout.addWidget(self.stopRecordingButton, 1,1)
-        layout.addWidget(self.transferButton, 2,0)
-        layout.addWidget(self.plotButton, 2,1)
+        layout.addWidget(self.impedanceButton, 0,0)
+        layout.addWidget(self.electroplatingButton, 0,1)
+        layout.addWidget(self.streamButton, 1,0)
+        layout.addWidget(self.snapshotButton, 1,1)
+        layout.addWidget(self.startRecordingButton, 2,0)
+        layout.addWidget(self.stopRecordingButton, 2,1)
+        layout.addWidget(self.transferButton, 3,0)
+        layout.addWidget(self.plotButton, 3,1)
 
         self.setLayout(layout)
+
+    def runImpedanceTest(self):
+        dlg = ImpedanceDialog()
+        if dlg.exec_():
+            params = dlg.getParams()
+            chip = params['chip']
+            chan = params['chan']
+            self.impedanceProgressDialog = QtGui.QProgressDialog('Impedance Testing Progress', 'Cancel', 0, 10)
+            self.impedanceProgressDialog.setAutoReset(False)
+            self.impedanceProgressDialog.setMinimumDuration(0)
+            self.impedanceProgressDialog.setModal(True)
+            self.impedanceThread = ImpedanceThread(chip, chan, self.statusBox)
+            self.impedanceThread.valueChanged.connect(self.impedanceProgressDialog.setValue)
+            self.impedanceThread.maxChanged.connect(self.impedanceProgressDialog.setMaximum)
+            self.impedanceThread.textChanged.connect(self.impedanceProgressDialog.setLabelText)
+            self.impedanceThread.finished.connect(self.impedanceProgressDialog.reset)
+            self.impedanceProgressDialog.canceled.connect(self.impedanceThread.terminate)
+            self.impedanceProgressDialog.show()
+            self.impedanceThread.start()
+
+    def runElectroplating(self):
+        pass
 
     def launchStreamWindow(self):
         dlg = StreamDialog()
