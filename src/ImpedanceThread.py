@@ -129,7 +129,9 @@ class ImpedanceThread(QtCore.QThread):
 
 
     def allChipsRoutine(self):
+        # tmp message
         self.statusBox.append('ImpedanceThead: All Chips Routine not implemented yet.')
+        self.finished.emit()
 
     def oneChipRoutine(self):
         nsamples = 15000

@@ -93,6 +93,7 @@ class ButtonPanel(QtGui.QWidget):
             self.impedanceProgressDialog.setAutoReset(False)
             self.impedanceProgressDialog.setMinimumDuration(0)
             self.impedanceProgressDialog.setModal(True)
+            self.impedanceProgressDialog.setWindowTitle('Impedance Testing Progress')
             self.impedanceThread = ImpedanceThread(chip, chan, self.statusBox)
             self.impedanceThread.valueChanged.connect(self.impedanceProgressDialog.setValue)
             self.impedanceThread.maxChanged.connect(self.impedanceProgressDialog.setMaximum)

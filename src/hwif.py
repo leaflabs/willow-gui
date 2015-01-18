@@ -229,6 +229,25 @@ def doRegWrite(module, address, data):
     if resp.type==ControlResponse.ERR:
         raise ex.ERROR_DICT[resp.err.code]
 
+def doIntanRegWrite(address, data):
+    """
+    Can only write to all chips simultaneously, due to hardware limitations.
+    (Can actually write at "headstage resolution", but this isn't particularly useful.)
+    """
+    address = address & 0b11111
+    cmds = []
+    cmdData = ((0x1 << 24) |                    # aux command write enable
+               (0xFF << 16) |                   # all chips
+               ((0b10000000 | address) << 8) | # intan register address
+               data)                            # data
+    clear = 0
+    cmds.append(reg_write(MOD_DAQ, DAQ_CHIP_CMD, cmdData))
+    cmds.append(reg_write(MOD_DAQ, DAQ_CHIP_CMD, clear))
+    resps = do_control_cmds(cmds)
+    for resp in resps:
+        if resp.type==ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+
 
 def checkVitals():
     vitals = {} # True means up, False means down, None means unknown
