@@ -23,6 +23,7 @@ class ButtonPanel(QtGui.QWidget):
         super(ButtonPanel, self).__init__()
         self.statusBox = statusBox
 
+        """
         self.impedanceButton = QtGui.QPushButton()
         self.impedanceButton.setIcon(QtGui.QIcon('../img/impedance.png'))
         self.impedanceButton.setIconSize(QtCore.QSize(48,48))
@@ -34,6 +35,7 @@ class ButtonPanel(QtGui.QWidget):
         self.electroplatingButton.setIconSize(QtCore.QSize(48,48))
         self.electroplatingButton.setToolTip('Run Electroplating')
         self.electroplatingButton.clicked.connect(self.runElectroplating)
+        """
 
         self.streamButton = QtGui.QPushButton()
         self.streamButton.setIcon(QtGui.QIcon('../img/stream.ico'))
@@ -72,14 +74,14 @@ class ButtonPanel(QtGui.QWidget):
         self.plotButton.clicked.connect(self.launchPlotWindow)
 
         layout = QtGui.QGridLayout()
-        layout.addWidget(self.impedanceButton, 0,0)
-        layout.addWidget(self.electroplatingButton, 0,1)
-        layout.addWidget(self.streamButton, 1,0)
-        layout.addWidget(self.snapshotButton, 1,1)
-        layout.addWidget(self.startRecordingButton, 2,0)
-        layout.addWidget(self.stopRecordingButton, 2,1)
-        layout.addWidget(self.transferButton, 3,0)
-        layout.addWidget(self.plotButton, 3,1)
+        #layout.addWidget(self.impedanceButton, 0,0)
+        #layout.addWidget(self.electroplatingButton, 0,1)
+        layout.addWidget(self.streamButton, 0,0)
+        layout.addWidget(self.snapshotButton, 0,1)
+        layout.addWidget(self.startRecordingButton, 1,0)
+        layout.addWidget(self.stopRecordingButton, 1,1)
+        layout.addWidget(self.transferButton, 2,0)
+        layout.addWidget(self.plotButton, 2,1)
 
         self.setLayout(layout)
 
@@ -140,6 +142,8 @@ class ButtonPanel(QtGui.QWidget):
                     plotWindow.show()
             except ex.StateChangeError:
                 self.statusBox.append("Can't take snapshot while streaming.")
+            except ex.NoResponseError:
+                self.statusBox.append('Control Command got no response')
             except socket.error:
                 self.statusBox.append('Socket error: Could not connect to daemon.')
             except tuple(ex.ERROR_DICT.values()) as e:
@@ -151,6 +155,8 @@ class ButtonPanel(QtGui.QWidget):
             self.statusBox.append('Started recording.')
         except ex.AlreadyError:
             self.statusBox.append('Already recording.')
+        except ex.NoResponseError:
+            self.statusBox.append('Control Command got no response')
         except socket.error:
             self.statusBox.append('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
@@ -162,6 +168,8 @@ class ButtonPanel(QtGui.QWidget):
             self.statusBox.append('Stopped recording.')
         except ex.AlreadyError:
             self.statusBox.append('Already not recording.')
+        except ex.NoResponseError:
+            self.statusBox.append('Control Command got no response')
         except socket.error:
             self.statusBox.append('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
@@ -195,6 +203,8 @@ class ButtonPanel(QtGui.QWidget):
                     self.statusBox.append('Transfer complete: %s' % filename)
             except ex.StateChangeError:
                 self.statusbox.append('Cannot do transfer while recording or streaming')
+            except ex.NoResponseError:
+                self.statusBox.append('Control Command got no response')
             except socket.error:
                 self.statusBox.append('Socket error: Could not connect to daemon.')
             except tuple(ex.ERROR_DICT.values()) as e:

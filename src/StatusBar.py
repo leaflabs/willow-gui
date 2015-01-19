@@ -2,6 +2,7 @@ import socket
 from PyQt4 import QtCore, QtGui
 #from StateManagement import *   # implicitly imports * from daemon_control
 import hwif
+from WatchdogThread import WatchdogThread
 
 GOOD_STYLE = 'QLabel {background-color: #8fdb90; font: bold}'
 UNKNOWN_STYLE = 'QLabel {background-color: gray; font: bold}'
@@ -48,11 +49,13 @@ class StatusBar(QtGui.QWidget):
 
         ###
 
-        self.watchdogTimer = QtCore.QTimer()
-        self.watchdogTimer.timeout.connect(self.watchdogCallback)
+        self.watchdogThread = WatchdogThread()
+        self.watchdogThread.vitalsChecked.connect(self.updateGUI)
 
         self.startWatchdog()
         self.watchdogCheckbox.setChecked(True)
+
+        self.watchdogThread.start()
 
     def toggleWatchdog(self, state):
         if state:
@@ -61,14 +64,12 @@ class StatusBar(QtGui.QWidget):
             self.stopWatchdog()
 
     def startWatchdog(self):
-        self.watchdogTimer.start(1000) # ms
+        self.watchdogLoop = True
 
     def stopWatchdog(self):
-        self.watchdogTimer.stop()
+        self.watchdogLoop = False
 
-    def watchdogCallback(self):
-        vitals = hwif.checkVitals()
-
+    def updateGUI(self, vitals):
         tmp = vitals['daemon']
         if tmp == True:
             self.daemonLabel.setStyleSheet(GOOD_STYLE)
@@ -132,4 +133,7 @@ class StatusBar(QtGui.QWidget):
         elif tmp == None:
             self.recordLabel.setText('(record)')
             self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
+
+        if self.watchdogLoop:
+            self.watchdogThread.start()
 

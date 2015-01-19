@@ -167,6 +167,8 @@ class StreamWindow(QtGui.QWidget):
         except ex.AlreadyError:
             self.toggleStdin(True)
             self.statusBox.append('Already streaming')
+        except ex.NoResponseError:
+            self.statusBox.append('Control Command got no response')
         except socket.error:
             self.statusBox.append('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
@@ -180,6 +182,8 @@ class StreamWindow(QtGui.QWidget):
         except ex.AlreadyError:
             self.toggleStdin(False)
             self.statusBox.append('Already not streaming')
+        except ex.NoResponseError:
+            self.statusBox.append('Control Command got no response')
         except socket.error:
             self.statusBox.append('Socker error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
@@ -207,6 +211,13 @@ class StreamWindow(QtGui.QWidget):
         self.canvas.draw()
 
     def closeEvent(self, event):
-        if hwif.isStreaming():
-            self.stopStreaming()
+        try:
+            if hwif.isStreaming():
+                self.stopStreaming()
+        except ex.NoResponseError:
+            self.statusBox.append('Control Command got no response')
+        except socket.error:
+            self.statusBox.append('Socker error: Could not connect to daemon.')
+        except tuple(ex.ERROR_DICT.values()) as e:
+            self.statusBox.append('Error: %s' % e)
 

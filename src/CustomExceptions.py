@@ -24,7 +24,9 @@ class NoResponseError(Exception):
     This error means that do_control_cmd(cmd) returned None
     This happens when, e.g. trying to do a ControlCommand.STORE with nsamples missing,
     but the DAQ's BSI register is empty (because e.g. the hardware was recently booted).
-    This is a bug in the daemon which needs to be fixed.
+    (This is a bug in the daemon which needs to be fixed.)
+    (It can also happen as a result of the daemon refusing new client connection because
+    'another is ongoing'?)
     """
     pass
 

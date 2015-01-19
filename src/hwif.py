@@ -16,14 +16,20 @@ import CustomExceptions as ex
 
 def isStreaming():
     resp = do_control_cmd(reg_read(3,9))
-    if resp.type == ControlResponse.ERR:
-        raise ex.ERROR_DICT[resp.err.code]
+    if resp:
+        if resp.type==ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+    else:
+        raise ex.NoResponseError
     return resp.reg_io.val == 1
 
 def isRecording():
     resp = do_control_cmd(reg_read(3,11))
-    if resp.type == ControlResponse.ERR:
-        raise ex.ERROR_DICT[resp.err.code]
+    if resp:
+        if resp.type==ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+    else:
+        raise ex.NoResponseError
     return resp.reg_io.val == 3
 
 def getSampleType():
@@ -47,8 +53,11 @@ def startStreaming():
         cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
         cmd.forward.enable = True
         resp = do_control_cmd(cmd)
-        if resp.type == ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
+        if resp:
+            if resp.type==ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
 
 def startStreaming_boardSamples():
     if isStreaming():
@@ -62,8 +71,11 @@ def startStreaming_boardSamples():
         cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
         cmd.forward.enable = True
         resp = do_control_cmd(cmd)
-        if resp.type == ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
+        if resp:
+            if resp.type==ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
 
 def stopStreaming():
     if not isStreaming():
@@ -79,8 +91,11 @@ def stopStreaming():
             cmds.append(cmd)
         resps = do_control_cmds(cmds)
         for resp in resps:
-            if resp.type==ControlResponse.ERR:
-                raise ex.ERROR_DICT[resp.err.code]
+            if resp:
+                if resp.type==ControlResponse.ERR:
+                    raise ex.ERROR_DICT[resp.err.code]
+            else:
+                raise ex.NoResponseError
 
 def startRecording():
     if isRecording():
@@ -110,8 +125,11 @@ def startRecording():
             cmds.append(cmd)
         resps = do_control_cmds(cmds)
         for resp in resps:
-            if resp.type==ControlResponse.ERR:
-                raise ex.ERROR_DICT[resp.err.code]
+            if resp:
+                if resp.type==ControlResponse.ERR:
+                    raise ex.ERROR_DICT[resp.err.code]
+            else:
+                raise ex.NoResponseError
 
 def stopRecording():
     if not isRecording():
@@ -134,8 +152,11 @@ def stopRecording():
             cmds.append(cmd)
         resps = do_control_cmds(cmds)
         for resp in resps:
-            if resp.type==ControlResponse.ERR:
-                raise ex.ERROR_DICT[resp.err.code]
+            if resp:
+                if resp.type==ControlResponse.ERR:
+                    raise ex.ERROR_DICT[resp.err.code]
+            else:
+                raise ex.NoResponseError
 
 def takeSnapshot(nsamples, filename):
     cmds = []
@@ -182,8 +203,11 @@ def takeSnapshot(nsamples, filename):
         cmds.append(cmd)
     resps = do_control_cmds(cmds)
     for resp in resps:
-        if resp.type==ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
+        if resp:
+            if resp.type==ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
     for resp in resps:
         if resp.type==ControlResponse.STORE_FINISHED:
             if resp.store.status==ControlResStore.DONE:
@@ -214,20 +238,29 @@ def doTransfer(nsamples=None, filename=None):
 def pingDatanode():
     cmd = ControlCommand(type=ControlCommand.PING_DNODE)
     resp = do_control_cmd(cmd)
-    if resp.type==ControlResponse.ERR:
-        raise ex.ERROR_DICT[resp.err.code]
+    if resp:
+        if resp.type==ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+    else:
+        raise ex.NoResponseError
 
 def doRegRead(module, address):
     resp = do_control_cmd(reg_read(module, address))
-    if resp.type == ControlResponse.REG_IO:
-        return resp.reg_io.val
-    elif resp.type==ControlResponse.ERR:
-        raise ex.ERROR_DICT[resp.err.code]
+    if resp:
+        if resp.type == ControlResponse.REG_IO:
+            return resp.reg_io.val
+        elif resp.type==ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+    else:
+        raise ex.NoResponseError
 
 def doRegWrite(module, address, data):
     resp = do_control_cmd(reg_write(module, address, data))
-    if resp.type==ControlResponse.ERR:
-        raise ex.ERROR_DICT[resp.err.code]
+    if resp:
+        if resp.type==ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+    else:
+        raise ex.NoResponseError
 
 def doIntanRegWrite(address, data):
     """
@@ -245,11 +278,15 @@ def doIntanRegWrite(address, data):
     cmds.append(reg_write(MOD_DAQ, DAQ_CHIP_CMD, clear))
     resps = do_control_cmds(cmds)
     for resp in resps:
-        if resp.type==ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
+        if resp:
+            if resp.type==ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
 
 
 def checkVitals():
+    #TODO catch NoResponseError as well?
     vitals = {} # True means up, False means down, None means unknown
     try:
         pingDatanode()
