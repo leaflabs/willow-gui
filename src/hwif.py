@@ -6,7 +6,9 @@ and raising informative exceptions when things go wrong.
 """
 
 import sys, os, socket
-from time import time
+import time
+
+from PyQt4 import QtCore
 
 from parameters import *
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
@@ -14,8 +16,15 @@ from daemon_control import *
 
 import CustomExceptions as ex
 
+def init():
+    global DAEMON_SOCK, DAEMON_MUTEX
+    DAEMON_SOCK = get_daemon_control_sock(retry=True, max_retries=100)
+    DAEMON_MUTEX = QtCore.QMutex()
+    print 'hwif initialized'
+
 def isStreaming():
-    resp = do_control_cmd(reg_read(3,9))
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resp = do_control_cmd(reg_read(MOD_DAQ, DAQ_UDP_ENABLE), control_socket=DAEMON_SOCK)
     if resp:
         if resp.type==ControlResponse.ERR:
             raise ex.ERROR_DICT[resp.err.code]
@@ -24,7 +33,8 @@ def isStreaming():
     return resp.reg_io.val == 1
 
 def isRecording():
-    resp = do_control_cmd(reg_read(3,11))
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resp = do_control_cmd(reg_read(MOD_DAQ, DAQ_SATA_ENABLE), control_socket=DAEMON_SOCK)
     if resp:
         if resp.type==ControlResponse.ERR:
             raise ex.ERROR_DICT[resp.err.code]
@@ -33,7 +43,7 @@ def isRecording():
     return resp.reg_io.val == 3
 
 def getSampleType():
-    val = doRegRead(3,10)
+    val = doRegRead(MOD_DAQ, DAQ_UDP_MODE)
     if val == 0:
         return 'subsample'
     elif val == 1:
@@ -41,7 +51,31 @@ def getSampleType():
     else:
         return -1
 
-def startStreaming():
+def setSubsamples_byChip(chip):
+    """
+    Right now proto2bytes only allows subsample channels to all be on one chip
+    (or one channel across all chips).
+    But you can configure the subsamples manually through the reg_writes.
+    Eventually, if proto2bytes is modified (or we used a different method for streaming),
+    one could imagine cherrypicking the subsamples one by one.
+    """
+    chipchanList = [(chip, chan) for chan in range(32)]
+    cmds = []
+    for i,chipchan in enumerate(chipchanList):
+        chip = chipchan[0] & 0b00011111
+        chan = chipchan[1] & 0b00011111
+        cmds.append(reg_write(MOD_DAQ, DAQ_SUBSAMP_CHIP0+i,
+                       (chip << 8) | chan))
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resps = do_control_cmds(cmds, control_socket=DAEMON_SOCK)
+    for resp in resps:
+        if resp:
+            if resp.type==ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
+
+def startStreaming_subsamples():
     if isStreaming():
         raise ex.AlreadyError
     else:
@@ -52,14 +86,15 @@ def startStreaming():
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
         cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
         cmd.forward.enable = True
-        resp = do_control_cmd(cmd)
+        mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+        resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
         if resp:
             if resp.type==ControlResponse.ERR:
                 raise ex.ERROR_DICT[resp.err.code]
         else:
             raise ex.NoResponseError
 
-def startStreaming_boardSamples():
+def startStreaming_boardsamples():
     if isStreaming():
         raise ex.AlreadyError
     else:
@@ -70,7 +105,7 @@ def startStreaming_boardSamples():
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
         cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
         cmd.forward.enable = True
-        resp = do_control_cmd(cmd)
+        resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
         if resp:
             if resp.type==ControlResponse.ERR:
                 raise ex.ERROR_DICT[resp.err.code]
@@ -89,7 +124,8 @@ def stopStreaming():
             cmd = ControlCommand(type=ControlCommand.ACQUIRE)
             cmd.acquire.enable = False
             cmds.append(cmd)
-        resps = do_control_cmds(cmds)
+        mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+        resps = do_control_cmds(cmds, control_socket=DAEMON_SOCK)
         for resp in resps:
             if resp:
                 if resp.type==ControlResponse.ERR:
@@ -109,7 +145,7 @@ def startRecording():
             cmd.forward.enable = False
             cmds.append(cmd)
         cmd = ControlCommand(type=ControlCommand.ACQUIRE)
-        cmd.acquire.exp_cookie = long(time())
+        cmd.acquire.exp_cookie = long(time.time())
         cmd.acquire.start_sample = 0
         cmd.acquire.enable = True
         cmds.append(cmd)
@@ -123,7 +159,8 @@ def startRecording():
             cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
             cmd.forward.enable = True
             cmds.append(cmd)
-        resps = do_control_cmds(cmds)
+        mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+        resps = do_control_cmds(cmds, control_socket=DAEMON_SOCK)
         for resp in resps:
             if resp:
                 if resp.type==ControlResponse.ERR:
@@ -150,7 +187,8 @@ def stopRecording():
             cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
             cmd.forward.enable = True
             cmds.append(cmd)
-        resps = do_control_cmds(cmds)
+        mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+        resps = do_control_cmds(cmds, control_socket=DAEMON_SOCK)
         for resp in resps:
             if resp:
                 if resp.type==ControlResponse.ERR:
@@ -201,7 +239,8 @@ def takeSnapshot(nsamples, filename):
         cmd = ControlCommand(type=ControlCommand.ACQUIRE)
         cmd.acquire.enable = False
         cmds.append(cmd)
-    resps = do_control_cmds(cmds)
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resps = do_control_cmds(cmds, control_socket=DAEMON_SOCK)
     for resp in resps:
         if resp:
             if resp.type==ControlResponse.ERR:
@@ -227,7 +266,7 @@ def doTransfer(nsamples=None, filename=None):
             cmd.store.nsamples = nsamples
         # (else leave missing which indicates whole experiment)
         cmd.store.path = filename
-        resp = do_control_cmd(cmd)
+        resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
         if resp:
             if resp.type==ControlResponse.ERR:
                 raise ex.ERROR_DICT[resp.err.code]
@@ -237,7 +276,8 @@ def doTransfer(nsamples=None, filename=None):
 
 def pingDatanode():
     cmd = ControlCommand(type=ControlCommand.PING_DNODE)
-    resp = do_control_cmd(cmd)
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
     if resp:
         if resp.type==ControlResponse.ERR:
             raise ex.ERROR_DICT[resp.err.code]
@@ -245,7 +285,8 @@ def pingDatanode():
         raise ex.NoResponseError
 
 def doRegRead(module, address):
-    resp = do_control_cmd(reg_read(module, address))
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resp = do_control_cmd(reg_read(module, address), control_socket=DAEMON_SOCK)
     if resp:
         if resp.type == ControlResponse.REG_IO:
             return resp.reg_io.val
@@ -255,7 +296,7 @@ def doRegRead(module, address):
         raise ex.NoResponseError
 
 def doRegWrite(module, address, data):
-    resp = do_control_cmd(reg_write(module, address, data))
+    resp = do_control_cmd(reg_write(module, address, data), control_socket=DAEMON_SOCK)
     if resp:
         if resp.type==ControlResponse.ERR:
             raise ex.ERROR_DICT[resp.err.code]
@@ -276,7 +317,7 @@ def doIntanRegWrite(address, data):
     clear = 0
     cmds.append(reg_write(MOD_DAQ, DAQ_CHIP_CMD, cmdData))
     cmds.append(reg_write(MOD_DAQ, DAQ_CHIP_CMD, clear))
-    resps = do_control_cmds(cmds)
+    resps = do_control_cmds(cmds, control_socket=DAEMON_SOCK)
     for resp in resps:
         if resp:
             if resp.type==ControlResponse.ERR:

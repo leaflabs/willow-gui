@@ -22,10 +22,14 @@ from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
 from daemon_control import *
 
+import hwif
+
 if not os.path.isdir('../log'):
     os.mkdir('../log')
 oFile = open('../log/oFile', 'w')
 eFile = open('../log/eFile', 'w')
+
+DAEMON_MUTEX = QtCore.QMutex()
 
 class MainWindow(QtGui.QWidget):
 
@@ -33,7 +37,7 @@ class MainWindow(QtGui.QWidget):
         super(MainWindow, self).__init__(parent)
 
         self.statusBar = StatusBar()
-        self.statusBar.startWatchdog()
+        #self.statusBar.startWatchdog()
 
         ###
 
@@ -63,6 +67,13 @@ class MainWindow(QtGui.QWidget):
         ###
 
         self.startDaemon()
+        try:
+            hwif.init()
+        except socket.error:
+            print 'could not connect to daemon after 100 tries.. quitting.'
+            sys.exit(1)
+
+        self.statusBar
 
     def startDaemon(self):
         #subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
@@ -70,6 +81,7 @@ class MainWindow(QtGui.QWidget):
         self.daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
                                                 '-N', '-A', '192.168.1.2', '-I', 'eth0'], stdout=oFile, stderr=eFile)
         self.statusBox.append('Daemon started.')
+        print 'daemon started'
 
     def isDaemonRunning(self):
         rc = self.daemonProcess.poll()

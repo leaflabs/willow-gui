@@ -3,8 +3,6 @@ import subprocess, os, sys, socket
 import numpy as np
 
 from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
-from daemon_control import *
 
 import numpy as np
 import matplotlib
@@ -44,7 +42,14 @@ class StreamWindow(QtGui.QWidget):
         self.yrange_cnts = [int(y*5+2**15) for y in self.yrange_uV]
         self.refreshRate = refreshRate
 
-        self.setSubsamples_byChip(self.chip)
+        try:
+            hwif.setSubsamples_byChip(self.chip)
+        except ex.NoResponseError:
+            self.statusBox.append('Control Command got no response')
+        except socket.error:
+            self.statusBox.append('Socket error: Could not connect to daemon.')
+        except tuple(ex.ERROR_DICT.values()) as e:
+            self.statusBox.append('Error: %s' % e)
 
         ###################
         # Matplotlib Setup
@@ -125,43 +130,9 @@ class StreamWindow(QtGui.QWidget):
         self.setWindowTitle('Willow Live Streaming')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
 
-    def setSubsamples_cherryPick(self):
-        """
-        Right now proto2bytes only allows subsample channels to all be on one chip
-        (or one channel across all chips).
-        But you can configure the subsamples manually through the reg_writes.
-        So ideally we'd use this function to cherrypick those channels.
-        TODO: implement this
-        """
-        cmds = []
-        for i, chipchan in enumerate(self.chipchanVector):
-            chip_str, chan_str = chipchan.split(',')
-            chip = int(chip_str) & 0b00011111
-            chan = int(chan_str) & 0b00011111
-            cmds.append(reg_write(MOD_DAQ, DAQ_SUBSAMP_CHIP0+i,
-                           (chip << 8) | chan))
-        resps = do_control_cmds(cmds)
-
-    def setSubsamples_byChip(self, chip):
-        chipchanList = [(chip, chan) for chan in range(32)]
-        cmds = []
-        for i,chipchan in enumerate(chipchanList):
-            chip = chipchan[0] & 0b00011111
-            chan = chipchan[1] & 0b00011111
-            cmds.append(reg_write(MOD_DAQ, DAQ_SUBSAMP_CHIP0+i,
-                           (chip << 8) | chan))
-        try:
-            resps = do_control_cmds(cmds)
-            for resp in resps:
-                if resp.type==ControlResponse.ERR:
-                    self.statusBox.append('Daemon control error.')
-                    return
-        except socket.error:
-            self.statusBox.append('Socket error: Could not connect to daemon')
-
     def startStreaming(self):
         try:
-            hwif.startStreaming()
+            hwif.startStreaming_subsamples()
             self.toggleStdin(True)
             self.statusBox.append('Started streaming.')
         except ex.AlreadyError:

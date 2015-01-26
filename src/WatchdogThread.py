@@ -14,6 +14,14 @@ class WatchdogThread(QtCore.QThread):
     def __init__(self):
         super(WatchdogThread, self).__init__()
 
+    """
+    def start(self):
+        # for debugging
+        super(WatchdogThread, self).start()
+        print 'watchdog thread started!'
+        raise Exception('wtf')
+    """
+
     def run(self):
         time.sleep(1)
         # doesn't need try/except because it's the watchdog

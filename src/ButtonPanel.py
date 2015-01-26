@@ -141,7 +141,7 @@ class ButtonPanel(QtGui.QWidget):
                     plotWindow = PlotWindow(self, filename, [0,nsamples_actual-1], self.statusBox)
                     plotWindow.show()
             except ex.StateChangeError:
-                self.statusBox.append("Can't take snapshot while streaming.")
+                self.statusBox.append('Caught StateChangeError')
             except ex.NoResponseError:
                 self.statusBox.append('Control Command got no response')
             except socket.error:

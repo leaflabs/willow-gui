@@ -1,6 +1,5 @@
 import socket
 from PyQt4 import QtCore, QtGui
-#from StateManagement import *   # implicitly imports * from daemon_control
 import hwif
 from WatchdogThread import WatchdogThread
 
@@ -55,8 +54,6 @@ class StatusBar(QtGui.QWidget):
         self.startWatchdog()
         self.watchdogCheckbox.setChecked(True)
 
-        self.watchdogThread.start()
-
     def toggleWatchdog(self, state):
         if state:
             self.startWatchdog()
@@ -65,6 +62,7 @@ class StatusBar(QtGui.QWidget):
 
     def startWatchdog(self):
         self.watchdogLoop = True
+        self.watchdogThread.start()
 
     def stopWatchdog(self):
         self.watchdogLoop = False
