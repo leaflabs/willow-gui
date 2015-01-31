@@ -139,7 +139,7 @@ class ImpedanceThread(QtCore.QThread):
         self.valueChanged.emit(0)
         self.maxChanged.emit(1)
         self.textChanged.emit('Starting streaming..')
-        hwif.startStreaming_boardSamples()
+        hwif.startStreaming_boardsamples()
         self.valueChanged.emit(1)
         # configure zcheck registers
         self.valueChanged.emit(0)

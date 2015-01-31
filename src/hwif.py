@@ -105,6 +105,7 @@ def startStreaming_boardsamples():
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
         cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
         cmd.forward.enable = True
+        mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
         resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
         if resp:
             if resp.type==ControlResponse.ERR:
@@ -266,6 +267,7 @@ def doTransfer(nsamples=None, filename=None):
             cmd.store.nsamples = nsamples
         # (else leave missing which indicates whole experiment)
         cmd.store.path = filename
+        mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
         resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
         if resp:
             if resp.type==ControlResponse.ERR:

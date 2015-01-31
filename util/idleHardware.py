@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
-import subprocess, os, time
+import subprocess, os, sys, time
+
+sys.path.append('../src')
+
 import hwif
 import CustomExceptions as ex
 from parameters import DAEMON_DIR, DATA_DIR

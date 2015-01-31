@@ -7,7 +7,12 @@ from StreamWindow import StreamWindow
 from PlotWindow import PlotWindow 
 from SnapshotDialog import SnapshotDialog
 from StreamDialog import StreamDialog
-from PlotDialog import PlotDialog
+
+from SnapshotThread import SnapshotThread
+
+from ImportDialog import ImportDialog
+from ImportThread import ImportThread
+
 from TransferDialog import TransferDialog
 
 from ImpedanceDialog import ImpedanceDialog
@@ -129,6 +134,19 @@ class ButtonPanel(QtGui.QWidget):
             nsamples_requested = params['nsamples']
             filename = params['filename']
             plot = params['plot']
+            self.snapshotThread = SnapshotThread(nsamples_requested, filename)
+            self.importThread = ImportThread(filename, -1)
+            self.importThread.finished.connect(self.showPlotWindow)
+            self.snapshotThread.finished.connect(self.importThread.start)
+            self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 10)
+            self.importThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
+            self.importThread.valueChanged.connect(self.snapshotProgressDialog.setValue)
+            self.importThread.labelChanged.connect(self.snapshotProgressDialog.setLabelText)
+            self.snapshotProgressDialog.show()
+            self.snapshotThread.start()
+
+
+    def oldTakeSnapshot(self):
             try:
                 nsamples_actual = hwif.takeSnapshot(nsamples=nsamples_requested, filename=filename)
                 if nsamples_actual == nsamples_requested:
@@ -138,8 +156,18 @@ class ButtonPanel(QtGui.QWidget):
                     self.statusBox.append('Packets dropped. Saved %d samples to: %s' %
                                                     (nsamples_actual, filename))
                 if plot:
-                    plotWindow = PlotWindow(self, filename, [0,nsamples_actual-1], self.statusBox)
-                    plotWindow.show()
+                    self.importProgressDialog = QtGui.QProgressDialog('Importing Data...', 'Cancel', 0, nsamples_actual)
+                    self.importProgressDialog.setAutoReset(False)
+                    self.importProgressDialog.setMinimumDuration(1000)
+                    self.importProgressDialog.setModal(True)
+                    self.importProgressDialog.setWindowTitle('Data Import Progress')
+                    self.importThread = ImportThread(filename, [0, nsamples_actual-1])
+                    self.importThread.valueChanged.connect(self.importProgressDialog.setValue)
+                    self.importThread.finished.connect(self.importProgressDialog.reset)
+                    self.importThread.finished.connect(self.showPlotWindow)
+                    self.importProgressDialog.canceled.connect(self.importThread.terminate)
+                    self.importProgressDialog.show()
+                    self.importThread.start()
             except ex.StateChangeError:
                 self.statusBox.append('Caught StateChangeError')
             except ex.NoResponseError:
@@ -213,11 +241,24 @@ class ButtonPanel(QtGui.QWidget):
     def launchPlotWindow(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', DATA_DIR)
         if filename:
-            dlg = PlotDialog()
+            filename = str(filename)
+            dlg = ImportDialog()
             if dlg.exec_():
                 params = dlg.getParams()
                 sampleRange = params['sampleRange']
-                plotWindow = PlotWindow(self, str(filename), sampleRange, self.statusBox)
-                if plotWindow.importSuccess:
-                    plotWindow.show()
-                    
+                self.importProgressDialog = QtGui.QProgressDialog('Importing Data...', 'Cancel', 0, 10)
+                self.importProgressDialog.setMinimumDuration(1000)
+                self.importProgressDialog.setModal(False)
+                self.importProgressDialog.setWindowTitle('Data Import Progress')
+                self.importThread = ImportThread(filename, sampleRange)
+                self.importThread.valueChanged.connect(self.importProgressDialog.setValue)
+                self.importThread.maxChanged.connect(self.importProgressDialog.setMaximum)
+                self.importThread.finished.connect(self.showPlotWindow)
+                self.importProgressDialog.canceled.connect(self.importThread.terminate)
+                self.importProgressDialog.show()
+                self.importThread.start()
+
+    def showPlotWindow(self, filename, data, sampleRange):
+        plotWindow = PlotWindow(str(filename), sampleRange, data, self.statusBox)
+        plotWindow.show()
+        

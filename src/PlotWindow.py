@@ -29,20 +29,15 @@ def createLabelLine(labelText, lineWidget):
 
 class PlotWindow(QtGui.QWidget):
 
-    def __init__(self, parent, filename, sampleRange, statusBox):
+    def __init__(self, filename, sampleRange, data, statusBox):
         super(PlotWindow, self).__init__(None)
 
-        self.parent = parent
-        self.statusBox = statusBox
         self.filename = filename
         self.sampleRange = sampleRange
-        if self.importData():
-            self.importSuccess = True
-        else:
-            self.importSuccess = False
-            return
-            
-
+        self.sampleNumbers = np.arange(self.sampleRange[0], self.sampleRange[1]+1)
+        self.data = data
+        self.data_uv = (np.array(self.data, dtype='float')-2**15)*0.2
+        self.statusBox = statusBox
 
         ###################
         # Control Panel
