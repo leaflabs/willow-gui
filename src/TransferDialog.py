@@ -15,14 +15,11 @@ class TransferDialog(QtGui.QDialog):
         self.subsetButton.clicked.connect(self.enableSubsetLine)
         self.subsetLine = QtGui.QLineEdit('10')
         self.subsetLine.setDisabled(True)
-        self.warning = QtGui.QLabel('<b>NOTE:</b> GUI will be unresponsive until'
-            ' transfer completes;<br>transfer time is roughly equivalent to recording time.')
         self.experimentGroupBox = QtGui.QGroupBox('Experiment')
         layout = QtGui.QGridLayout()
         layout.addWidget(self.allDataButton, 0, 0)
         layout.addWidget(self.subsetButton, 1, 0)
         layout.addWidget(self.subsetLine, 1, 1)
-        layout.addWidget(self.warning, 2, 0, 1,2)
         self.experimentGroupBox.setLayout(layout)
 
         self.autoNameButton = QtGui.QRadioButton('Name automatically')

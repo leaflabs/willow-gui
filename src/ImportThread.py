@@ -20,13 +20,14 @@ class ImportThread(QtCore.QThread):
         self.sampleRange = sampleRange
         self.isTerminated = False
 
-    def terminate(self):
+    def handleCancel(self):
         """
         This is required to prevent the race condition between QProgressDialog
         and this thread. self.isTerminated is checked before emission of valueChanged.
         """
         self.isTerminated = True
-        super(ImportThread, self).terminate()
+        self.terminate()
+
 
     def run(self):
         f = h5py.File(self.filename)

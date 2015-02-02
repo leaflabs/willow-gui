@@ -14,6 +14,7 @@ from ImportDialog import ImportDialog
 from ImportThread import ImportThread
 
 from TransferDialog import TransferDialog
+from TransferThread import TransferThread
 
 from ImpedanceDialog import ImpedanceDialog
 from ImpedanceThread import ImpedanceThread
@@ -127,25 +128,6 @@ class ButtonPanel(QtGui.QWidget):
             self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate, self.statusBox)
             self.streamWindow.show()
 
-    def takeSnapshot(self):
-        dlg = SnapshotDialog()
-        if dlg.exec_():
-            params = dlg.getParams()
-            nsamples_requested = params['nsamples']
-            filename = params['filename']
-            plot = params['plot']
-            self.snapshotThread = SnapshotThread(nsamples_requested, filename)
-            self.importThread = ImportThread(filename, -1)
-            self.importThread.finished.connect(self.showPlotWindow)
-            self.snapshotThread.finished.connect(self.importThread.start)
-            self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 10)
-            self.importThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
-            self.importThread.valueChanged.connect(self.snapshotProgressDialog.setValue)
-            self.importThread.labelChanged.connect(self.snapshotProgressDialog.setLabelText)
-            self.snapshotProgressDialog.show()
-            self.snapshotThread.start()
-
-
     def oldTakeSnapshot(self):
             try:
                 nsamples_actual = hwif.takeSnapshot(nsamples=nsamples_requested, filename=filename)
@@ -176,6 +158,31 @@ class ButtonPanel(QtGui.QWidget):
                 self.statusBox.append('Socket error: Could not connect to daemon.')
             except tuple(ex.ERROR_DICT.values()) as e:
                 self.statusBox.append('Error: %s' % e)
+
+    def takeSnapshot(self):
+        dlg = SnapshotDialog()
+        if dlg.exec_():
+            params = dlg.getParams()
+            nsamples_requested = params['nsamples']
+            filename = params['filename']
+            plot = params['plot']
+            self.snapshotThread = SnapshotThread(nsamples_requested, filename)
+            self.snapshotThread.statusUpdated.connect(self.postStatus)
+            self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
+            self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
+            if plot:
+                self.importThread = ImportThread(filename, -1)
+                self.importThread.finished.connect(self.showPlotWindow)
+                self.snapshotThread.finished.connect(self.importThread.start)
+                self.snapshotProgressDialog.canceled.connect(self.importThread.handleCancel)
+                self.importThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
+                self.importThread.valueChanged.connect(self.snapshotProgressDialog.setValue)
+                self.importThread.labelChanged.connect(self.snapshotProgressDialog.setLabelText)
+            else:
+                self.snapshotThread.finished.connect(self.snapshotProgressDialog.reset)
+            self.snapshotProgressDialog.show()
+            self.snapshotThread.start()
+
 
     def startRecording(self):
         try:
@@ -209,34 +216,16 @@ class ButtonPanel(QtGui.QWidget):
             params = dlg.getParams()
             nsamples = params['nsamples']
             filename = params['filename'] # this is an absolute filename, or False
-            if filename:
-                rename = False
-            else:
-                filename = os.path.join(DATA_DIR, 'tmp_transfer.h5')
-                rename = True
-            try:
-                if (nsamples==None) and (hwif.doRegRead(3,3)==0):
-                    self.statusBox.append('Error: Could not transfer experiment because BSI is missing.')
-                    self.statusBox.append('Please specify nsamples in the Transfer Dialog and try again.')
-                else:
-                    hwif.doTransfer(nsamples, filename)
-                    if rename:
-                        tmpFilename = filename
-                        f = h5py.File(tmpFilename)
-                        timestamp = f['wired-dataset'].attrs['experiment_cookie'][0]
-                        dt = datetime.datetime.fromtimestamp(timestamp)
-                        strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-                        filename = os.path.join(DATA_DIR, 'experiment_%s.h5' % strtime)
-                        os.rename(tmpFilename, filename)
-                    self.statusBox.append('Transfer complete: %s' % filename)
-            except ex.StateChangeError:
-                self.statusbox.append('Cannot do transfer while recording or streaming')
-            except ex.NoResponseError:
-                self.statusBox.append('Control Command got no response')
-            except socket.error:
-                self.statusBox.append('Socket error: Could not connect to daemon.')
-            except tuple(ex.ERROR_DICT.values()) as e:
-                self.statusBox.append('Error: %s' % e)
+            self.transferThread = TransferThread(nsamples, filename)
+            self.transferProgressDialog = QtGui.QProgressDialog('Transferring Experiment..', 'Cancel', 0, 0)
+            self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
+            self.transferThread.statusUpdated.connect(self.postStatus)
+            self.transferThread.finished.connect(self.transferProgressDialog.reset)
+            self.transferProgressDialog.show()
+            self.transferThread.start()
+
+    def postStatus(self, msg):
+        self.statusBox.append(msg)
 
     def launchPlotWindow(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', DATA_DIR)

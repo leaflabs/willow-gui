@@ -12,7 +12,6 @@ class SnapshotThread(QtCore.QThread):
 
     valueChanged = QtCore.pyqtSignal(int)
     maxChanged = QtCore.pyqtSignal(int)
-    finished = QtCore.pyqtSignal(int)
     statusUpdated = QtCore.pyqtSignal(str)
 
     def __init__(self, nsamples_requested, filename):
@@ -21,18 +20,20 @@ class SnapshotThread(QtCore.QThread):
         self.filename = filename
         self.isTerminated = False
 
-    def terminate(self):
+    def handleCancel(self):
         """
         This is required to prevent the race condition between QProgressDialog
         and this thread. self.isTerminated is checked before emission of valueChanged.
         """
         self.isTerminated = True
-        super(SnapshotThread, self).terminate()
+        self.terminate()
 
     def run(self):
         try:
             nsamples_actual = hwif.takeSnapshot(nsamples=self.nsamples_requested, filename=self.filename)
-            self.finished.emit(nsamples_actual)
+            self.statusUpdated.emit('Snapshot Complete: %d samples saved to %s' %
+                (nsamples_actual, self.filename))
+            self.finished.emit()    # wait, why is this necessary to reset to dialog?
         except ex.StateChangeError:
             self.statusUpdated.emit('Caught StateChangeError')
         except ex.NoResponseError:
@@ -41,19 +42,4 @@ class SnapshotThread(QtCore.QThread):
             self.statusUpdated.emit('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
             self.statusUpdated.emit('Error: %s' % e)
-
-    def run_reference(self):
-        f = h5py.File(self.filename)
-        dset = f['wired-dataset']
-        if self.sampleRange==-1:
-            self.sampleRange = [0, len(dset)-1]
-        self.nsamples = self.sampleRange[1] - self.sampleRange[0] + 1
-        self.maxChanged.emit(self.nsamples)
-        data = np.zeros((1024,self.nsamples), dtype='uint16')
-        for i in range(self.nsamples):
-            data[:,i] = dset[self.sampleRange[0]+i][3][:1024]
-            if (i%1000==0) and not self.isTerminated:
-                self.valueChanged.emit(i)
-        self.valueChanged.emit(self.nsamples)   # to reset the progressdialog
-        self.finished.emit(self.filename, data, self.sampleRange)
 
