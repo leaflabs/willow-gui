@@ -25,9 +25,9 @@ import h5py
 
 class ButtonPanel(QtGui.QWidget):
 
-    def __init__(self, statusBox):
+    def __init__(self, msgLog):
         super(ButtonPanel, self).__init__()
-        self.statusBox = statusBox
+        self.msgLog = msgLog
 
         """
         self.impedanceButton = QtGui.QPushButton()
@@ -103,7 +103,7 @@ class ButtonPanel(QtGui.QWidget):
             self.impedanceProgressDialog.setModal(True)
             self.impedanceProgressDialog.setWindowTitle('Impedance Testing Progress')
             self.impedanceProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-            self.impedanceThread = ImpedanceThread(chip, chan, self.statusBox)
+            self.impedanceThread = ImpedanceThread(chip, chan, self.msgLog)
             self.impedanceThread.valueChanged.connect(self.impedanceProgressDialog.setValue)
             self.impedanceThread.maxChanged.connect(self.impedanceProgressDialog.setMaximum)
             self.impedanceThread.textChanged.connect(self.impedanceProgressDialog.setLabelText)
@@ -126,7 +126,7 @@ class ButtonPanel(QtGui.QWidget):
             chip = channel//32
             chan = channel%32
             yrange = [ymin, ymax]
-            self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate, self.statusBox)
+            self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate, self.msgLog)
             self.streamWindow.show()
 
     def takeSnapshot(self):
@@ -159,28 +159,28 @@ class ButtonPanel(QtGui.QWidget):
     def startRecording(self):
         try:
             hwif.startRecording()
-            self.statusBox.append('Started recording.')
+            self.msgLog.post('Started recording.')
         except ex.AlreadyError:
-            self.statusBox.append('Already recording.')
+            self.msgLog.post('Already recording.')
         except ex.NoResponseError:
-            self.statusBox.append('Control Command got no response')
+            self.msgLog.post('Control Command got no response')
         except socket.error:
-            self.statusBox.append('Socket error: Could not connect to daemon.')
+            self.msgLog.post('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.statusBox.append('Error: %s' % e)
+            self.msgLog.post('Error: %s' % e)
 
     def stopRecording(self):
         try:
             hwif.stopRecording()
-            self.statusBox.append('Stopped recording.')
+            self.msgLog.post('Stopped recording.')
         except ex.AlreadyError:
-            self.statusBox.append('Already not recording.')
+            self.msgLog.post('Already not recording.')
         except ex.NoResponseError:
-            self.statusBox.append('Control Command got no response')
+            self.msgLog.post('Control Command got no response')
         except socket.error:
-            self.statusBox.append('Socket error: Could not connect to daemon.')
+            self.msgLog.post('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.statusBox.append('Error: %s' % e)
+            self.msgLog.post('Error: %s' % e)
 
     def transferExperiment(self):
         dlg = TransferDialog()
@@ -192,6 +192,7 @@ class ButtonPanel(QtGui.QWidget):
             self.transferProgressDialog = QtGui.QProgressDialog('Transferring Experiment..', 'Cancel', 0, 0)
             self.transferProgressDialog.setWindowTitle('Transfer Progress')
             self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
+            self.transferProgressDialog.setModal(True)
             self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
             self.transferThread.statusUpdated.connect(self.postStatus)
             self.transferThread.finished.connect(self.transferProgressDialog.reset)
@@ -199,7 +200,7 @@ class ButtonPanel(QtGui.QWidget):
             self.transferThread.start()
 
     def postStatus(self, msg):
-        self.statusBox.append(msg)
+        self.msgLog.post(msg)
 
     def launchPlotWindow(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', DATA_DIR)
@@ -223,6 +224,6 @@ class ButtonPanel(QtGui.QWidget):
                 self.importThread.start()
 
     def showPlotWindow(self, filename, data, sampleRange):
-        plotWindow = PlotWindow(str(filename), sampleRange, data, self.statusBox)
+        plotWindow = PlotWindow(str(filename), sampleRange, data, self.msgLog)
         plotWindow.show()
         

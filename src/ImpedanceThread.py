@@ -16,12 +16,12 @@ class ImpedanceThread(QtCore.QThread):
     textChanged = QtCore.pyqtSignal(str)
     finished = QtCore.pyqtSignal()
 
-    def __init__(self, chip, chan, statusBox):
+    def __init__(self, chip, chan, msgLog):
         super(ImpedanceThread, self).__init__()
         self.chip = chip
         self.chan = chan
         self.capscale = 0b01    # hard-coded for now
-        self.statusBox = statusBox
+        self.msgLog= msgLog
 
     def amp2volts(self, amplitude, nsamples):
         # copied from impedance_tool.py
@@ -130,7 +130,7 @@ class ImpedanceThread(QtCore.QThread):
 
     def allChipsRoutine(self):
         # tmp message
-        self.statusBox.append('ImpedanceThead: All Chips Routine not implemented yet.')
+        self.msgLog.post('ImpedanceThead: All Chips Routine not implemented yet.')
         self.finished.emit()
 
     def oneChipRoutine(self):
@@ -167,10 +167,10 @@ class ImpedanceThread(QtCore.QThread):
         impedance = self.analyzeSnapshot(data)
         self.valueChanged.emit(15)
         #if type(impedance)==str:
-        #    self.statusBox.append('Impedance Result: %s' % impedance)
+        #    self.msgLog.post('Impedance Result: %s' % impedance)
         #else:
-        #    self.statusBox.append('Impedance Result: %10.2f' % impedance)
-        #self.statusBox.append('ImpedanceThread: stopping streaming')
+        #    self.msgLog.post('Impedance Result: %10.2f' % impedance)
+        #self.msgLog.post('ImpedanceThread: stopping streaming')
         self.valueChanged.emit(0)
         self.maxChanged.emit(1)
         self.textChanged.emit('Turning off streaming..')
@@ -180,14 +180,14 @@ class ImpedanceThread(QtCore.QThread):
 
     def run(self):
         if hwif.isRecording() or hwif.isStreaming():
-            self.statusBox.append('ImpedanceThread: Cannot check impedance while recording or streaming')
+            self.msgLog.post('ImpedanceThread: Cannot check impedance while recording or streaming')
             return
         if self.chip == -1:
             self.allChipsRoutine()
         else:
             chipAliveList = self.getChipsAlive()
             if not self.chip in chipAliveList:
-                self.statusBox.append('ImpedanceThread: Chip %d requested is not alive.' % self.chip)
+                self.msgLog.post('ImpedanceThread: Chip %d requested is not alive.' % self.chip)
                 return
             self.oneChipRoutine()
 

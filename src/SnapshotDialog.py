@@ -51,30 +51,3 @@ class SnapshotDialog(QtGui.QDialog):
         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', DATA_DIR)
         if filename:
             self.filenameLine.setText(filename)
-
-class SnapshotProgressDialog(QtGui.QDialog):
-
-    def __init__(self, nsamples, filename, parent=None):
-        super(SnapshotProgressDialog, self).__init__(parent)
-
-        self.plotButton = QtGui.QPushButton('Plot')
-        self.plotButton.setEnabled(False)
-
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.addWidget(QtGui.QLabel('hello'))
-        self.layout.addWidget(QtGui.QLabel('world'))
-        self.layout.addWidget(self.plotButton)
-        self.setLayout(self.layout)
-
-
-    def doSnapshot(self, nsamples, filename):
-        changeState('take snapshot', nsamples=nsamples, filename=filename)
-        self.plotButton.setEnabled(True)
-
-    @staticmethod
-    def getPlotChoice(nsamples, filename, parent=None):
-        dialog = SnapshotProgressDialog(nsamples, filename, parent)
-        #result = dialog.exec_()
-        result = dialog.show()
-        dialog.doSnapshot(nsamples, filename)
-        return result

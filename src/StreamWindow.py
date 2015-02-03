@@ -31,9 +31,9 @@ def calculateTicks(axisrange):
 
 class StreamWindow(QtGui.QWidget):
 
-    def __init__(self, parent, chip, chan, yrange_uV, refreshRate, statusBox):
+    def __init__(self, parent, chip, chan, yrange_uV, refreshRate, msgLog):
         super(StreamWindow, self).__init__(None)
-        self.statusBox = statusBox
+        self.msgLog = msgLog
 
         self.parent = parent
         self.chip = chip
@@ -45,11 +45,11 @@ class StreamWindow(QtGui.QWidget):
         try:
             hwif.setSubsamples_byChip(self.chip)
         except ex.NoResponseError:
-            self.statusBox.append('Control Command got no response')
+            self.msgLog.post('Control Command got no response')
         except socket.error:
-            self.statusBox.append('Socket error: Could not connect to daemon.')
+            self.msgLog.post('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.statusBox.append('Error: %s' % e)
+            self.msgLog.post('Error: %s' % e)
 
         ###################
         # Matplotlib Setup
@@ -134,33 +134,33 @@ class StreamWindow(QtGui.QWidget):
         try:
             hwif.startStreaming_subsamples()
             self.toggleStdin(True)
-            self.statusBox.append('Started streaming.')
+            self.msgLog.post('Started streaming.')
         except ex.AlreadyError:
             self.toggleStdin(True)
-            self.statusBox.append('Already streaming')
+            self.msgLog.post('Already streaming')
         except ex.NoResponseError:
-            self.statusBox.append('Control Command got no response')
+            self.msgLog.post('Control Command got no response')
         except socket.error:
-            self.statusBox.append('Socket error: Could not connect to daemon.')
+            self.msgLog.post('Socket error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.statusBox.append('Error: %s' % e)
+            self.msgLog.post('Error: %s' % e)
 
     def stopStreaming(self):
         try:
             hwif.stopStreaming()
             self.toggleStdin(False)
-            self.statusBox.append('Stopped streaming.')
+            self.msgLog.post('Stopped streaming.')
         except ex.AlreadyError:
             self.toggleStdin(False)
-            self.statusBox.append('Already not streaming')
+            self.msgLog.post('Already not streaming')
         except ex.NoResponseError:
-            self.statusBox.append('Control Command got no response')
+            self.msgLog.post('Control Command got no response')
         except socket.error:
-            self.statusBox.append('Socker error: Could not connect to daemon.')
+            self.msgLog.post('Socker error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.statusBox.append('Error: %s' % e)
+            self.msgLog.post('Error: %s' % e)
         except AttributeError:
-            self.statusBox.append('AttributeError: Pipe object does not exist')
+            self.msgLog.post('AttributeError: Pipe object does not exist')
 
     def toggleStdin(self, enable):
         if enable:
@@ -186,9 +186,9 @@ class StreamWindow(QtGui.QWidget):
             if hwif.isStreaming():
                 self.stopStreaming()
         except ex.NoResponseError:
-            self.statusBox.append('Control Command got no response')
+            self.msgLog.post('Control Command got no response')
         except socket.error:
-            self.statusBox.append('Socker error: Could not connect to daemon.')
+            self.msgLog.post('Socker error: Could not connect to daemon.')
         except tuple(ex.ERROR_DICT.values()) as e:
-            self.statusBox.append('Error: %s' % e)
+            self.msgLog.post('Error: %s' % e)
 

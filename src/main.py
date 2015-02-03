@@ -17,6 +17,7 @@ from PyQt4 import QtCore, QtGui
 
 from StatusBar import StatusBar
 from ButtonPanel import ButtonPanel
+from MessageLog import MessageLog
 
 from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
@@ -38,20 +39,18 @@ class MainWindow(QtGui.QWidget):
 
         ###
 
-        self.statusBox = QtGui.QTextEdit()
-        self.statusBox.setReadOnly(True)
+        self.msgLog = MessageLog()
 
         ###
 
-        self.buttonPanel = ButtonPanel(self.statusBox)
+        self.buttonPanel = ButtonPanel(self.msgLog)
 
         ###
 
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.statusBar)
         mainLayout.addWidget(self.buttonPanel)
-        mainLayout.addWidget(QtGui.QLabel('Message Log'))
-        mainLayout.addWidget(self.statusBox)
+        mainLayout.addWidget(self.msgLog)
 
         ###
 
@@ -77,25 +76,8 @@ class MainWindow(QtGui.QWidget):
         subprocess.call(['killall', 'leafysd'])
         self.daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
                                                 '-N', '-A', '192.168.1.2', '-I', 'eth0'], stdout=oFile, stderr=eFile)
-        self.statusBox.append('Daemon started.')
+        self.msgLog.post('Daemon started.')
         print 'daemon started'
-
-    def isDaemonRunning(self):
-        rc = self.daemonProcess.poll()
-        return rc==None
-
-    def isConnected(self):
-        if self.isDaemonRunning():
-            cmd = ControlCommand(type=ControlCommand.PING_DNODE)
-            resp = do_control_cmd(cmd)
-            if resp.type==2:
-                return True
-            else:
-                self.statusBox.append('Datanode is not connected!')
-                return False
-        else:
-            self.statusBox.append('Daemon is not running!')
-            return False
 
     def exit(self):
         print 'Cleaning up, then exiting..'

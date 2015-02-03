@@ -29,7 +29,7 @@ def createLabelLine(labelText, lineWidget):
 
 class PlotWindow(QtGui.QWidget):
 
-    def __init__(self, filename, sampleRange, data, statusBox):
+    def __init__(self, filename, sampleRange, data, msgLog):
         super(PlotWindow, self).__init__(None)
 
         self.filename = filename
@@ -37,7 +37,7 @@ class PlotWindow(QtGui.QWidget):
         self.sampleNumbers = np.arange(self.sampleRange[0], self.sampleRange[1]+1)
         self.data = data
         self.data_uv = (np.array(self.data, dtype='float')-2**15)*0.2
-        self.statusBox = statusBox
+        self.msgLog = msgLog
 
         ###################
         # Control Panel
@@ -213,8 +213,8 @@ class PlotWindow(QtGui.QWidget):
             self.sampleRange = [0, len(dset)-1]
         self.nsamples = self.sampleRange[1] - self.sampleRange[0] + 1
         if self.nsamples > 5e6:
-            self.statusBox.append('Data range exceeds memory limit of 5 million samples')
-            self.statusBox.append('Import aborting.')
+            self.msgLog.post('Data range exceeds memory limit of 5 million samples')
+            self.msgLog.post('Import aborting.')
             self.close()
             return False
         self.sampleNumbers = np.arange(self.sampleRange[0], self.sampleRange[1]+1)
