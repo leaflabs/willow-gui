@@ -102,6 +102,7 @@ class ButtonPanel(QtGui.QWidget):
             self.impedanceProgressDialog.setMinimumDuration(0)
             self.impedanceProgressDialog.setModal(True)
             self.impedanceProgressDialog.setWindowTitle('Impedance Testing Progress')
+            self.impedanceProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
             self.impedanceThread = ImpedanceThread(chip, chan, self.statusBox)
             self.impedanceThread.valueChanged.connect(self.impedanceProgressDialog.setValue)
             self.impedanceThread.maxChanged.connect(self.impedanceProgressDialog.setMaximum)
@@ -128,37 +129,6 @@ class ButtonPanel(QtGui.QWidget):
             self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate, self.statusBox)
             self.streamWindow.show()
 
-    def oldTakeSnapshot(self):
-            try:
-                nsamples_actual = hwif.takeSnapshot(nsamples=nsamples_requested, filename=filename)
-                if nsamples_actual == nsamples_requested:
-                    self.statusBox.append('Snapshot complete. Saved %d samples to: %s' %
-                                                    (nsamples_actual, filename))
-                else:
-                    self.statusBox.append('Packets dropped. Saved %d samples to: %s' %
-                                                    (nsamples_actual, filename))
-                if plot:
-                    self.importProgressDialog = QtGui.QProgressDialog('Importing Data...', 'Cancel', 0, nsamples_actual)
-                    self.importProgressDialog.setAutoReset(False)
-                    self.importProgressDialog.setMinimumDuration(1000)
-                    self.importProgressDialog.setModal(True)
-                    self.importProgressDialog.setWindowTitle('Data Import Progress')
-                    self.importThread = ImportThread(filename, [0, nsamples_actual-1])
-                    self.importThread.valueChanged.connect(self.importProgressDialog.setValue)
-                    self.importThread.finished.connect(self.importProgressDialog.reset)
-                    self.importThread.finished.connect(self.showPlotWindow)
-                    self.importProgressDialog.canceled.connect(self.importThread.terminate)
-                    self.importProgressDialog.show()
-                    self.importThread.start()
-            except ex.StateChangeError:
-                self.statusBox.append('Caught StateChangeError')
-            except ex.NoResponseError:
-                self.statusBox.append('Control Command got no response')
-            except socket.error:
-                self.statusBox.append('Socket error: Could not connect to daemon.')
-            except tuple(ex.ERROR_DICT.values()) as e:
-                self.statusBox.append('Error: %s' % e)
-
     def takeSnapshot(self):
         dlg = SnapshotDialog()
         if dlg.exec_():
@@ -169,6 +139,8 @@ class ButtonPanel(QtGui.QWidget):
             self.snapshotThread = SnapshotThread(nsamples_requested, filename)
             self.snapshotThread.statusUpdated.connect(self.postStatus)
             self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
+            self.snapshotProgressDialog.setWindowTitle('Snapshot Progress')
+            self.snapshotProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
             self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
             if plot:
                 self.importThread = ImportThread(filename, -1)
@@ -218,6 +190,8 @@ class ButtonPanel(QtGui.QWidget):
             filename = params['filename'] # this is an absolute filename, or False
             self.transferThread = TransferThread(nsamples, filename)
             self.transferProgressDialog = QtGui.QProgressDialog('Transferring Experiment..', 'Cancel', 0, 0)
+            self.transferProgressDialog.setWindowTitle('Transfer Progress')
+            self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
             self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
             self.transferThread.statusUpdated.connect(self.postStatus)
             self.transferThread.finished.connect(self.transferProgressDialog.reset)
@@ -235,10 +209,11 @@ class ButtonPanel(QtGui.QWidget):
             if dlg.exec_():
                 params = dlg.getParams()
                 sampleRange = params['sampleRange']
-                self.importProgressDialog = QtGui.QProgressDialog('Importing Data...', 'Cancel', 0, 10)
+                self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename, 'Cancel', 0, 10)
                 self.importProgressDialog.setMinimumDuration(1000)
                 self.importProgressDialog.setModal(False)
                 self.importProgressDialog.setWindowTitle('Data Import Progress')
+                self.importProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
                 self.importThread = ImportThread(filename, sampleRange)
                 self.importThread.valueChanged.connect(self.importProgressDialog.setValue)
                 self.importThread.maxChanged.connect(self.importProgressDialog.setMaximum)
