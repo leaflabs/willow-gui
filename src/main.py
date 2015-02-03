@@ -29,15 +29,12 @@ if not os.path.isdir('../log'):
 oFile = open('../log/oFile', 'w')
 eFile = open('../log/eFile', 'w')
 
-DAEMON_MUTEX = QtCore.QMutex()
-
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
         self.statusBar = StatusBar()
-        #self.statusBar.startWatchdog()
 
         ###
 
@@ -102,7 +99,9 @@ class MainWindow(QtGui.QWidget):
 
     def exit(self):
         print 'Cleaning up, then exiting..'
+        self.statusBar.watchdogThread.terminate()
         subprocess.call(['killall', 'leafysd'])
+        subprocess.call(['killall', 'proto2bytes'])
 
     def center(self):
         windowCenter = self.frameGeometry().center()
