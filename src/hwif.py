@@ -257,15 +257,19 @@ def takeSnapshot(nsamples, filename):
             else:
                 raise Exception('ControlResStore Status: %d' % resp.store.status)
 
-def doTransfer(nsamples=None, filename=None):
+def doTransfer(filename, sampleRange=-1):
     if isStreaming() or isRecording():
         raise ex.StateChangeError
     else:
         cmd = ControlCommand(type=ControlCommand.STORE)
-        cmd.store.start_sample = 0
-        if nsamples:
+        if (len(sampleRange) == 2) and (sampleRange[1] > sampleRange[0]):
+            startSample = sampleRange[0]
+            nsamples = sampleRange[1] - sampleRange[0] + 1
+            cmd.store.start_sample = startSample
             cmd.store.nsamples = nsamples
-        # (else leave missing which indicates whole experiment)
+        elif sampleRange == -1:
+            cmd.store.start_sample = 0
+            # leave nsamples missing, which indicates whole experiment
         cmd.store.path = filename
         mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
         resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)

@@ -23,6 +23,17 @@ from parameters import DAEMON_DIR, DATA_DIR
 
 import h5py
 
+def isSampleRangeValid(sampleRange):
+    if len(sampleRange)==2:
+        if (sampleRange[1]>sampleRange[0]) and (sampleRange[0]>=0):
+            return True
+        else:
+            return False
+    elif sampleRange==-1:
+        return True
+    else:
+        return False
+
 class ButtonPanel(QtGui.QWidget):
 
     def __init__(self, msgLog):
@@ -186,18 +197,21 @@ class ButtonPanel(QtGui.QWidget):
         dlg = TransferDialog()
         if dlg.exec_():
             params = dlg.getParams()
-            nsamples = params['nsamples']
+            sampleRange = params['sampleRange']
             filename = params['filename'] # this is an absolute filename, or False
-            self.transferThread = TransferThread(nsamples, filename)
-            self.transferProgressDialog = QtGui.QProgressDialog('Transferring Experiment..', 'Cancel', 0, 0)
-            self.transferProgressDialog.setWindowTitle('Transfer Progress')
-            self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-            self.transferProgressDialog.setModal(True)
-            self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
-            self.transferThread.statusUpdated.connect(self.postStatus)
-            self.transferThread.finished.connect(self.transferProgressDialog.reset)
-            self.transferProgressDialog.show()
-            self.transferThread.start()
+            if isSampleRangeValid(sampleRange):
+                self.transferThread = TransferThread(filename, sampleRange)
+                self.transferProgressDialog = QtGui.QProgressDialog('Transfering Experiment..', 'Cancel', 0, 0)
+                self.transferProgressDialog.setWindowTitle('Transfer Progress')
+                self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
+                self.transferProgressDialog.setModal(True)
+                self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
+                self.transferThread.statusUpdated.connect(self.postStatus)
+                self.transferThread.finished.connect(self.transferProgressDialog.reset)
+                self.transferProgressDialog.show()
+                self.transferThread.start()
+            else:
+                self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
 
     def postStatus(self, msg):
         self.msgLog.post(msg)

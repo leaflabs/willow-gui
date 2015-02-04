@@ -12,15 +12,15 @@ class TransferThread(QtCore.QThread):
 
     statusUpdated = QtCore.pyqtSignal(str)
 
-    def __init__(self, nsamples, filename):
+    def __init__(self, filename, sampleRange):
         super(TransferThread, self).__init__()
-        self.nsamples = nsamples
-        if filename:
-            self.filename = filename
-            self.rename = False
-        else:
+        if filename == -1:
             self.filename = os.path.join(DATA_DIR, 'tmp_transfer.h5')
             self.rename = True
+        else:
+            self.filename = filename
+            self.rename = False
+        self.sampleRange = sampleRange
         self.isTerminated = False
 
     def handleCancel(self):
@@ -33,11 +33,11 @@ class TransferThread(QtCore.QThread):
 
     def run(self):
         try:
-            if (self.nsamples==None) and (hwif.doRegRead(3,3)==0):
+            if (self.sampleRange == -1) and (hwif.doRegRead(3,3) == 0):
                 self.statusUpdated.emit('Error: Could not transfer experiment because BSI is missing.')
-                self.statusUpdated.emit('Please specify nsamples in the Transfer Dialog and try again.')
+                self.statusUpdated.emit('Please specify subset parameters in the Transfer Dialog and try again.')
             else:
-                hwif.doTransfer(self.nsamples, self.filename)
+                hwif.doTransfer(self.filename, self.sampleRange)
                 if self.rename:
                     tmpFilename = self.filename
                     f = h5py.File(tmpFilename)
