@@ -262,11 +262,12 @@ def doTransfer(filename, sampleRange=-1):
         raise ex.StateChangeError
     else:
         cmd = ControlCommand(type=ControlCommand.STORE)
-        if (len(sampleRange) == 2) and (sampleRange[1] > sampleRange[0]):
-            startSample = sampleRange[0]
-            nsamples = sampleRange[1] - sampleRange[0] + 1
-            cmd.store.start_sample = startSample
-            cmd.store.nsamples = nsamples
+        if isinstance(sampleRange, list):
+            if (len(sampleRange) == 2) and (sampleRange[1] > sampleRange[0]):
+                startSample = sampleRange[0]
+                nsamples = sampleRange[1] - sampleRange[0] + 1
+                cmd.store.start_sample = startSample
+                cmd.store.nsamples = nsamples
         elif sampleRange == -1:
             cmd.store.start_sample = 0
             # leave nsamples missing, which indicates whole experiment

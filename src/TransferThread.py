@@ -46,7 +46,7 @@ class TransferThread(QtCore.QThread):
                     strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
                     filename = os.path.join(DATA_DIR, 'experiment_%s.h5' % strtime)
                     os.rename(tmpFilename, filename)
-                self.statusUpdated.emit('Transfer complete: %s' % filename)
+                self.statusUpdated.emit('Transfer complete: %s' % self.filename)
         except ex.StateChangeError:
             self.statusUpdated.emit('Caught StateChangeError')
         except ex.NoResponseError:

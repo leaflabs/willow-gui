@@ -43,6 +43,8 @@ class SnapshotDialog(QtGui.QDialog):
         filename = str(self.filenameLine.text())
         if not os.path.isabs(filename):
             filename = os.path.join(DATA_DIR, filename)
+        if os.path.splitext(filename)[1] != '.h5':
+            filename = filename + '.h5'
         params['filename'] = filename
         params['plot'] = self.plotCheckbox.isChecked()
         return params

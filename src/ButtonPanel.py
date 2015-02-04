@@ -24,7 +24,7 @@ from parameters import DAEMON_DIR, DATA_DIR
 import h5py
 
 def isSampleRangeValid(sampleRange):
-    if len(sampleRange)==2:
+    if isinstance(sampleRange, list) and (len(sampleRange)==2):
         if (sampleRange[1]>sampleRange[0]) and (sampleRange[0]>=0):
             return True
         else:
@@ -33,6 +33,10 @@ def isSampleRangeValid(sampleRange):
         return True
     else:
         return False
+
+def targetDirExists(filename):
+    targetDir = os.path.split(filename)[0]
+    return os.path.exists(targetDir)
 
 class ButtonPanel(QtGui.QWidget):
 
@@ -147,6 +151,9 @@ class ButtonPanel(QtGui.QWidget):
             nsamples_requested = params['nsamples']
             filename = params['filename']
             plot = params['plot']
+            if not targetDirExists(filename):
+                self.msgLog.post('Target directory does not exist: %s' % os.path.split(filename)[0])
+                return
             self.snapshotThread = SnapshotThread(nsamples_requested, filename)
             self.snapshotThread.statusUpdated.connect(self.postStatus)
             self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
@@ -199,19 +206,22 @@ class ButtonPanel(QtGui.QWidget):
             params = dlg.getParams()
             sampleRange = params['sampleRange']
             filename = params['filename'] # this is an absolute filename, or False
-            if isSampleRangeValid(sampleRange):
-                self.transferThread = TransferThread(filename, sampleRange)
-                self.transferProgressDialog = QtGui.QProgressDialog('Transfering Experiment..', 'Cancel', 0, 0)
-                self.transferProgressDialog.setWindowTitle('Transfer Progress')
-                self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-                self.transferProgressDialog.setModal(True)
-                self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
-                self.transferThread.statusUpdated.connect(self.postStatus)
-                self.transferThread.finished.connect(self.transferProgressDialog.reset)
-                self.transferProgressDialog.show()
-                self.transferThread.start()
-            else:
+            if not isSampleRangeValid(sampleRange):
                 self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
+                return
+            if not targetDirExists(filename):
+                self.msgLog.post('Target directory does not exist: %s' % os.path.split(filename)[0])
+                return
+            self.transferThread = TransferThread(filename, sampleRange)
+            self.transferProgressDialog = QtGui.QProgressDialog('Transfering Experiment..', 'Cancel', 0, 0)
+            self.transferProgressDialog.setWindowTitle('Transfer Progress')
+            self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
+            self.transferProgressDialog.setModal(True)
+            self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
+            self.transferThread.statusUpdated.connect(self.postStatus)
+            self.transferThread.finished.connect(self.transferProgressDialog.reset)
+            self.transferProgressDialog.show()
+            self.transferThread.start()
 
     def postStatus(self, msg):
         self.msgLog.post(msg)
