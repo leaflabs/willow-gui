@@ -136,8 +136,8 @@ class StreamWindow(QtGui.QWidget):
             self.toggleStdin(True)
             self.msgLog.post('Started streaming.')
         except ex.AlreadyError:
-            self.toggleStdin(True)
-            self.msgLog.post('Already streaming')
+            #self.toggleStdin(True) # ideally this would start the plot updating, but for now it fails
+            self.msgLog.post('Hardware was already streaming. Try stopping and restarting stream.')
         except ex.NoResponseError:
             self.msgLog.post('Control Command got no response')
         except socket.error:
@@ -167,6 +167,7 @@ class StreamWindow(QtGui.QWidget):
             self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s',
                 '-c', str(self.chan)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.timer.start(self.fp)
+            print 'timer started'
         else:
             self.timer.stop()
             try:
