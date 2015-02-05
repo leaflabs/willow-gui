@@ -209,7 +209,7 @@ class ButtonPanel(QtGui.QWidget):
             if not isSampleRangeValid(sampleRange):
                 self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
                 return
-            if not targetDirExists(filename):
+            if isinstance(filename, str) and (not targetDirExists(filename)):
                 self.msgLog.post('Target directory does not exist: %s' % os.path.split(filename)[0])
                 return
             self.transferThread = TransferThread(filename, sampleRange)
