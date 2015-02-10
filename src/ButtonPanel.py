@@ -92,7 +92,7 @@ class ButtonPanel(QtGui.QWidget):
         self.plotButton.setIcon(QtGui.QIcon('../img/plot.ico'))
         self.plotButton.setIconSize(QtCore.QSize(48,48))
         self.plotButton.setToolTip('Launch Plot Window')
-        self.plotButton.clicked.connect(self.launchPlotWindow)
+        self.plotButton.clicked.connect(self.plotData)
 
         layout = QtGui.QGridLayout()
         #layout.addWidget(self.impedanceButton, 0,0)
@@ -226,7 +226,7 @@ class ButtonPanel(QtGui.QWidget):
     def postStatus(self, msg):
         self.msgLog.post(msg)
 
-    def launchPlotWindow(self):
+    def plotData(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', DATA_DIR)
         if filename:
             filename = str(filename)
@@ -234,6 +234,9 @@ class ButtonPanel(QtGui.QWidget):
             if dlg.exec_():
                 params = dlg.getParams()
                 sampleRange = params['sampleRange']
+                if not isSampleRangeValid(sampleRange):
+                    self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
+                    return
                 self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename, 'Cancel', 0, 10)
                 self.importProgressDialog.setMinimumDuration(1000)
                 self.importProgressDialog.setModal(False)
@@ -242,12 +245,14 @@ class ButtonPanel(QtGui.QWidget):
                 self.importThread = ImportThread(filename, sampleRange)
                 self.importThread.valueChanged.connect(self.importProgressDialog.setValue)
                 self.importThread.maxChanged.connect(self.importProgressDialog.setMaximum)
-                self.importThread.finished.connect(self.showPlotWindow)
+                self.importThread.statusUpdated.connect(self.postStatus)
+                self.importThread.finished.connect(self.launchPlotWindow)
+                self.importThread.canceled.connect(self.importProgressDialog.cancel)
                 self.importProgressDialog.canceled.connect(self.importThread.terminate)
                 self.importProgressDialog.show()
                 self.importThread.start()
 
-    def showPlotWindow(self, filename, data, sampleRange):
-        plotWindow = PlotWindow(str(filename), sampleRange, data, self.msgLog)
+    def launchPlotWindow(self, willowDataset):
+        plotWindow = PlotWindow(willowDataset)
         plotWindow.show()
         

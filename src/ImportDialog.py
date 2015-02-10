@@ -44,5 +44,5 @@ class ImportDialog(QtGui.QDialog):
             params['sampleRange'] = -1
         else:
             params['sampleRange'] = [int(float(self.fromLine.text())*30000),
-                int(float(self.toLine.text())*30000)]
+                int(float(self.toLine.text())*30000)-1]
         return params
