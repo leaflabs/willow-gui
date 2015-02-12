@@ -162,7 +162,7 @@ class ButtonPanel(QtGui.QWidget):
             self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
             if plot:
                 self.importThread = ImportThread(filename, -1)
-                self.importThread.finished.connect(self.showPlotWindow)
+                self.importThread.finished.connect(self.launchPlotWindow)
                 self.snapshotThread.finished.connect(self.importThread.start)
                 self.snapshotProgressDialog.canceled.connect(self.importThread.handleCancel)
                 self.importThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
@@ -253,6 +253,6 @@ class ButtonPanel(QtGui.QWidget):
                 self.importThread.start()
 
     def launchPlotWindow(self, willowDataset):
-        plotWindow = PlotWindow(willowDataset)
-        plotWindow.show()
+        self.plotWindow = PlotWindow(willowDataset)
+        self.plotWindow.show()
         

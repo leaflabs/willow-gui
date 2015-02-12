@@ -4,7 +4,6 @@ import os, sys, h5py
 import numpy as np
 
 from progressbar import ProgressBar
-from ProgressBarWindow import ProgressBarWindow
 
 from parameters import DAEMON_DIR, DATA_DIR
 sys.path.append(os.path.join(DAEMON_DIR, 'util'))
@@ -104,7 +103,6 @@ class ControlPanel(QtGui.QWidget):
         self.refreshButton.clicked.connect(self.handleZoomRefresh)
         self.defaultButton = QtGui.QPushButton('Default')
         self.defaultButton.clicked.connect(self.handleZoomDefault)
-        self.autoMode = True
         self.switchModes() # initialize
         ###
         modes = QtGui.QWidget()
@@ -168,6 +166,8 @@ class ControlPanel(QtGui.QWidget):
         defaultParams['yrange'] = [0,0]
         defaultParams['autoMode'] = True
         self.zoomUpdated.emit(defaultParams)
+        # after plotpanel calculates autozoom parameters, it sends a signal back,
+        # which gets handled by ControlPanel.setZoom()
 
     def launchWaterfall(self):
         self.waterfallPlotWindow = WaterfallPlotWindow(self.dataset)
@@ -200,9 +200,6 @@ class PlotPanel(QtGui.QWidget):
         layout.addWidget(self.canvas)
         layout.addWidget(self.toolbar)
         self.setLayout(layout)
-
-    def initialize(self, controlParams):
-        self.setChannels(controlParams)
 
     def setChannels(self, controlParams):
         nchannels = controlParams['nchannels']
@@ -252,11 +249,7 @@ class PlotWindow(QtGui.QWidget):
         self.controlPanel.channelsUpdated.connect(self.plotPanel.setChannels)
         self.controlPanel.zoomUpdated.connect(self.plotPanel.setZoom)
         self.plotPanel.autoZoomCalculated.connect(self.controlPanel.setZoom)
-        self.plotPanel.initialize(self.controlPanel.getParams())
-
-        ###################
-        # Top-level stuff
-        ##################
+        self.plotPanel.setChannels(self.controlPanel.getParams())
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.controlPanel)
@@ -267,48 +260,6 @@ class PlotWindow(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(1600,800)
 
-    def updateZoom_redraw(self):
-        # this is stupid; trouble with default argument redraw 20140929
-        zoomGroup = self.controlPanel.zoomGroup
-        if zoomGroup.mode == 'manual':
-            xmin = int(zoomGroup.xminLine.text())
-            xmax = int(zoomGroup.xmaxLine.text())
-            ymin = int(zoomGroup.yminLine.text())
-            ymax = int(zoomGroup.ymaxLine.text())
-        elif zoomGroup.mode == 'auto':
-            xmin = self.sampleRange[0]
-            xmax = self.sampleRange[1]
-            ymin_hard = np.min(self.data_uv[self.channelList,:])
-            ymax_hard = np.max(self.data_uv[self.channelList,:])
-            deltay = ymax_hard - ymin_hard
-            ymin = ymin_hard - deltay//2
-            if ymin < 0: ymin = 0
-            ymax = ymax_hard + deltay//2
-            if ymax > 2**16-1: ymax = 2**16-1
-            zoomGroup.xminLine.setText(str(xmin))
-            zoomGroup.xmaxLine.setText(str(xmax))
-            zoomGroup.yminLine.setText(str(ymin))
-            zoomGroup.ymaxLine.setText(str(ymax))
-        for axes in self.axesList:
-            axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
-        self.canvas.draw()
-
-    def calculateYTicks(self, ymin, ymax):
-        if ((ymin < 2**15) and (ymax > 2**15)):
-            if (2**15-ymin) < (ymax-2**15):
-                ytick_locs = np.linspace(ymin, ymax, 5)
-                ytick_lbls = ['%3.2f uv' % ((cnt-2**15)*0.2) for cnt in ytick_locs]
-
-    def defaultZoom(self):
-        zoomGroup = self.controlPanel.zoomGroup
-        zoomGroup.xminLine.setText(str(self.sampleRange[0]))
-        zoomGroup.xmaxLine.setText(str(self.sampleRange[1]))
-        zoomGroup.yminLine.setText(str(0))
-        zoomGroup.ymaxLine.setText(str(2**16-1))
-        self.updateZoom()
-
-    def closeEvent(self, event):
-        print 'closing'
 
 if __name__=='__main__':
     filename_64chan = '/home/chrono/sng/data/justin/64chan/neuralRecording_10sec.h5'

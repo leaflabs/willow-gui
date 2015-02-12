@@ -8,10 +8,13 @@ class WillowDataset():
         (self.uv) and a time coordinate in milliseconds (self.ms)
     """
 
-    def __init__(self, data_uint16, sampleRange, filename):
+    def __init__(self, data, sampleRange, filename, uvProvided=False):
         self.filename = filename
         self.sampleRange = sampleRange
-        self.data_uv = (np.array(data_uint16, dtype='float')-2**15)*0.2
+        if uvProvided:
+            self.data_uv = data
+        else:
+            self.data_uv = (np.array(data, dtype='float')-2**15)*0.2
         self.dataMin = np.min(self.data_uv)
         self.dataMax = np.max(self.data_uv)
         self.time_ms = np.arange(sampleRange[0], sampleRange[1]+1)/30.
@@ -20,3 +23,8 @@ class WillowDataset():
         self.limits = [self.timeMin, self.timeMax, self.dataMin, self.dataMax]
         self.nsamples = len(self.time_ms)
 
+    def getDataSubset(self, c1, c2, t1, t2):
+        timeIndices = np.where((t1 <= self.time_ms) & (self.time_ms < t2))
+        dataSubset = WillowDataset(self.data_uv[c1:c2, timeIndices],
+            sampleRange=[t1*30, t2*30], filename = self.filename, uvProvided=True)
+        return dataSubset
