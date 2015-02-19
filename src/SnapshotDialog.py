@@ -1,7 +1,7 @@
 from PyQt4 import QtCore, QtGui
 import time, datetime, os, sys
 
-from parameters import *
+import config
 
 class SnapshotDialog(QtGui.QDialog):
 
@@ -11,7 +11,7 @@ class SnapshotDialog(QtGui.QDialog):
         self.lengthLine = QtGui.QLineEdit('1')
         dt = datetime.datetime.fromtimestamp(time.time())
         strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-        filename = os.path.join(DATA_DIR, 'snapshot_%s.h5' % strtime)
+        filename = os.path.join(config.dataDir, 'snapshot_%s.h5' % strtime)
         self.filenameLine = QtGui.QLineEdit(filename)
         self.browseButton = QtGui.QPushButton('Browse')
         self.browseButton.clicked.connect(self.browse)
@@ -42,7 +42,7 @@ class SnapshotDialog(QtGui.QDialog):
         params['nsamples'] = int(float(self.lengthLine.text())*30000)
         filename = str(self.filenameLine.text())
         if not os.path.isabs(filename):
-            filename = os.path.join(DATA_DIR, filename)
+            filename = os.path.join(config.dataDir, filename)
         if os.path.splitext(filename)[1] != '.h5':
             filename = filename + '.h5'
         params['filename'] = filename
@@ -50,6 +50,6 @@ class SnapshotDialog(QtGui.QDialog):
         return params
 
     def browse(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', DATA_DIR)
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', config.dataDir)
         if filename:
             self.filenameLine.setText(filename)

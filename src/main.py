@@ -19,8 +19,9 @@ from StatusBar import StatusBar
 from ButtonPanel import ButtonPanel
 from MessageLog import MessageLog
 
-from parameters import DAEMON_DIR, DATA_DIR
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+import config
+
+sys.path.append(os.path.join(config.daemonDir, 'util'))
 from daemon_control import *
 
 import hwif
@@ -72,9 +73,9 @@ class MainWindow(QtGui.QWidget):
         self.statusBar
 
     def startDaemon(self):
-        #subprocess.call([os.path.join(DAEMON_DIR, 'build/leafysd'), '-A', '192.168.1.2'])
+        #subprocess.call([os.path.join(config.daemonDir, 'build/leafysd'), '-A', '192.168.1.2'])
         subprocess.call(['killall', 'leafysd'])
-        self.daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
+        self.daemonProcess = subprocess.Popen([os.path.join(config.daemonDir, 'build/leafysd'),
                                                 '-N', '-A', '192.168.1.2', '-I', 'eth0'], stdout=oFile, stderr=eFile)
         self.msgLog.post('Daemon started.')
         print 'daemon started'

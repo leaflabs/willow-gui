@@ -1,7 +1,7 @@
 from PyQt4 import QtCore, QtGui
 import time, datetime, os, sys
 
-from parameters import *
+import config
 
 class TransferDialog(QtGui.QDialog):
 
@@ -86,7 +86,7 @@ class TransferDialog(QtGui.QDialog):
         if self.filenameButton.isChecked():
             filename = str(self.filenameLine.text())
             if not os.path.isabs(filename):
-                filename = os.path.join(DATA_DIR, filename)
+                filename = os.path.join(config.dataDir, filename)
             if os.path.splitext(filename)[1] != '.h5':
                 filename = filename + '.h5'
             params['filename'] = filename
@@ -95,6 +95,6 @@ class TransferDialog(QtGui.QDialog):
         return params
 
     def browse(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', DATA_DIR)
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', config.dataDir)
         if filename:
             self.filenameLine.setText(filename)

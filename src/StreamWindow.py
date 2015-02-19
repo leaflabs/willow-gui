@@ -2,7 +2,7 @@ from PyQt4 import QtCore, QtGui
 import subprocess, os, sys, socket
 import numpy as np
 
-from parameters import *
+import config
 
 import numpy as np
 import matplotlib
@@ -100,7 +100,7 @@ class StreamWindow(QtGui.QWidget):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
 
-        self.proto2bytes = os.path.join(DAEMON_DIR, 'build/proto2bytes')
+        self.proto2bytes = os.path.join(config.daemonDir, 'build/proto2bytes')
 
         ###################
         # Top-level stuff

@@ -1,7 +1,7 @@
 from PyQt4 import QtCore, QtGui
 import time, datetime, os, sys
 
-from parameters import *
+import config
 
 class ImpedanceDialog(QtGui.QDialog):
 
@@ -39,8 +39,7 @@ class ImpedanceDialog(QtGui.QDialog):
         layout.addWidget(self.dialogButtons)
         self.setLayout(layout)
         self.setWindowTitle('Impedance Check Parameters')
-        #self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-        self.setWindowIcon(QtGui.QIcon('../img/impedance.png'))
+        self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
 
     def disableOneChipLine(self):
         self.oneChipLine.setDisabled(True)
@@ -58,6 +57,6 @@ class ImpedanceDialog(QtGui.QDialog):
         return params
 
     def browse(self):
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', DATA_DIR)
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save To...', config.dataDir)
         if filename:
             self.filenameLine.setText(filename)

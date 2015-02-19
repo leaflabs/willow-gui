@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 import os, h5py, time, sys
-from parameters import DAEMON_DIR, DATA_DIR
+from parameters import config.daemonDir, config.dataDir
 
 from StateManagement import DaemonControlError
 
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+sys.path.append(os.path.join(config.daemonDir, 'util'))
 from daemon_control import *
 
 ERRORS = {0:'NO_DNODE', 1:'DAEMON', 6:'DAEMON_IO', 8:'C_VALUE', 2:'C_PROTO',

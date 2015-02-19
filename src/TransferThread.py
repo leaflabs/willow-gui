@@ -4,8 +4,8 @@ import numpy as np
 import hwif
 import CustomExceptions as ex
 
-from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+import config
+sys.path.append(os.path.join(config.daemonDir, 'util'))
 from daemon_control import *
 
 class TransferThread(QtCore.QThread):
@@ -15,7 +15,7 @@ class TransferThread(QtCore.QThread):
     def __init__(self, filename, sampleRange):
         super(TransferThread, self).__init__()
         if filename == -1:
-            self.filename = os.path.join(DATA_DIR, 'tmp_transfer.h5')
+            self.filename = os.path.join(config.dataDir, 'tmp_transfer.h5')
             self.rename = True
         else:
             self.filename = filename
@@ -44,7 +44,7 @@ class TransferThread(QtCore.QThread):
                     timestamp = f['wired-dataset'].attrs['experiment_cookie'][0]
                     dt = datetime.datetime.fromtimestamp(timestamp)
                     strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-                    filename = os.path.join(DATA_DIR, 'experiment_%s.h5' % strtime)
+                    filename = os.path.join(config.dataDir, 'experiment_%s.h5' % strtime)
                     os.rename(tmpFilename, filename)
                 self.statusUpdated.emit('Transfer complete: %s' % self.filename)
         except ex.StateChangeError:

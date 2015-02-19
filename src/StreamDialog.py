@@ -1,5 +1,4 @@
 from PyQt4 import QtCore, QtGui
-from parameters import *
 
 class StreamDialog(QtGui.QDialog):
 

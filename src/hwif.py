@@ -10,8 +10,9 @@ import time
 
 from PyQt4 import QtCore
 
-from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+import config
+
+sys.path.append(os.path.join(config.daemonDir, 'util'))
 from daemon_control import *
 
 import CustomExceptions as ex
@@ -82,9 +83,9 @@ def startStreaming_subsamples():
         cmd = ControlCommand(type=ControlCommand.FORWARD)
         cmd.forward.sample_type = BOARD_SUBSAMPLE
         cmd.forward.force_daq_reset = not isRecording() # if recording, then DAQ is already running
-        aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)   # TODO should this have its own exception?
+        aton = socket.inet_aton(config.defaultForwardAddr)   # TODO should this have its own exception?
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-        cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+        cmd.forward.dest_udp_port = config.defaultForwardPort
         cmd.forward.enable = True
         mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
         resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
@@ -101,9 +102,9 @@ def startStreaming_boardsamples():
         cmd = ControlCommand(type=ControlCommand.FORWARD)
         cmd.forward.sample_type = BOARD_SAMPLE
         cmd.forward.force_daq_reset = not isRecording() # if recording, then DAQ is already running
-        aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)   # TODO should this have its own exception?
+        aton = socket.inet_aton(config.defaultForwardAddr)   # TODO should this have its own exception?
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-        cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+        cmd.forward.dest_udp_port = config.defaultForwardPort
         cmd.forward.enable = True
         mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
         resp = do_control_cmd(cmd, control_socket=DAEMON_SOCK)
@@ -155,9 +156,9 @@ def startRecording():
             cmd = ControlCommand(type=ControlCommand.FORWARD)
             cmd.forward.sample_type = BOARD_SUBSAMPLE
             cmd.forward.force_daq_reset = False
-            aton = socket.inet_aton(DEFAULT_FORWARD_ADDR)   # TODO should this have its own exception?
+            aton = socket.inet_aton(config.defaultForwardAddr)   # TODO should this have its own exception?
             cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-            cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+            cmd.forward.dest_udp_port = config.defaultForwardPort
             cmd.forward.enable = True
             cmds.append(cmd)
         mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
@@ -183,9 +184,9 @@ def stopRecording():
             cmd = ControlCommand(type=ControlCommand.FORWARD)
             cmd.forward.sample_type = BOARD_SUBSAMPLE
             cmd.forward.force_daq_reset = True
-            aton = socket.inet_aton(DEFAULT_FORWARD_ADDR) # TODO should this have its own exception?
+            aton = socket.inet_aton(config.defaultForwardAddr) # TODO should this have its own exception?
             cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-            cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+            cmd.forward.dest_udp_port = config.defaultForwardPort
             cmd.forward.enable = True
             cmds.append(cmd)
         mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
@@ -226,9 +227,9 @@ def takeSnapshot(nsamples, filename):
         cmd = ControlCommand(type=ControlCommand.FORWARD)
         cmd.forward.sample_type = BOARD_SAMPLE
         cmd.forward.force_daq_reset = True
-        aton = socket.inet_aton(DEFAULT_FORWARD_ADDR) # TODO should this be its own exception?
+        aton = socket.inet_aton(config.defaultForwardAddr) # TODO should this be its own exception?
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
-        cmd.forward.dest_udp_port = DEFAULT_FORWARD_PORT
+        cmd.forward.dest_udp_port = config.defaultForwardPort
         cmd.forward.enable = True
         cmds.append(cmd)
 

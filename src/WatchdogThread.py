@@ -3,8 +3,8 @@ import sys, os, h5py, time
 import numpy as np
 import hwif
 
-from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+import config
+sys.path.append(os.path.join(config.daemonDir, 'util'))
 from daemon_control import *
 
 class WatchdogThread(QtCore.QThread):

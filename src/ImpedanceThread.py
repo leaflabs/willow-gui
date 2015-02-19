@@ -3,8 +3,8 @@ import sys, os, h5py
 import numpy as np
 import hwif
 
-from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+import config
+sys.path.append(os.path.join(config.daemonDir, 'util'))
 from daemon_control import *
 
 # TODO !!! wrap all the hwif calls in exception handlers
@@ -151,7 +151,7 @@ class ImpedanceThread(QtCore.QThread):
         self.valueChanged.emit(0)
         self.maxChanged.emit(1)
         self.textChanged.emit('Taking snapshot..')
-        tmpSnapshotFilename = os.path.join(DATA_DIR, 'tmpSnapshot.h5')
+        tmpSnapshotFilename = os.path.join(config.dataDir, 'tmpSnapshot.h5')
         hwif.takeSnapshot(nsamples, tmpSnapshotFilename)
         self.valueChanged.emit(1)
         # import snapshot

@@ -1,6 +1,6 @@
 import sys, os
-from parameters import *
-sys.path.append(os.path.join(DAEMON_DIR, 'util'))
+import config
+sys.path.append(os.path.join(config.daemonDir, 'util'))
 from daemon_control import *
 
 class DaemonControlError(Exception):

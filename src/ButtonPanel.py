@@ -19,7 +19,7 @@ from TransferThread import TransferThread
 from ImpedanceDialog import ImpedanceDialog
 from ImpedanceThread import ImpedanceThread
 
-from parameters import DAEMON_DIR, DATA_DIR
+import config
 
 import h5py
 
@@ -43,20 +43,6 @@ class ButtonPanel(QtGui.QWidget):
     def __init__(self, msgLog):
         super(ButtonPanel, self).__init__()
         self.msgLog = msgLog
-
-        """
-        self.impedanceButton = QtGui.QPushButton()
-        self.impedanceButton.setIcon(QtGui.QIcon('../img/impedance.png'))
-        self.impedanceButton.setIconSize(QtCore.QSize(48,48))
-        self.impedanceButton.setToolTip('Run Impedance Test')
-        self.impedanceButton.clicked.connect(self.runImpedanceTest)
-
-        self.electroplatingButton = QtGui.QPushButton()
-        self.electroplatingButton.setIcon(QtGui.QIcon('../img/electroplating.ico'))
-        self.electroplatingButton.setIconSize(QtCore.QSize(48,48))
-        self.electroplatingButton.setToolTip('Run Electroplating')
-        self.electroplatingButton.clicked.connect(self.runElectroplating)
-        """
 
         self.streamButton = QtGui.QPushButton()
         self.streamButton.setIcon(QtGui.QIcon('../img/stream.ico'))
@@ -94,15 +80,27 @@ class ButtonPanel(QtGui.QWidget):
         self.plotButton.setToolTip('Launch Plot Window')
         self.plotButton.clicked.connect(self.plotData)
 
+        self.impedanceButton = QtGui.QPushButton()
+        self.impedanceButton.setIcon(QtGui.QIcon('../img/impedance.png'))
+        self.impedanceButton.setIconSize(QtCore.QSize(48,48))
+        self.impedanceButton.setToolTip('Run Impedance Test')
+        self.impedanceButton.clicked.connect(self.runImpedanceTest)
+
+        self.settingsButton = QtGui.QPushButton()
+        self.settingsButton.setIcon(QtGui.QIcon('../img/settings.png'))
+        self.settingsButton.setIconSize(QtCore.QSize(48,48))
+        self.settingsButton.setToolTip('Configure Settings')
+        self.settingsButton.clicked.connect(self.configureSettings)
+
         layout = QtGui.QGridLayout()
-        #layout.addWidget(self.impedanceButton, 0,0)
-        #layout.addWidget(self.electroplatingButton, 0,1)
         layout.addWidget(self.streamButton, 0,0)
         layout.addWidget(self.snapshotButton, 0,1)
         layout.addWidget(self.startRecordingButton, 1,0)
         layout.addWidget(self.stopRecordingButton, 1,1)
         layout.addWidget(self.transferButton, 2,0)
         layout.addWidget(self.plotButton, 2,1)
+        layout.addWidget(self.impedanceButton, 3,0)
+        layout.addWidget(self.settingsButton, 3,1)
 
         self.setLayout(layout)
 
@@ -127,7 +125,7 @@ class ButtonPanel(QtGui.QWidget):
             self.impedanceProgressDialog.show()
             self.impedanceThread.start()
 
-    def runElectroplating(self):
+    def configureSettings(self):
         pass
 
     def launchStreamWindow(self):
@@ -227,7 +225,7 @@ class ButtonPanel(QtGui.QWidget):
         self.msgLog.post(msg)
 
     def plotData(self):
-        filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', DATA_DIR)
+        filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', config.dataDir)
         if filename:
             filename = str(filename)
             dlg = ImportDialog()
