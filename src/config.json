@@ -1,0 +1,27 @@
+{
+    "daemonDir" : {
+        "type" : "str",
+        "description" : "Daemon Directory",
+        "value" : "/home/chrono/sng/sng-daemon"
+    },
+    "defaultForwardAddr" : {
+        "type" : "str",
+        "description" : "proto2bytes Forwarding Address",
+        "value" : "127.0.0.1"
+    },
+    "dataDir" : {
+        "type" : "str",
+        "description" : "Data Directory",
+        "value" : "/home/chrono/sng/data2"
+    },
+    "storageCapacity" : {
+        "type" : "str",
+        "description" : "Datanode Storage Capacity",
+        "value" : "1TB"
+    },
+    "defaultForwardPort" : {
+        "type" : "int",
+        "description" : "proto2bytes Forwarding Port",
+        "value" : 7654
+    }
+}

@@ -19,6 +19,8 @@ from TransferThread import TransferThread
 from ImpedanceDialog import ImpedanceDialog
 from ImpedanceThread import ImpedanceThread
 
+from SettingsWindow import SettingsWindow
+
 import config
 
 import h5py
@@ -126,7 +128,8 @@ class ButtonPanel(QtGui.QWidget):
             self.impedanceThread.start()
 
     def configureSettings(self):
-        pass
+        self.settingsWindow = SettingsWindow()
+        self.settingsWindow.show()
 
     def launchStreamWindow(self):
         dlg = StreamDialog()
