@@ -1,7 +1,8 @@
 import sys, os
 import config
+
 sys.path.append(os.path.join(config.daemonDir, 'util'))
-from daemon_control import *
+import daemon_control as dc
 
 class DaemonControlError(Exception):
     """
@@ -71,14 +72,14 @@ class DNODE_DIED_error(Exception):
     def __str__(self):
         return 'DNODE_DIED: Datanode connection died while processing request'
 
-ERROR_DICT = {  ControlResErr.NO_DNODE : NO_DNODE_error,
-                ControlResErr.DAEMON : DAEMON_error,
-                ControlResErr.DAEMON_IO : DAEMON_IO_error,
-                ControlResErr.C_VALUE : C_VALUE_error,
-                ControlResErr.C_PROTO : C_PROTO_error,
-                ControlResErr.D_PROTO : D_PROTO_error,
-                ControlResErr.DNODE : DNODE_error,
-                ControlResErr.DNODE_ASYNC : DNODE_ASYNC_error,
-                ControlResErr.DNODE_DIED : DNODE_DIED_error
+ERROR_DICT = {  dc.ControlResErr.NO_DNODE : NO_DNODE_error,
+                dc.ControlResErr.DAEMON : DAEMON_error,
+                dc.ControlResErr.DAEMON_IO : DAEMON_IO_error,
+                dc.ControlResErr.C_VALUE : C_VALUE_error,
+                dc.ControlResErr.C_PROTO : C_PROTO_error,
+                dc.ControlResErr.D_PROTO : D_PROTO_error,
+                dc.ControlResErr.DNODE : DNODE_error,
+                dc.ControlResErr.DNODE_ASYNC : DNODE_ASYNC_error,
+                dc.ControlResErr.DNODE_DIED : DNODE_DIED_error
                 }
 
