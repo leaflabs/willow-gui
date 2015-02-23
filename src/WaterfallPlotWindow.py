@@ -90,6 +90,7 @@ class HistoControl(QtGui.QWidget):
         self.axes = self.fig.add_subplot(111)
         self.axes.set_axis_bgcolor('k')
         self.axes.bar(self.x,self.y, width=self.width, color='#8fdb90')
+        self.axes.set_title('Value Histogram (microVolts)', fontsize=10)
         self.axes.set_xlim([self.uvMin,self.uvMax])
         self.axes.get_yaxis().set_visible(False)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.92, top=0.92)
@@ -121,7 +122,7 @@ class ControlPanel(QtGui.QWidget):
         self.layout.addWidget(self.buttons, 2,0, 1,1)
         self.layout.addWidget(self.histoControl, 0,1, 3,3)
         self.setLayout(self.layout)
-        self.setMaximumHeight(220)
+        self.setMaximumHeight(260)
 
     def createChannelGroup(self):
         self.channelGroup = QtGui.QGroupBox('Channel Range')
@@ -222,7 +223,10 @@ class PlotPanel(QtGui.QWidget):
         self.axes = self.fig.add_subplot(111)
         self.axesImage = self.axes.imshow(self.dataset.data_uv, cm.Spectral, aspect='auto',
             extent=[self.dataset.timeMin, self.dataset.timeMax, 1024, 0])
+        self.axes.set_xlabel('Time (ms)')
+        self.axes.set_ylabel('Channel Count')
         self.colorbar = self.fig.colorbar(self.axesImage, use_gridspec=True)
+        self.colorbar.set_label('microVolts')
 
     def setRange(self, controlParams):
         timeMin, timeMax = controlParams['timeRange']
@@ -274,7 +278,7 @@ class WaterfallPlotWindow(QtGui.QWidget):
         self.mplWindow.setLayout(self.mplLayout)
 
 if __name__=='__main__':
-    filename_64chan = '/home/chrono/sng/data/justin/64chan/neuralRecording_10sec.h5'
+    filename_64chan = '/home/chrono/sng/data/justin/neuralRecording_10sec.h5'
     f = h5py.File(filename_64chan)
     dset = f['wired-dataset']
     nsamples = 10000
