@@ -3,10 +3,6 @@ import sys, os, h5py
 import numpy as np
 import hwif
 
-import config
-sys.path.append(os.path.join(config.daemonDir, 'util'))
-from daemon_control import *
-
 from WillowDataset import WillowDataset
 
 class ImportThread(QtCore.QThread):

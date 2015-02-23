@@ -1,12 +1,8 @@
 from PyQt4 import QtCore, QtGui
-import sys, os, h5py
+import sys, os, h5py, socket
 import numpy as np
 import hwif
 import CustomExceptions as ex
-
-import config
-sys.path.append(os.path.join(config.daemonDir, 'util'))
-from daemon_control import *
 
 class SnapshotThread(QtCore.QThread):
 

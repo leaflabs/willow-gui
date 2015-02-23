@@ -292,47 +292,15 @@ def pingDatanode():
     else:
         raise ex.NoResponseError
 
-def doRegRead(module, address):
-    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
-    resp = dc.do_control_cmd(dc.reg_read(module, address), control_socket=DAEMON_SOCK)
-    if resp:
-        if resp.type == dc.ControlResponse.REG_IO:
-            return resp.reg_io.val
-        elif resp.type==dc.ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
-    else:
-        raise ex.NoResponseError
-
-def doRegWrite(module, address, data):
-    resp = dc.do_control_cmd(dc.reg_write(module, address, data), control_socket=DAEMON_SOCK)
-    if resp:
-        if resp.type==dc.ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
-    else:
-        raise ex.NoResponseError
-
-def doIntanRegWrite(address, data):
+def getChipsAlive():
     """
-    Can only write to all chips simultaneously, due to hardware limitations.
-    (Can actually write at "headstage resolution", but this isn't particularly useful.)
+    Returns a list of indices of live Intan chips, by reading the bitmask in
+        hardware register (3,4)
+    NOTE: This bitmask will be inaccurate upon startup, until the DAQ is run.
     """
-    address = address & 0b11111
-    cmds = []
-    cmdData = ((0x1 << 24) |                    # aux command write enable
-               (0xFF << 16) |                   # all chips
-               ((0b10000000 | address) << 8) | # intan register address
-               data)                            # data
-    clear = 0
-    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData))
-    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, clear))
-    resps = dc.do_control_cmds(cmds, control_socket=DAEMON_SOCK)
-    for resp in resps:
-        if resp:
-            if resp.type==dc.ControlResponse.ERR:
-                raise ex.ERROR_DICT[resp.err.code]
-        else:
-            raise ex.NoResponseError
-
+    mask = doRegRead(3, 4)
+    #return [i for i in range(32) if (mask & (0x1 << i))]
+    return mask
 
 def checkVitals():
     #TODO catch NoResponseError as well?
@@ -373,5 +341,51 @@ def checkVitals():
         vitals['stream'] = isStreaming()
         vitals['record'] = isRecording()
         return vitals
+
+####################################################
+# These function are only for internal use (hwif.py)
+####################################################
+
+def doRegRead(module, address):
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resp = dc.do_control_cmd(dc.reg_read(module, address), control_socket=DAEMON_SOCK)
+    if resp:
+        if resp.type == dc.ControlResponse.REG_IO:
+            return resp.reg_io.val
+        elif resp.type==dc.ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+    else:
+        raise ex.NoResponseError
+
+def doRegWrite(module, address, data):
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resp = dc.do_control_cmd(dc.reg_write(module, address, data), control_socket=DAEMON_SOCK)
+    if resp:
+        if resp.type==dc.ControlResponse.ERR:
+            raise ex.ERROR_DICT[resp.err.code]
+    else:
+        raise ex.NoResponseError
+
+def doIntanRegWrite(address, data):
+    """
+    Can only write to all chips simultaneously, due to hardware limitations.
+    (Can actually write at "headstage resolution", but this isn't particularly useful.)
+    """
+    address = address & 0b11111
+    cmds = []
+    cmdData = ((0x1 << 24) |                    # aux command write enable
+               (0xFF << 16) |                   # all chips
+               ((0b10000000 | address) << 8) | # intan register address
+               data)                            # data
+    clear = 0
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData))
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, clear))
+    resps = dc.do_control_cmds(cmds, control_socket=DAEMON_SOCK)
+    for resp in resps:
+        if resp:
+            if resp.type==dc.ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
 
 

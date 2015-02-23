@@ -107,6 +107,8 @@ class ButtonPanel(QtGui.QWidget):
         self.setLayout(layout)
 
     def runImpedanceTest(self):
+        self.msgLog.post('Impedance measurement not implemented yet')
+        """
         dlg = ImpedanceDialog()
         if dlg.exec_():
             params = dlg.getParams()
@@ -118,14 +120,16 @@ class ButtonPanel(QtGui.QWidget):
             self.impedanceProgressDialog.setModal(True)
             self.impedanceProgressDialog.setWindowTitle('Impedance Testing Progress')
             self.impedanceProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-            self.impedanceThread = ImpedanceThread(chip, chan, self.msgLog)
+            self.impedanceThread = ImpedanceThread(chip, chan)
             self.impedanceThread.valueChanged.connect(self.impedanceProgressDialog.setValue)
             self.impedanceThread.maxChanged.connect(self.impedanceProgressDialog.setMaximum)
             self.impedanceThread.textChanged.connect(self.impedanceProgressDialog.setLabelText)
             self.impedanceThread.finished.connect(self.impedanceProgressDialog.reset)
+            self.impedanceThread.statusUpdated.connect(self.postStatus)
             self.impedanceProgressDialog.canceled.connect(self.impedanceThread.terminate)
             self.impedanceProgressDialog.show()
             self.impedanceThread.start()
+        """
 
     def configureSettings(self):
         self.settingsWindow = SettingsWindow()

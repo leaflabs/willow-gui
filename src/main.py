@@ -21,9 +21,6 @@ from MessageLog import MessageLog
 
 import config
 
-sys.path.append(os.path.join(config.daemonDir, 'util'))
-from daemon_control import *
-
 import hwif
 
 if not os.path.isdir('../log'):

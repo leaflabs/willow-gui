@@ -5,8 +5,6 @@ import hwif
 import CustomExceptions as ex
 
 import config
-sys.path.append(os.path.join(config.daemonDir, 'util'))
-from daemon_control import *
 
 class TransferThread(QtCore.QThread):
 

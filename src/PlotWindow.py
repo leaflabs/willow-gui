@@ -5,10 +5,6 @@ import numpy as np
 
 from progressbar import ProgressBar
 
-import config
-sys.path.append(os.path.join(config.daemonDir, 'util'))
-from daemon_control import *
-
 import numpy as np
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas

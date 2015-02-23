@@ -12,16 +12,16 @@
     "dataDir" : {
         "type" : "str",
         "description" : "Data Directory",
-        "value" : "/home/chrono/sng/data2"
-    },
-    "storageCapacity" : {
-        "type" : "str",
-        "description" : "Datanode Storage Capacity",
-        "value" : "1TB"
+        "value" : "/home/chrono/sng/data"
     },
     "defaultForwardPort" : {
         "type" : "int",
         "description" : "proto2bytes Forwarding Port",
         "value" : 7654
+    },
+    "storageCapacity" : {
+        "type" : "str",
+        "description" : "Datanode Storage Capacity",
+        "value" : "1TB"
     }
 }
