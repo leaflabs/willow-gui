@@ -4,13 +4,12 @@ import subprocess, os, sys, time
 
 sys.path.append('../src')
 
-import hwif
+import hwif, config
 import CustomExceptions as ex
-from parameters import DAEMON_DIR, DATA_DIR
 
 def startDaemon():
     subprocess.call(['killall', 'leafysd'])
-    daemonProcess = subprocess.Popen([os.path.join(DAEMON_DIR, 'build/leafysd'),
+    daemonProcess = subprocess.Popen([os.path.join(config.daemonDir, 'build/leafysd'),
                                             '-N', '-A', '192.168.1.2', '-I', 'eth0'])
     time.sleep(2)
     print 'Daemon started.'

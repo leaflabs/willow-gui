@@ -27,6 +27,7 @@ class SettingsWindow(QtGui.QWidget):
         self.setLayout(layout)
 
         self.setMinimumWidth(500)
+        self.center()
         self.setWindowTitle('Configuration Parameters')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
 
@@ -40,3 +41,9 @@ class SettingsWindow(QtGui.QWidget):
         config.saveJSON(config.jsonDict)
         self.close()
 
+    def center(self):
+        fmgeo = self.frameGeometry()
+        currentScreen = QtGui.QApplication.desktop().screenNumber(QtGui.QApplication.desktop().cursor().pos())
+        centerPoint = QtGui.QApplication.desktop().screenGeometry(currentScreen).center()
+        fmgeo.moveCenter(centerPoint)
+        self.move(fmgeo.topLeft())

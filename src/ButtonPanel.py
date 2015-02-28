@@ -25,6 +25,8 @@ import config
 
 import h5py
 
+from WillowDataset import WillowDataset
+
 def isSampleRangeValid(sampleRange):
     if isinstance(sampleRange, list) and (len(sampleRange)==2):
         if (sampleRange[1]>sampleRange[0]) and (sampleRange[0]>=0):
@@ -107,29 +109,25 @@ class ButtonPanel(QtGui.QWidget):
         self.setLayout(layout)
 
     def runImpedanceTest(self):
-        self.msgLog.post('Impedance measurement not implemented yet')
-        """
+        #self.msgLog.post('Impedance measurement not implemented yet')
         dlg = ImpedanceDialog()
         if dlg.exec_():
             params = dlg.getParams()
-            chip = params['chip']
-            chan = params['chan']
             self.impedanceProgressDialog = QtGui.QProgressDialog('Impedance Testing Progress', 'Cancel', 0, 10)
             self.impedanceProgressDialog.setAutoReset(False)
             self.impedanceProgressDialog.setMinimumDuration(0)
             self.impedanceProgressDialog.setModal(True)
             self.impedanceProgressDialog.setWindowTitle('Impedance Testing Progress')
             self.impedanceProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-            self.impedanceThread = ImpedanceThread(chip, chan)
+            self.impedanceThread = ImpedanceThread(params)
             self.impedanceThread.valueChanged.connect(self.impedanceProgressDialog.setValue)
             self.impedanceThread.maxChanged.connect(self.impedanceProgressDialog.setMaximum)
             self.impedanceThread.textChanged.connect(self.impedanceProgressDialog.setLabelText)
             self.impedanceThread.finished.connect(self.impedanceProgressDialog.reset)
             self.impedanceThread.statusUpdated.connect(self.postStatus)
-            self.impedanceProgressDialog.canceled.connect(self.impedanceThread.terminate)
+            self.impedanceProgressDialog.canceled.connect(self.impedanceThread.handleCancel)
             self.impedanceProgressDialog.show()
             self.impedanceThread.start()
-        """
 
     def configureSettings(self):
         self.settingsWindow = SettingsWindow()
@@ -149,7 +147,7 @@ class ButtonPanel(QtGui.QWidget):
             self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate, self.msgLog)
             self.streamWindow.show()
 
-    def takeSnapshot(self):
+    def takeSnapshot_old(self):
         dlg = SnapshotDialog()
         if dlg.exec_():
             params = dlg.getParams()
@@ -166,15 +164,33 @@ class ButtonPanel(QtGui.QWidget):
             self.snapshotProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
             self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
             if plot:
-                self.importThread = ImportThread(filename, -1)
+                self.importThread = ImportThread()
                 self.importThread.finished.connect(self.launchPlotWindow)
-                self.snapshotThread.finished.connect(self.importThread.start)
+                self.snapshotThread.finished.connect(self.importThread.run_fromSnapshotThread)
                 self.snapshotProgressDialog.canceled.connect(self.importThread.handleCancel)
                 self.importThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
                 self.importThread.valueChanged.connect(self.snapshotProgressDialog.setValue)
                 self.importThread.labelChanged.connect(self.snapshotProgressDialog.setLabelText)
             else:
                 self.snapshotThread.finished.connect(self.snapshotProgressDialog.reset)
+            self.snapshotProgressDialog.show()
+            self.snapshotThread.start()
+
+    def takeSnapshot(self):
+        dlg = SnapshotDialog()
+        if dlg.exec_():
+            params = dlg.getParams()
+            self.snapshotThread = SnapshotThread(params)
+            self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
+            self.snapshotProgressDialog.setWindowTitle('Snapshot Progress')
+            self.snapshotProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
+            self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
+            self.snapshotThread.msgPosted.connect(self.postStatus) # TODO see others
+            self.snapshotThread.importFinished.connect(self.launchPlotWindow)
+            self.snapshotThread.labelChanged.connect(self.snapshotProgressDialog.setLabelText)
+            self.snapshotThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
+            self.snapshotThread.progressUpdated.connect(self.snapshotProgressDialog.setValue)
+            self.snapshotThread.finished.connect(self.snapshotProgressDialog.reset) # necessary?
             self.snapshotProgressDialog.show()
             self.snapshotThread.start()
 
@@ -242,15 +258,16 @@ class ButtonPanel(QtGui.QWidget):
                 if not isSampleRangeValid(sampleRange):
                     self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
                     return
-                self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename, 'Cancel', 0, 10)
+                dataset = WillowDataset(filename, sampleRange)
+                self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename,
+                    'Cancel', 0, dataset.nsamples)
                 self.importProgressDialog.setMinimumDuration(1000)
                 self.importProgressDialog.setModal(False)
                 self.importProgressDialog.setWindowTitle('Data Import Progress')
                 self.importProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-                self.importThread = ImportThread(filename, sampleRange)
-                self.importThread.valueChanged.connect(self.importProgressDialog.setValue)
-                self.importThread.maxChanged.connect(self.importProgressDialog.setMaximum)
-                self.importThread.statusUpdated.connect(self.postStatus)
+                self.importThread = ImportThread(dataset)
+                self.importThread.progressUpdated.connect(self.importProgressDialog.setValue)
+                self.importThread.msgPosted.connect(self.postStatus) # TODO convert these to postMessage name
                 self.importThread.finished.connect(self.launchPlotWindow)
                 self.importThread.canceled.connect(self.importProgressDialog.cancel)
                 self.importProgressDialog.canceled.connect(self.importThread.terminate)

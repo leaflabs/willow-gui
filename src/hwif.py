@@ -342,6 +342,67 @@ def checkVitals():
         vitals['record'] = isRecording()
         return vitals
 
+def enableZCheck(chan, capscale):
+    """
+    Enable Intan impedance testing
+    chan is an int between 0 and 31 inclusive
+    capscale is either 0b00 (0.1pF), 0b01 (1pF), or 0b11 (10pF)
+    """
+    # first set DAC configuration register
+    enable = 0b1
+    power = (0b1 << 6)
+    scale = (capscale & 0b11) << 3
+    cmdData_DACconfig = ((0x1 << 24) |                # aux command write enable
+                        (0xFF << 16) |               # all chips (required by hw)
+                        (0b10000101 << 8) |          # write to register 5 (DAC config)
+                        (enable | power | scale))    # settings
+    # then set the DAC channel register
+    chan = chan & 0b11111
+    cmdData_DACchan =  ((0x1 << 24) |           # aux command write enable
+                        (0xFF << 16) |          # all chips (required by hw)
+                        (0b10000111 << 8) |     # write to register 7 (DAC chan select)
+                        (chan))                 # channel select
+    ####
+    cmds = []
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData_DACconfig))
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData_DACchan))
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, 0)) # clear the CMD register
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resps = dc.do_control_cmds(cmds, control_socket=DAEMON_SOCK)
+    for resp in resps:
+        if resp:
+            if resp.type==dc.ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
+
+def disableZCheck():
+    """
+    Disable Intan impedance testing
+    See enableZCheck for comments
+    """
+    cmdData_DACconfig = ((0x1 << 24) |
+                        (0xFF << 16) |
+                        (0b10000101 << 8) |
+                        0) # clear register
+    cmdData_DACchan =  ((0x1 << 24) |
+                        (0xFF << 16) |
+                        (0b10000111 << 8) |
+                        0) # clear register
+    ####
+    cmds = []
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData_DACconfig))
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData_DACchan))
+    cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, 0)) # clear the CMD register
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
+    resps = dc.do_control_cmds(cmds, control_socket=DAEMON_SOCK)
+    for resp in resps:
+        if resp:
+            if resp.type==dc.ControlResponse.ERR:
+                raise ex.ERROR_DICT[resp.err.code]
+        else:
+            raise ex.NoResponseError
+
 ####################################################
 # These function are only for internal use (hwif.py)
 ####################################################
@@ -380,6 +441,7 @@ def doIntanRegWrite(address, data):
     clear = 0
     cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData))
     cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, clear))
+    mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
     resps = dc.do_control_cmds(cmds, control_socket=DAEMON_SOCK)
     for resp in resps:
         if resp:

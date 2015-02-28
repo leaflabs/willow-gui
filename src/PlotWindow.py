@@ -258,20 +258,11 @@ class PlotWindow(QtGui.QWidget):
 
 
 if __name__=='__main__':
-    filename_64chan = '/home/chrono/sng/data/justin/64chan/neuralRecording_10sec.h5'
-    f = h5py.File(filename_64chan)
-    dset = f['wired-dataset']
-    nsamples = 10000
-    sampleRange = [0,9999]
-    data = np.zeros((1024,nsamples), dtype='uint16')
-    pbar = ProgressBar(maxval=nsamples).start()
-    for i in range(nsamples):
-        data[:,i] = dset[i][3][:1024]
-        pbar.update(i)
-    pbar.finish()
-    dataset_64chan = WillowDataset(data, sampleRange, filename_64chan)
+    filename = '/home/chrono/sng/data/justin/64chan/neuralRecording_10sec.h5'
+    dataset = WillowDataset(filename, [0,15000])
+    dataset.importData()
     ####
     app = QtGui.QApplication(sys.argv)
-    plotWindow = PlotWindow(dataset_64chan)
+    plotWindow = PlotWindow(dataset)
     plotWindow.show()
     app.exec_()
