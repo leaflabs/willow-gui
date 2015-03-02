@@ -27,12 +27,11 @@ class HistoControl(QtGui.QWidget):
     uvMin = -6553.6
     uvMax = 6553.6
 
-    limitsChanged = QtCore.pyqtSignal(float, float)
+    limitsChanged = QtCore.pyqtSignal(int, int)
 
     def __init__(self, dataset):
         QtGui.QWidget.__init__(self)
         self.dataset = dataset
-        self.data = self.dataset.data_uv
 
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
@@ -40,21 +39,14 @@ class HistoControl(QtGui.QWidget):
         self.canvas.mpl_connect('button_press_event', self.onclick)
 
         # initialize with subset = entire dataset
-        c1, c2 = 0, self.data.shape[0]
-        t1, t2 = 0, self.data.shape[1]
+        c1, c2 = 0, self.dataset.data_uv.shape[0]
+        t1, t2 = 0, self.dataset.data_uv.shape[1]
         self.setDataSubset(c1, c2, t1, t2 )
 
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
         #self.setMaximumWidth(220)
-
-    def setData(self, data):
-        # for setting a new data set, e.g. calibration
-        self.data = data
-        c1, c2 = 0, self.data.shape[0]
-        t1, t2 = 0, self.data.shape[1]
-        self.setDataSubset(c1, c2, t1, t2 )
 
     def onclick(self, event):
         if event.button==1:
@@ -89,11 +81,8 @@ class HistoControl(QtGui.QWidget):
         
 
     def setDataSubset(self, c1, c2, t1, t2):
-        self.vmin = np.min(self.data[c1:c2, t1:t2])
-        self.vmax = np.max(self.data[c1:c2, t1:t2])
-        self.limitsChanged.emit(self.vmin, self.vmax)
-        self.hist = np.histogram(self.data[c1:c2, t1:t2],
-            bins=np.linspace(self.vmin, self.vmax, 256))
+        self.hist = np.histogram(self.dataset.data_uv[c1:c2, t1:t2],
+            bins=np.linspace(self.uvMin, self.uvMax, 256))
         self.x = self.hist[1][1:-2]
         self.y = self.hist[0][1:-1] # exclude first and last bins
         self.width = self.x[1] - self.x[0]
@@ -102,11 +91,12 @@ class HistoControl(QtGui.QWidget):
         self.axes.set_axis_bgcolor('k')
         self.axes.bar(self.x,self.y, width=self.width, color='#8fdb90')
         self.axes.set_title('Value Histogram (microVolts)', fontsize=10)
-        #self.axes.set_xlim([self.uvMin,self.uvMax])
-        self.axes.set_xlim([self.vmin,self.vmax])
+        self.axes.set_xlim([self.uvMin,self.uvMax])
         self.axes.get_yaxis().set_visible(False)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.92, top=0.92)
         # vlines
+        self.vmin = np.min(self.dataset.data_uv[c1:c2, t1:t2])
+        self.vmax = np.max(self.dataset.data_uv[c1:c2, t1:t2])
         self.vlineL = self.axes.axvline(x=self.vmin, linewidth=2, color='r')
         self.vlineR = self.axes.axvline(x=self.vmax, linewidth=2, color='b')
         self.canvas.draw()
@@ -116,38 +106,23 @@ class HistoControl(QtGui.QWidget):
 class ControlPanel(QtGui.QWidget):
 
     rangeUpdated = QtCore.pyqtSignal(dict)
-    dataUpdated = QtCore.pyqtSignal(object)
 
     def __init__(self, dataset):
         QtGui.QWidget.__init__(self)
         self.dataset = dataset
 
-        self.createProcessingGroup()
         self.createChannelGroup()
         self.createTimeGroup()
         self.createButtons()
         self.histoControl = HistoControl(self.dataset)
-        self.dataUpdated.connect(self.histoControl.setData)
         self.rangeUpdated.connect(self.histoControl.handleNewRange)
         self.layout = QtGui.QGridLayout()
-        self.layout.addWidget(self.processingGroup, 0,0, 1,1)
-        self.layout.addWidget(self.channelGroup, 0,1, 1,1)
-        self.layout.addWidget(self.timeGroup, 1,1, 1,1)
-        self.layout.addWidget(self.buttons, 2,1, 1,1)
-        self.layout.addWidget(self.histoControl, 0,2, 3,3)
+        self.layout.addWidget(self.channelGroup, 0,0, 1,1)
+        self.layout.addWidget(self.timeGroup, 1,0, 1,1)
+        self.layout.addWidget(self.buttons, 2,0, 1,1)
+        self.layout.addWidget(self.histoControl, 0,1, 3,3)
         self.setLayout(self.layout)
         self.setMaximumHeight(260)
-
-    def createProcessingGroup(self):
-        self.processingGroup = QtGui.QGroupBox('Processing')
-        self.filterButton = QtGui.QPushButton('Apply Filter')
-        self.filterButton.clicked.connect(self.applyFilter)
-        self.calibrateButton = QtGui.QPushButton('Apply Calibration')
-        self.calibrateButton.clicked.connect(self.applyCalibration)
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.filterButton)
-        layout.addWidget(self.calibrateButton)
-        self.processingGroup.setLayout(layout)
 
     def createChannelGroup(self):
         self.channelGroup = QtGui.QGroupBox('Channel Range')
@@ -158,6 +133,7 @@ class ControlPanel(QtGui.QWidget):
         for n in [64, 128, 256, 512, 1024]:
             self.probeDropdown.addItem('%d chan' % n)
         self.probeDropdown.setCurrentIndex(4)
+        self.probeDropdown.currentIndexChanged.connect(self.handleRefresh)
         self.manualButton = QtGui.QRadioButton('Manual')
         self.manualButton.setChecked(False)
         self.manualButton.toggled.connect(self.switchModes)
@@ -206,14 +182,6 @@ class ControlPanel(QtGui.QWidget):
         self.probeButton.setChecked(True)
         self.rangeUpdated.emit(self.getParams())
 
-    def applyFilter(self):
-        pass
-
-    def applyCalibration(self):
-        filename = QtGui.QFileDialog.getOpenFileName(self, 'Select Calibration File', '../cal/')
-        self.dataset.applyCalibration(filename)
-        self.dataUpdated.emit(self.dataset.data_cal)
-
     def switchModes(self):
         if self.probeButton.isChecked():
             self.probeMode = True
@@ -252,7 +220,7 @@ class PlotPanel(QtGui.QWidget):
         layout.addWidget(self.toolbar)
         self.setLayout(layout)
 
-    def initializeWaterfall(self):
+    def drawWaterfall(self):
         self.axes = self.fig.add_subplot(111)
         self.axesImage = self.axes.imshow(self.dataset.data_uv, cm.Spectral, aspect='auto',
             extent=[self.dataset.timeMin, self.dataset.timeMax, 1024, 0])
@@ -260,10 +228,6 @@ class PlotPanel(QtGui.QWidget):
         self.axes.set_ylabel('Channel Count')
         self.colorbar = self.fig.colorbar(self.axesImage, use_gridspec=True)
         self.colorbar.set_label('microVolts')
-
-    def setData(self, data):
-        self.axesImage.set_data(data)
-        self.canvas.draw()
 
     def setRange(self, controlParams):
         timeMin, timeMax = controlParams['timeRange']
@@ -277,7 +241,6 @@ class PlotPanel(QtGui.QWidget):
         self.canvas.draw()
 
     def setColorBar(self, vmin, vmax):
-        print 'setColorBar: ', vmin, vmax
         self.axesImage.set_clim(vmin, vmax)
         self.canvas.draw()
 
@@ -289,11 +252,10 @@ class WaterfallPlotWindow(QtGui.QWidget):
 
         self.controlPanel = ControlPanel(self.dataset)
         self.plotPanel = PlotPanel(self.dataset)
-        self.plotPanel.initializeWaterfall()
+        self.plotPanel.drawWaterfall()
 
         self.controlPanel.histoControl.limitsChanged.connect(self.plotPanel.setColorBar)
         self.controlPanel.rangeUpdated.connect(self.plotPanel.setRange)
-        self.controlPanel.dataUpdated.connect(self.plotPanel.setData)
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.controlPanel)
@@ -304,9 +266,21 @@ class WaterfallPlotWindow(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(1600,800)
 
+    def initializeWaterfallPlot(self):
+        self.drawSpectrogram()
+
+        self.controlPanel = self.ControlPanel(self.data, self.sampleRange, self.canvas)
+
+        self.mpl_toolbar = NavigationToolbar(self.canvas, self)
+        self.mplLayout = QtGui.QVBoxLayout()
+        self.mplLayout.addWidget(self.canvas)
+        self.mplLayout.addWidget(self.mpl_toolbar)
+        self.mplWindow = QtGui.QWidget()
+        self.mplWindow.setLayout(self.mplLayout)
 
 if __name__=='__main__':
-    dataset = WillowDataset('/home/chrono/sng/data/tmpSnapshot.h5', -1)
+    filename_64chan = '/home/chrono/sng/data/justin/64chan/neuralRecording_10sec.h5'
+    dataset = WillowDataset(filename_64chan, [0,10000])
     dataset.importData()
     ####
     app = QtGui.QApplication(sys.argv)
