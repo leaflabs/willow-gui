@@ -12,6 +12,8 @@ class ImpedanceDialog(QtGui.QDialog):
         self.allChipsButton.setChecked(True)
         self.allChipsButton.clicked.connect(self.setDisabledAllChips)
 
+        self.plotCheckbox = QtGui.QCheckBox('Plot when finished')
+
         self.oneChannelButton = QtGui.QRadioButton('Single Channel:')
         self.oneChannelButton.clicked.connect(self.setDisabledOneChannel)
         self.oneChannelLine = QtGui.QLineEdit('0')
@@ -24,6 +26,7 @@ class ImpedanceDialog(QtGui.QDialog):
 
         layout = QtGui.QGridLayout()
         layout.addWidget(self.allChipsButton, 0,0)
+        layout.addWidget(self.plotCheckbox, 0,1)
         layout.addWidget(self.oneChannelButton, 1,0)
         layout.addWidget(self.oneChannelLine, 1,1)
         layout.addWidget(self.dialogButtons, 2,0, 1,2)
@@ -33,14 +36,17 @@ class ImpedanceDialog(QtGui.QDialog):
 
     def setDisabledAllChips(self):
         self.oneChannelLine.setDisabled(True)
+        self.plotCheckbox.setDisabled(False)
 
     def setDisabledOneChannel(self):
         self.oneChannelLine.setDisabled(False)
+        self.plotCheckbox.setDisabled(True)
 
     def getParams(self):
         params = {}
         if self.allChipsButton.isChecked():
             params['routine'] = 0
+            params['plot'] = self.plotCheckbox.isChecked()
         elif self.oneChannelButton.isChecked():
             params['routine'] = 1
             params['channel'] = int(str(self.oneChannelLine.text()))

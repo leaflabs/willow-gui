@@ -18,6 +18,7 @@ class ImpedanceThread(QtCore.QThread):
     textChanged = QtCore.pyqtSignal(str)
     finished = QtCore.pyqtSignal()
     msgPosted = QtCore.pyqtSignal(str)
+    dataReady = QtCore.pyqtSignal(object)
 
     def __init__(self, params):
         QtCore.QThread.__init__(self)
@@ -121,6 +122,9 @@ class ImpedanceThread(QtCore.QThread):
         impedanceFilename = os.path.abspath('../cal/impedance_%s.npy' % strtime)
         np.save(impedanceFilename, self.impedanceMeasurements)
         self.msgPosted.emit('Impedance measurements saved to %s' % impedanceFilename)
+        if self.plot:
+            self.dataReady.emit(self.impedanceMeasurements)
+
 
     def oneChannelRoutine(self):
         # start streaming
@@ -176,6 +180,7 @@ class ImpedanceThread(QtCore.QThread):
             if hwif.isRecording() or hwif.isStreaming():
                 self.msgPosted.emit('ImpedanceThread: Cannot check impedance while recording or streaming')
             if self.params['routine'] == 0:
+                self.plot = self.params['plot']
                 self.allChipsRoutine()
             elif self.params['routine'] == 1:
                 self.absChan = self.params['channel']
@@ -193,3 +198,4 @@ class ImpedanceThread(QtCore.QThread):
         except tuple(ex.ERROR_DICT.values()) as e:
             self.msgPosted.emit('Error: %s' % e)
             self.finished.emit()
+

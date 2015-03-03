@@ -18,6 +18,7 @@ from TransferThread import TransferThread
 
 from ImpedanceDialog import ImpedanceDialog
 from ImpedanceThread import ImpedanceThread
+from ImpedancePlotWindow import ImpedancePlotWindow
 
 from SettingsWindow import SettingsWindow
 
@@ -124,6 +125,7 @@ class ButtonPanel(QtGui.QWidget):
             self.impedanceThread.textChanged.connect(self.impedanceProgressDialog.setLabelText)
             self.impedanceThread.finished.connect(self.impedanceProgressDialog.reset)
             self.impedanceThread.msgPosted.connect(self.postStatus)
+            self.impedanceThread.dataReady.connect(self.launchImpedancePlotWindow)
             self.impedanceProgressDialog.canceled.connect(self.impedanceThread.handleCancel)
             self.impedanceProgressDialog.show()
             self.impedanceThread.start()
@@ -276,4 +278,8 @@ class ButtonPanel(QtGui.QWidget):
     def launchPlotWindow(self, willowDataset):
         self.plotWindow = PlotWindow(willowDataset)
         self.plotWindow.show()
+
+    def launchImpedancePlotWindow(self, impedanceMeasurements):
+        self.impedancePlotWindow = ImpedancePlotWindow(impedanceMeasurements)
+        self.impedancePlotWindow.show()
         
