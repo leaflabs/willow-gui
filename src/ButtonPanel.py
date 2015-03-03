@@ -259,21 +259,24 @@ class ButtonPanel(QtGui.QWidget):
                 if not isSampleRangeValid(sampleRange):
                     self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
                     return
-                dataset = WillowDataset(filename, sampleRange)
-                self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename,
-                    'Cancel', 0, dataset.nsamples)
-                self.importProgressDialog.setMinimumDuration(1000)
-                self.importProgressDialog.setModal(False)
-                self.importProgressDialog.setWindowTitle('Data Import Progress')
-                self.importProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-                self.importThread = ImportThread(dataset)
-                self.importThread.progressUpdated.connect(self.importProgressDialog.setValue)
-                self.importThread.msgPosted.connect(self.postStatus) # TODO convert these to postMessage name
-                self.importThread.finished.connect(self.launchPlotWindow)
-                self.importThread.canceled.connect(self.importProgressDialog.cancel)
-                self.importProgressDialog.canceled.connect(self.importThread.terminate)
-                self.importProgressDialog.show()
-                self.importThread.start()
+                try:
+                    dataset = WillowDataset(filename, sampleRange)
+                    self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename,
+                        'Cancel', 0, dataset.nsamples)
+                    self.importProgressDialog.setMinimumDuration(1000)
+                    self.importProgressDialog.setModal(False)
+                    self.importProgressDialog.setWindowTitle('Data Import Progress')
+                    self.importProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
+                    self.importThread = ImportThread(dataset)
+                    self.importThread.progressUpdated.connect(self.importProgressDialog.setValue)
+                    self.importThread.msgPosted.connect(self.postStatus) # TODO convert these to postMessage name
+                    self.importThread.finished.connect(self.launchPlotWindow)
+                    self.importThread.canceled.connect(self.importProgressDialog.cancel)
+                    self.importProgressDialog.canceled.connect(self.importThread.terminate)
+                    self.importProgressDialog.show()
+                    self.importThread.start()
+                except IndexError as e:
+                    self.msgLog.post(e.message)
 
     def launchPlotWindow(self, willowDataset):
         self.plotWindow = PlotWindow(willowDataset)
