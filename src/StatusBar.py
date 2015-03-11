@@ -9,10 +9,17 @@ BAD_STYLE = 'QLabel {background-color: orange; font: bold}'
 STREAM_STYLE = 'QLabel {background-color: rgb(0,191,255); font: bold}'
 RECORD_STYLE = 'QLabel {background-color: red; font: bold}'
 
+MAX_DISK_INDEX = 250e6   # this depends on disk size, assuming 1TB
+DISK_FILLUP_FRACTION = 0.97
+
 class StatusBar(QtGui.QWidget):
 
-    def __init__(self):
-        super(StatusBar, self).__init__()
+    diskFillupDetected = QtCore.pyqtSignal()
+
+    def __init__(self, msgLog):
+        QtGui.QWidget.__init__(self)
+
+        self.msgLog = msgLog
 
         layout = QtGui.QGridLayout()
 
@@ -51,14 +58,16 @@ class StatusBar(QtGui.QWidget):
         self.watchdogThread = WatchdogThread()
         self.watchdogThread.vitalsChecked.connect(self.updateGUI)
 
-        self.startWatchdog()
-        self.watchdogCheckbox.setChecked(True)
 
     def toggleWatchdog(self, state):
         if state:
             self.startWatchdog()
         else:
             self.stopWatchdog()
+
+    def initializeWatchdog(self):
+        self.startWatchdog()
+        self.watchdogCheckbox.setChecked(True)
 
     def startWatchdog(self):
         self.watchdogLoop = True
@@ -116,15 +125,14 @@ class StatusBar(QtGui.QWidget):
 
         tmp = vitals['record']
         if tmp == True:
-            """
-            TODO
-            If vitals['record']==True, then subsequent hwif commands *should* work,
-            but this is subject to a race condition, so this should be wrapped in
-            some carefully chosen exception handlers.
-            """
-            diskIndex = hwif.getSataBSI()
-            self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/250e4))
-            self.recordLabel.setStyleSheet(RECORD_STYLE)
+            try:
+                diskIndex = hwif.getSataBSI()
+                if (diskIndex >= DISK_FILLUP_FRACTION*MAX_DISK_INDEX): # TODO magic numbers
+                    self.diskFillupDetected.emit()
+                self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/MAX_DISK_INDEX*100))
+                self.recordLabel.setStyleSheet(RECORD_STYLE)
+            except hwif.hwifError as e:
+                self.msgLog.post('StatusBar Error while trying to read disk index: %s' % e.message)
         elif tmp == False:
             self.recordLabel.setText('Not Recording')
             self.recordLabel.setStyleSheet(GOOD_STYLE)

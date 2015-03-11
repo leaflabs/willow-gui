@@ -2,7 +2,8 @@
 
 """
 Willow Control Panel GUI
-Initiated on 20140522 by Chris Chronopoulos (chrono@leaflabs.com)
+
+Chris Chronopoulos (chrono@leaflabs.com) - 20140522
 """
 
 import sys, os, subprocess, socket
@@ -26,11 +27,12 @@ eFile = open('../log/eFile', 'w')
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+        QtGui.QWidget.__init__(self)
 
-        self.statusBar = StatusBar()
         self.msgLog = MessageLog()
+        self.statusBar = StatusBar(self.msgLog)
         self.buttonPanel = ButtonPanel(self.msgLog)
+        self.statusBar.diskFillupDetected.connect(self.buttonPanel.handleDiskFillup)
 
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.statusBar)
@@ -48,9 +50,10 @@ class MainWindow(QtGui.QWidget):
         self.startDaemon()
         try:
             hwif.init()
+            self.statusBar.initializeWatchdog()
+            self.msgLog.post('Daemon connection established, watchdog started')
         except socket.error:
-            print 'could not connect to daemon after 100 tries.. quitting.'
-            sys.exit(1) # TODO something better?
+            self.msgLog.post('Could not establish a connection with the daemon.')
 
     def startDaemon(self):
         #subprocess.call([os.path.join(config.daemonDir, 'build/leafysd'), '-A', '192.168.1.2'])

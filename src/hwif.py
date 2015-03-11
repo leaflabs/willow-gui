@@ -44,7 +44,6 @@ def init():
     global DAEMON_SOCK, DAEMON_MUTEX
     DAEMON_SOCK = dc.get_daemon_control_sock(retry=True, max_retries=100)
     DAEMON_MUTEX = QtCore.QMutex()
-    #DAEMON_MUTEX = QtCore.QMutex(QtCore.QMutex.Recursive) # not sure why this is necessary..
     print 'hwif initialized'
 
 
