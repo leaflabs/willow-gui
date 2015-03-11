@@ -138,44 +138,8 @@ class ButtonPanel(QtGui.QWidget):
         dlg = StreamDialog()
         if dlg.exec_():
             params = dlg.getParams()
-            channel = params['channel']
-            ymin = params['ymin']
-            ymax = params['ymax']
-            refreshRate = params['refreshRate']
-            chip = channel//32
-            chan = channel%32
-            yrange = [ymin, ymax]
-            self.streamWindow = StreamWindow(self, chip, chan, [ymin,ymax], refreshRate, self.msgLog)
+            self.streamWindow = StreamWindow(params, self.msgLog)
             self.streamWindow.show()
-
-    def takeSnapshot_old(self):
-        dlg = SnapshotDialog()
-        if dlg.exec_():
-            params = dlg.getParams()
-            nsamples_requested = params['nsamples']
-            filename = params['filename']
-            plot = params['plot']
-            if not targetDirExists(filename):
-                self.msgLog.post('Target directory does not exist: %s' % os.path.split(filename)[0])
-                return
-            self.snapshotThread = SnapshotThread(nsamples_requested, filename)
-            self.snapshotThread.statusUpdated.connect(self.postStatus)
-            self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
-            self.snapshotProgressDialog.setWindowTitle('Snapshot Progress')
-            self.snapshotProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-            self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
-            if plot:
-                self.importThread = ImportThread()
-                self.importThread.finished.connect(self.launchPlotWindow)
-                self.snapshotThread.finished.connect(self.importThread.run_fromSnapshotThread)
-                self.snapshotProgressDialog.canceled.connect(self.importThread.handleCancel)
-                self.importThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
-                self.importThread.valueChanged.connect(self.snapshotProgressDialog.setValue)
-                self.importThread.labelChanged.connect(self.snapshotProgressDialog.setLabelText)
-            else:
-                self.snapshotThread.finished.connect(self.snapshotProgressDialog.reset)
-            self.snapshotProgressDialog.show()
-            self.snapshotThread.start()
 
     def takeSnapshot(self):
         dlg = SnapshotDialog()
@@ -200,27 +164,19 @@ class ButtonPanel(QtGui.QWidget):
         try:
             hwif.startRecording()
             self.msgLog.post('Started recording.')
-        except ex.AlreadyError:
+        except hwif.AlreadyError:
             self.msgLog.post('Already recording.')
-        except ex.NoResponseError:
-            self.msgLog.post('Control Command got no response')
-        except socket.error:
-            self.msgLog.post('Socket error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgLog.post('Error: %s' % e)
+        except hwif.hwifError as e:
+            self.msgLog.post(e.message)
 
     def stopRecording(self):
         try:
             hwif.stopRecording()
             self.msgLog.post('Stopped recording.')
-        except ex.AlreadyError:
+        except hwif.AlreadyError:
             self.msgLog.post('Already not recording.')
-        except ex.NoResponseError:
-            self.msgLog.post('Control Command got no response')
-        except socket.error:
-            self.msgLog.post('Socket error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgLog.post('Error: %s' % e)
+        except hwif.hwifError as e:
+            self.msgLog.post(e.message)
 
     def transferExperiment(self):
         dlg = TransferDialog()

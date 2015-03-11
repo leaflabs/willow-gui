@@ -37,17 +37,11 @@ class ImpedanceThread(QtCore.QThread):
         try:
             hwif.disableZCheck()
             hwif.stopStreaming()
-        except ex.StateChangeError:
+        except hwif.StateChangeError:
             self.msgPosted.emit('Caught StateChangeError')
-            self.finished.emit()
-        except ex.NoResponseError:
-            self.msgPosted.emit('Control Command got no response')
-            self.finished.emit()
-        except socket.error:
-            self.msgPosted.emit('Socket error: Could not connect to daemon.')
-            self.finished.emit()
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgPosted.emit('Error: %s' % e)
+        except hwif.hwifError as e:
+            self.msgPosted.emit(e.message)
+        finally:
             self.finished.emit()
         self.terminate()
 
@@ -185,17 +179,10 @@ class ImpedanceThread(QtCore.QThread):
             elif self.params['routine'] == 1:
                 self.absChan = self.params['channel']
                 self.oneChannelRoutine()
-            self.finished.emit()
-        except ex.StateChangeError:
+        except hwif.StateChangeError:
             self.msgPosted.emit('Caught StateChangeError')
-            self.finished.emit()
-        except ex.NoResponseError:
-            self.msgPosted.emit('Control Command got no response')
-            self.finished.emit()
-        except socket.error:
-            self.msgPosted.emit('Socket error: Could not connect to daemon.')
-            self.finished.emit()
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgPosted.emit('Error: %s' % e)
+        except hwif.hwifError as e:
+            self.msgPosted.emit(e.message)
+        finally:
             self.finished.emit()
 

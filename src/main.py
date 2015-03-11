@@ -5,22 +5,17 @@ Willow Control Panel GUI
 Initiated on 20140522 by Chris Chronopoulos (chrono@leaflabs.com)
 """
 
-import sys, os, time, subprocess, socket
-
-import numpy as np
-import matplotlib
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
-from matplotlib.figure import Figure
+import sys, os, subprocess, socket
 
 from PyQt4 import QtCore, QtGui
+
+# change workdir to src/
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 from StatusBar import StatusBar
 from ButtonPanel import ButtonPanel
 from MessageLog import MessageLog
-
 import config
-
 import hwif
 
 if not os.path.isdir('../log'):
@@ -34,25 +29,15 @@ class MainWindow(QtGui.QWidget):
         super(MainWindow, self).__init__(parent)
 
         self.statusBar = StatusBar()
-
-        ###
-
         self.msgLog = MessageLog()
-
-        ###
-
         self.buttonPanel = ButtonPanel(self.msgLog)
-
-        ###
 
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.statusBar)
         mainLayout.addWidget(self.buttonPanel)
         mainLayout.addWidget(self.msgLog)
-
-        ###
-
         self.setLayout(mainLayout)
+
         self.setWindowTitle('Willow Control Panel')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         #self.resize(400,200)
@@ -65,9 +50,7 @@ class MainWindow(QtGui.QWidget):
             hwif.init()
         except socket.error:
             print 'could not connect to daemon after 100 tries.. quitting.'
-            sys.exit(1)
-
-        self.statusBar
+            sys.exit(1) # TODO something better?
 
     def startDaemon(self):
         #subprocess.call([os.path.join(config.daemonDir, 'build/leafysd'), '-A', '192.168.1.2'])

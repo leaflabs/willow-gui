@@ -122,7 +122,7 @@ class StatusBar(QtGui.QWidget):
             but this is subject to a race condition, so this should be wrapped in
             some carefully chosen exception handlers.
             """
-            diskIndex = hwif.doRegRead(2,7)
+            diskIndex = hwif.getSataBSI()
             self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/250e4))
             self.recordLabel.setStyleSheet(RECORD_STYLE)
         elif tmp == False:

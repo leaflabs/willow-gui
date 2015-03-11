@@ -1,19 +1,5 @@
 import json, sys
 
-def split(jDict):
-    vDict = {}
-    dDict = {}
-    for name, (value, description) in jDict.items():
-        vDict[name] = value
-        dDict[name] = description
-    return vDict, dDict
-
-def merge(vDict, dDict):
-    jDict = {}
-    for key in vDict.keys():
-        jDict[key] = (vDict[key], dDict[key])
-    return jDict
-
 def loadJSON():
     """
     Reads in config.json, returns jDict

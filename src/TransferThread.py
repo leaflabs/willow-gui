@@ -31,7 +31,7 @@ class TransferThread(QtCore.QThread):
 
     def run(self):
         try:
-            if (self.sampleRange == -1) and (hwif.doRegRead(3,3) == 0):
+            if (self.sampleRange == -1) and (hwif.getDaqBSI() == 0):
                 self.statusUpdated.emit('Error: Could not transfer experiment because BSI is missing.')
                 self.statusUpdated.emit('Please specify subset parameters in the Transfer Dialog and try again.')
             else:
@@ -45,12 +45,7 @@ class TransferThread(QtCore.QThread):
                     filename = os.path.join(config.dataDir, 'experiment_%s.h5' % strtime)
                     os.rename(tmpFilename, filename)
                 self.statusUpdated.emit('Transfer complete: %s' % self.filename)
-        except ex.StateChangeError:
+        except hwif.StateChangeError:
             self.statusUpdated.emit('Caught StateChangeError')
-        except ex.NoResponseError:
-            self.statusUpdated.emit('Control Command got no response')
-        except socket.error:
-            self.statusUpdated.emit('Socket error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.statusUpdated.emit('Error: %s' % e)
-
+        except hwif.hwifError as e:
+            self.statusUpdated.emit(e.message)

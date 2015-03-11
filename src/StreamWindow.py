@@ -31,25 +31,23 @@ def calculateTicks(axisrange):
 
 class StreamWindow(QtGui.QWidget):
 
-    def __init__(self, parent, chip, chan, yrange_uV, refreshRate, msgLog):
+    def __init__(self, params, msgLog):
         super(StreamWindow, self).__init__(None)
         self.msgLog = msgLog
 
-        self.parent = parent
-        self.chip = chip
-        self.chan= chan
-        self.yrange_uV = yrange_uV
+        channel = params['channel']
+        self.chip = channel//32
+        self.chan = channel%32
+        ymin = params['ymin']
+        ymax = params['ymax']
+        self.yrange_uV = [ymin, ymax]
         self.yrange_cnts = [int(y*5+2**15) for y in self.yrange_uV]
-        self.refreshRate = refreshRate
+        self.refreshRate = params['refreshRate']
 
         try:
             hwif.setSubsamples_byChip(self.chip)
-        except ex.NoResponseError:
-            self.msgLog.post('Control Command got no response')
-        except socket.error:
-            self.msgLog.post('Socket error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgLog.post('Error: %s' % e)
+        except hwif.hwifError as e:
+            self.msgLog.post(e.message)
 
         ###################
         # Matplotlib Setup
@@ -60,7 +58,7 @@ class StreamWindow(QtGui.QWidget):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self)
         self.axes = self.fig.add_subplot(111)
-        self.axes.set_title('Chip %d, Channel %d' % (self.chip, chan))
+        self.axes.set_title('Chip %d, Channel %d' % (self.chip, self.chan))
         self.axes.set_ylabel('microVolts')
         self.axes.set_xlabel('Samples')
         self.axes.set_axis_bgcolor('k')
@@ -135,32 +133,25 @@ class StreamWindow(QtGui.QWidget):
             hwif.startStreaming_subsamples()
             self.toggleStdin(True)
             self.msgLog.post('Started streaming.')
-        except ex.AlreadyError:
+        except hwif.AlreadyError:
             #self.toggleStdin(True) # ideally this would start the plot updating, but for now it fails
             self.msgLog.post('Hardware was already streaming. Try stopping and restarting stream.')
-        except ex.NoResponseError:
-            self.msgLog.post('Control Command got no response')
-        except socket.error:
-            self.msgLog.post('Socket error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgLog.post('Error: %s' % e)
+        except hwif.hwifError as e:
+            self.msgLog.post(e.message)
 
     def stopStreaming(self):
         try:
             hwif.stopStreaming()
             self.toggleStdin(False)
             self.msgLog.post('Stopped streaming.')
-        except ex.AlreadyError:
+        except hwif.AlreadyError:
             self.toggleStdin(False)
             self.msgLog.post('Already not streaming')
-        except ex.NoResponseError:
-            self.msgLog.post('Control Command got no response')
-        except socket.error:
-            self.msgLog.post('Socker error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgLog.post('Error: %s' % e)
         except AttributeError:
+            # TODO what's up with this?
             self.msgLog.post('AttributeError: Pipe object does not exist')
+        except hwif.hwifError as e:
+            self.msgLog.post(e.message)
 
     def toggleStdin(self, enable):
         if enable:
@@ -186,10 +177,6 @@ class StreamWindow(QtGui.QWidget):
         try:
             if hwif.isStreaming():
                 self.stopStreaming()
-        except ex.NoResponseError:
-            self.msgLog.post('Control Command got no response')
-        except socket.error:
-            self.msgLog.post('Socker error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgLog.post('Error: %s' % e)
+        except hwif.hwifError as e:
+            self.msgLog.post(e.message)
 

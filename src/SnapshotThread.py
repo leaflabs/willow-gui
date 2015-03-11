@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import sys, os, h5py, socket
+import sys, os, h5py
 import numpy as np
 import hwif
 import CustomExceptions as ex
@@ -41,13 +41,9 @@ class SnapshotThread(QtCore.QThread):
                 dataset.progressUpdated.connect(self.progressUpdated)
                 dataset.importData()
                 self.importFinished.emit(dataset)
-            self.finished.emit()
-        except ex.StateChangeError:
+        except hwif.StateChangeError:
             self.msgPosted.emit('Caught StateChangeError')
-        except ex.NoResponseError:
-            self.msgPosted.emit('Control Command got no response')
-        except socket.error:
-            self.msgPosted.emit('Socket error: Could not connect to daemon.')
-        except tuple(ex.ERROR_DICT.values()) as e:
-            self.msgPosted.emit('Error: %s' % e)
-
+        except hwif.hwifError as e:
+            self.msgPosted.emit(e.message)
+        finally:
+            self.finished.emit()
