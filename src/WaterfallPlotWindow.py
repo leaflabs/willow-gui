@@ -230,6 +230,7 @@ class PlotPanel(QtGui.QWidget):
         self.colorbar.set_label('microVolts')
 
     def setRange(self, controlParams):
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         timeMin, timeMax = controlParams['timeRange']
         probeMode = controlParams['probeMode']
         if probeMode:
@@ -239,10 +240,13 @@ class PlotPanel(QtGui.QWidget):
             chanMin, chanMax = controlParams['channelRange']
         self.axes.axis([timeMin, timeMax, chanMin, chanMax])
         self.canvas.draw()
+        QtGui.QApplication.restoreOverrideCursor()
 
     def setColorBar(self, vmin, vmax):
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.axesImage.set_clim(vmin, vmax)
         self.canvas.draw()
+        QtGui.QApplication.restoreOverrideCursor()
 
 class WaterfallPlotWindow(QtGui.QWidget):
 
@@ -279,11 +283,18 @@ class WaterfallPlotWindow(QtGui.QWidget):
         self.mplWindow.setLayout(self.mplLayout)
 
 if __name__=='__main__':
-    filename_64chan = '/home/chrono/sng/data/justin/64chan/neuralRecording_10sec.h5'
-    dataset = WillowDataset(filename_64chan, [0,10000])
-    dataset.importData()
-    ####
+    import config
+    from ImportDialog import ImportDialog
     app = QtGui.QApplication(sys.argv)
-    waterfallPlotWindow = WaterfallPlotWindow(dataset)
-    waterfallPlotWindow.show()
-    app.exec_()
+    filename = str(QtGui.QFileDialog.getOpenFileName(None,
+        'Select Data File', config.dataDir))
+    if filename:
+        dlg = ImportDialog()
+        if dlg.exec_():
+            params = dlg.getParams()
+            sampleRange = params['sampleRange']
+        dataset = WillowDataset(filename, sampleRange)
+        dataset.importData()
+        waterfallPlotWindow = WaterfallPlotWindow(dataset)
+        waterfallPlotWindow.show()
+        app.exec_()

@@ -232,7 +232,9 @@ class PlotPanel(QtGui.QWidget):
             ymin, ymax = controlParams['yrange']
         for axes in self.axesList:
             axes.axis([xmin, xmax, ymin, ymax], fontsize=10)
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.canvas.draw()
+        QtGui.QApplication.restoreOverrideCursor()
 
 class PlotWindow(QtGui.QWidget):
 
@@ -258,11 +260,18 @@ class PlotWindow(QtGui.QWidget):
 
 
 if __name__=='__main__':
-    filename = '/home/chrono/sng/data/justin/64chan/neuralRecording_10sec.h5'
-    dataset = WillowDataset(filename, [0,15000])
-    dataset.importData()
-    ####
+    import config
+    from ImportDialog import ImportDialog
     app = QtGui.QApplication(sys.argv)
-    plotWindow = PlotWindow(dataset)
-    plotWindow.show()
-    app.exec_()
+    filename = str(QtGui.QFileDialog.getOpenFileName(None,
+        'Select Data File', config.dataDir))
+    if filename:
+        dlg = ImportDialog()
+        if dlg.exec_():
+            params = dlg.getParams()
+            sampleRange = params['sampleRange']
+        dataset = WillowDataset(filename, sampleRange)
+        dataset.importData()
+        plotWindow = PlotWindow(dataset)
+        plotWindow.show()
+        app.exec_()
