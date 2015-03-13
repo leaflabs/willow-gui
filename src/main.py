@@ -76,6 +76,7 @@ class MainWindow(QtGui.QWidget):
 
 
 if __name__=='__main__':
+    print 'PID = %d' % os.getpid()
     app = QtGui.QApplication(sys.argv)
     main = MainWindow()
     main.show()

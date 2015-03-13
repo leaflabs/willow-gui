@@ -6,7 +6,9 @@ import numpy as np
 from progressbar import ProgressBar
 
 import numpy as np
+
 import matplotlib
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
@@ -204,15 +206,13 @@ class PlotPanel(QtGui.QWidget):
         self.channelList = range(bank*nchannels,(bank+1)*nchannels)
         self.fig.clear()
         self.axesList = []
-        self.waveformList = []
         for i in range(nchannels):
             channel = self.channelList[i]
             axes = self.fig.add_subplot(nrows, ncols, i+1)
             axes.set_title('Channel %d' % channel, fontsize=10, fontweight='bold')
             axes.set_axis_bgcolor('k')
-            waveform = axes.plot(self.dataset.time_ms, self.dataset.data_uv[channel,:], color='#8fdb90')
+            axes.plot(self.dataset.time_ms, self.dataset.data_uv[channel,:], color='#8fdb90')
             self.axesList.append(axes)
-            self.waveformList.append(waveform)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.98, top=0.92, wspace=0.08, hspace=0.4)
         self.setZoom(controlParams)
 
@@ -258,8 +258,17 @@ class PlotWindow(QtGui.QWidget):
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.resize(1600,800)
 
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+    def closeEvent(self, event):
+        # clear matplotlib objects
+        for ax in self.plotPanel.axesList:
+            ax.lines = []
+            ax.cla()
+        self.plotPanel.fig.clf()
 
 if __name__=='__main__':
+    print 'PID = %d' % os.getpid()
     import config
     from ImportDialog import ImportDialog
     app = QtGui.QApplication(sys.argv)

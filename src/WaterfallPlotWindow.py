@@ -282,6 +282,12 @@ class WaterfallPlotWindow(QtGui.QWidget):
         self.mplWindow = QtGui.QWidget()
         self.mplWindow.setLayout(self.mplLayout)
 
+    def closeEvent(self, event):
+        # memory management
+        del(self.plotPanel.axesImage)
+        self.plotPanel.axes.cla()
+        self.plotPanel.fig.clf()
+
 if __name__=='__main__':
     import config
     from ImportDialog import ImportDialog
