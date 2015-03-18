@@ -82,22 +82,53 @@ To run the GUI:
 \vspace{5mm}
 
 \noindent
-The GUI will present its main window (Figure~\ref{fig_mainwindow}), which consists of a tab dialog and a message log. The daemon is automatically started in the background, with \texttt{stderr} and \texttt{stdout} redirected to \texttt{log/eFile} and \texttt{log/oFile}, respectively. The message log should display a line indicating that the daemon was started successfully.
+The GUI will present its main window (Figure~\ref{fig_mainwindow}), which consists of the status bar, the button panel, and the message log. The daemon is automatically started in the background, with \texttt{stderr} and \texttt{stdout} redirected to \texttt{log/eFile} and \texttt{log/oFile}, respectively. The message log should display a line indicating that the daemon was started successfully.
 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics[width=8cm]{screenshots/mainwindow.png}
+\includegraphics[width=6cm]{screenshots/mainwindow.png}
 \end{center}
-\caption{GUI main window, immediately after startup.}
+\caption{GUI main window, immediately after startup, showing the statusbar at the top, the button panel in the middle, and the message log at the bottom.}
 \label{fig_mainwindow}
 \end{figure}
 
-\subsection{Acquire Tab}
-\label{sec_usage_acquire}
 
-The first tab that is presented when the GUI starts up is the Acquire Tab. It encapsulates the tasks that deal with the data acquisition (DAQ) module on the Willow hardware. Anything that involves interaction with the Intan chips will be found in the Acquire Tab.
+%%%%%%%%%%%%%%%%%%%%%%%%
 
-There are three modes of operating the DAQ: streaming, snapshot, and recording. These can be done simultaneously, with exception that you cannot take a snapshot while streaming; if you try, the GUI will refuse, printing a message to let you know.
+\subsection{Status Bar}
+\label{sec_usage_statusbar}
+
+The status bar is an array of labels at the top of the main window, which indicates the status of the daemon and the hardware. The status bar is updated by a watchdog process which pings the datanode once every second, and evaluates the response to determine daemon status, datanode status, firmware version, error conditions, streaming state, and recording state. The general color code for the labels is: green for ``good/normal state'', orange for ``bad state, something is wrong'', and gray for ``unknown state''. For example, if the datanode is unresponsive, its label will turn orange and the labels below it will turn gray to indicate an unknown state. Similarly, if the daemon is unresponsive, its label will turn orange and all labels below it will turn gray. These conditions are shown in Figure~\ref{fig_statusbar}.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=17cm]{screenshots/statusbar_threestates.png}
+\end{center}
+\caption{Statusbar in three states: Daemon up and connected to Datanode, showing firmware version, error state, and streaming/recording states (\textit{left}); Daemon up but datanode unresponsive (\textit{center}); Daemon down or unreachable, hardware state unknown (\textit{right}).}
+\label{fig_statusbar}
+\end{figure}
+
+The firmware label, when green, will show the firmware version as a 32-bit hexadecimal number. The error label beside it indicates whether an error condition is present on the datanode. If so, this label will turn orange and display the value of the top-level error register, which is a bitmask of the error states of the sub-modules on the FPGA. If an error condition comes up on the datanode, you'll need to reboot it to clear the errors. Hardware-related bug reports can be sent to \texttt{info@leaflabs.com}, and should include both the firmware version and the error state bitmask as context.
+
+The ``Stream'' label indicates the streaming state of the datanode: green for idle, and blue for streaming. Similarly, the ``Record'' label beside it is green for idle, but turns red while recording and additionally indicates the current disk usage as a percentage in real time. These states --- streaming and recording --- are determined from the hardware registers on the datanode, and are therefore robust to daemon and/or GUI crashes.
+
+The Watchdog process can be disabled by un-checking the ``Watchdog'' box at the top of the status bar. This should rarely be necessary, but may free up some bandwidth during streaming or transfer operations on slow workstations. The status bar will no longer be updated while the Watchdog is disabled.
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Message Log}
+\label{sec_usage_messagelog}
+
+At the bottom of the main window is the message log, which displays and logs messages from the GUI. Examples of messages include success/failure reports from requested actions, status updates from background threads, and general errors. Each message is prepended with a timestamp of the form \texttt{HH:mm:ss}. The message log can be cleared, or saved to a log file using the buttons at the top-right. Message logs are saved to the \texttt{log/} subdirectory by default, but can be saved anywhere by navigating the presented file dialog.
+
+The message log is intended to serve as a supplement to the experimentalist's lab notebook, logging the actions taken --- and their results --- to help contextualize the data for future analysis.
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Button Panel}
+\label{sec_usage_buttonpanel}
+
+At the center of the main GUI window is the button panel, containing 8 buttons with symbolic icons. These buttons are your starting point for all the capabilities offered by the GUI. Mousing over a button will display a tooltip which describes its action.
 
 \subsubsection{Streaming}
 \label{sec_usage_acquire_streaming}

@@ -27,10 +27,11 @@ class MessageLog(QtGui.QWidget):
 
     def save(self):
         filename = str(QtGui.QFileDialog.getSaveFileName(self, 'Save Log File', '../log/'))
-        logText = self.textEdit.toPlainText()
-        with open(filename, 'w') as f:
-            f.write(logText)
-        self.post('Saved Message Log to %s' % filename)
+        if filename:
+            logText = self.textEdit.toPlainText()
+            with open(filename, 'w') as f:
+                f.write(logText)
+            self.post('Saved Message Log to %s' % filename)
 
     def post(self, msg):
         dt = datetime.datetime.fromtimestamp(time.time())

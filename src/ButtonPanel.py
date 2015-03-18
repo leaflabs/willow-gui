@@ -1,7 +1,6 @@
 import socket, os, datetime
 from PyQt4 import QtCore, QtGui
 import hwif
-import CustomExceptions as ex
 
 from StreamWindow import StreamWindow
 from PlotWindow import PlotWindow 

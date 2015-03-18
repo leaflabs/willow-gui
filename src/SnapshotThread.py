@@ -2,7 +2,6 @@ from PyQt4 import QtCore, QtGui
 import sys, os, h5py
 import numpy as np
 import hwif
-import CustomExceptions as ex
 from WillowDataset import WillowDataset
 
 class SnapshotThread(QtCore.QThread):

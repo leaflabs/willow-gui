@@ -11,7 +11,6 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as Naviga
 from matplotlib.figure import Figure
 
 import hwif
-import CustomExceptions as ex
 
 def calculateTicks(axisrange):
     delta = axisrange[1] - axisrange[0]

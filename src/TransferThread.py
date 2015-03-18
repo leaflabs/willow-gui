@@ -2,7 +2,6 @@ from PyQt4 import QtCore, QtGui
 import sys, os, h5py, time, datetime, socket
 import numpy as np
 import hwif
-import CustomExceptions as ex
 
 import config
 

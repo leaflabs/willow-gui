@@ -3,7 +3,6 @@ import sys, os, h5py, time, datetime
 import numpy as np
 import hwif
 from WillowDataset import WillowDataset
-import CustomExceptions as ex
 
 import config
 sys.path.append(os.path.join(config.daemonDir, 'util'))
