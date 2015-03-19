@@ -40,8 +40,8 @@ class SnapshotThread(QtCore.QThread):
                 dataset.progressUpdated.connect(self.progressUpdated)
                 dataset.importData()
                 self.importFinished.emit(dataset)
-        except hwif.StateChangeError:
-            self.msgPosted.emit('Caught StateChangeError')
+        except hwif.StateChangeError as e:
+            self.msgPosted.emit('StateChangeError: %s' % e.message)
         except hwif.hwifError as e:
             self.msgPosted.emit(e.message)
         finally:

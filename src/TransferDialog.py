@@ -32,7 +32,10 @@ class TransferDialog(QtGui.QDialog):
         self.autoNameButton.clicked.connect(self.disableFilenameLine)
         self.filenameButton = QtGui.QRadioButton('Filename:')
         self.filenameButton.clicked.connect(self.enableFilenameLine)
-        self.filenameLine = QtGui.QLineEdit()
+        dt = datetime.datetime.fromtimestamp(time.time())
+        strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+        filename = os.path.join(config.dataDir, 'experiment_T%s.h5' % strtime)
+        self.filenameLine = QtGui.QLineEdit(filename)
         self.filenameLine.setDisabled(True)
         self.browseButton = QtGui.QPushButton('Browse')
         self.browseButton.clicked.connect(self.browse)
@@ -81,8 +84,8 @@ class TransferDialog(QtGui.QDialog):
             toSamples = int(float(self.subsetToLine.text())*30000)
             params['sampleRange'] = [fromSamples, toSamples]
         else:
-            # return -1 to indicate "entire experiment"
-            params['sampleRange'] = -1
+            # return None to indicate "entire experiment"
+            params['sampleRange'] = None
         if self.filenameButton.isChecked():
             filename = str(self.filenameLine.text())
             if not os.path.isabs(filename):
@@ -91,7 +94,7 @@ class TransferDialog(QtGui.QDialog):
                 filename = filename + '.h5'
             params['filename'] = filename
         else:
-            params['filename'] = -1
+            params['filename'] = None
         return params
 
     def browse(self):

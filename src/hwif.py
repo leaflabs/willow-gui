@@ -59,6 +59,12 @@ ERR_MSG = {  dc.ControlResErr.NO_DNODE : 'NO_DNODE: No datanode connected',
                 dc.ControlResErr.DNODE_DIED : 'DNODE_DIED: Datanode connection died while processing request'
                 }
 
+
+#
+##
+###
+#### custom exceptions
+
 class StateChangeError(Exception):
     """
     This error indicates that the user has requested a state change that is
@@ -94,8 +100,9 @@ class hwifError(Exception):
             but the DAQ's BSI register is empty (because e.g. the hardware was recently booted).
             (This is a bug in the daemon which needs to be fixed.)
         as a result of the daemon refusing new client connection because 'another is ongoing'.
+    type = 3 means "miscellaneous", and should be accompanied by a custom message argument
     """
-    def __init__(self, type, errcode=None):
+    def __init__(self, type, errcode=None, message=None):
         Exception.__init__(self)
         self.type = type
         if self.type==0:
@@ -105,10 +112,14 @@ class hwifError(Exception):
             self.message = ERR_MSG[self.errcode]
         elif self.type==2:
             self.message = 'Control Command got No Response'
+        elif self.type==3:
+            self.message = message
 
-#### helper functions
 
-#TODO convert this to one function which detects the type of its argument (list vs thing)
+#
+##
+###
+#### internal (helper) functions
 
 def _controlCmdWrapper(cmd):
     """
@@ -178,7 +189,11 @@ def _doRegRead(module, address):
     else:
         raise ex.NoResponseError
 
-#### good functions
+
+#
+##
+###
+#### public functions
 
 def isStreaming():
     """
@@ -384,7 +399,8 @@ def takeSnapshot(nsamples, filename):
             cmd.store.nsamples = nsamples
             cmds.append(cmd)
         elif sampleType == 'subsample':
-            raise StateChangeError   #TODO implement a work-around for this
+            #TODO implement a work-around for this
+            raise StateChangeError('Pause streaming before taking snapshot.')   
         else:
             print 'unrecognized sample type received!'
     elif isRecording():
@@ -426,7 +442,7 @@ def takeSnapshot(nsamples, filename):
                 return resp.store.nsamples
             else:
                 # this shouldn't happen, but..
-                raise hwifError('ControlResStore Status: %d' % resp.store.status)
+                raise hwifError(3, message='ControlResStore Status: %d' % resp.store.status)
 
 def doTransfer(filename, sampleRange=None):
     """
@@ -449,7 +465,7 @@ def doTransfer(filename, sampleRange=None):
                 cmd.store.start_sample = startSample
                 cmd.store.nsamples = nsamples
             else:
-                raise hwifError('sampleRange %s not valid' % repr(sampleRange))
+                raise hwifError(3, message='sampleRange %s not valid' % repr(sampleRange))
         else:
             cmd.store.start_sample = 0
             # leave nsamples missing, which indicates whole experiment

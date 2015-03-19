@@ -191,15 +191,7 @@ class ButtonPanel(QtGui.QWidget):
         dlg = TransferDialog()
         if dlg.exec_():
             params = dlg.getParams()
-            sampleRange = params['sampleRange']
-            filename = params['filename'] # this is an absolute filename, or False
-            if not isSampleRangeValid(sampleRange):
-                self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
-                return
-            if isinstance(filename, str) and (not targetDirExists(filename)):
-                self.msgLog.post('Target directory does not exist: %s' % os.path.split(filename)[0])
-                return
-            self.transferThread = TransferThread(filename, sampleRange)
+            self.transferThread = TransferThread(params)
             self.transferProgressDialog = QtGui.QProgressDialog('Transfering Experiment..', 'Cancel', 0, 0)
             self.transferProgressDialog.setWindowTitle('Transfer Progress')
             self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))

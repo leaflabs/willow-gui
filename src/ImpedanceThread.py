@@ -36,13 +36,15 @@ class ImpedanceThread(QtCore.QThread):
         try:
             hwif.disableZCheck()
             hwif.stopStreaming()
+        except hwif.AlreadyError:
+            pass
         except hwif.StateChangeError:
             self.msgPosted.emit('Caught StateChangeError')
         except hwif.hwifError as e:
             self.msgPosted.emit(e.message)
         finally:
             self.finished.emit()
-        self.terminate()
+            self.terminate()
 
     def fft2volts(self, amplitude):
         """
