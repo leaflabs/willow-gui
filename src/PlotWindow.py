@@ -168,8 +168,10 @@ class ControlPanel(QtGui.QWidget):
         # which gets handled by ControlPanel.setZoom()
 
     def launchWaterfall(self):
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.waterfallPlotWindow = WaterfallPlotWindow(self.dataset)
         self.waterfallPlotWindow.show()
+        QtGui.QApplication.restoreOverrideCursor()
 
     def getParams(self):
         params = {}
