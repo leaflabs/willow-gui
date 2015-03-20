@@ -192,10 +192,10 @@ class ButtonPanel(QtGui.QWidget):
         if dlg.exec_():
             params = dlg.getParams()
             self.transferThread = TransferThread(params)
-            self.transferProgressDialog = QtGui.QProgressDialog('Transfering Experiment..', 'Cancel', 0, 0)
+            self.transferProgressDialog = QtGui.QProgressDialog('Transferring Experiment..', 'Cancel', 0, 0)
             self.transferProgressDialog.setWindowTitle('Transfer Progress')
             self.transferProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-            self.transferProgressDialog.setModal(True)
+            self.transferProgressDialog.setModal(True)  #TODO setup protection so that this can be non-modal
             self.transferProgressDialog.canceled.connect(self.transferThread.handleCancel)
             self.transferThread.statusUpdated.connect(self.postStatus)
             self.transferThread.finished.connect(self.transferProgressDialog.reset)

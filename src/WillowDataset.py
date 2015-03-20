@@ -1,6 +1,12 @@
 import numpy as np
 import h5py
 from PyQt4 import QtCore
+import config
+
+MAX_NSAMPLES = config.importLimit_GB*5e5
+
+class WillowImportError(Exception):
+    pass
 
 class WillowDataset(QtCore.QObject):
     """
@@ -53,8 +59,8 @@ class WillowDataset(QtCore.QObject):
         self.isImported = False
 
     def importData(self):
-        if self.nsamples > 5e6:
-            raise Exception('Data range exceeds memory limit of 5 million samples')
+        if self.nsamples > MAX_NSAMPLES:
+            raise WillowImportError
         self.data_raw = np.zeros((1024,self.nsamples), dtype='uint16')
         for i in range(self.nsamples):
             self.data_raw[:,i] = self.dset[self.sampleRange[0]+i][3][:1024]
@@ -65,6 +71,7 @@ class WillowDataset(QtCore.QObject):
         self.dataMin = np.min(self.data_uv)
         self.dataMax = np.max(self.data_uv)
         self.limits = [self.timeMin, self.timeMax, self.dataMin, self.dataMax]
+        self.isImported = True
 
     def filterData(self):
         pass # TODO

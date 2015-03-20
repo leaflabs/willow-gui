@@ -3,7 +3,9 @@ import sys, os, h5py
 import numpy as np
 import hwif
 
-from WillowDataset import WillowDataset
+import config
+
+from WillowDataset import WillowDataset, WillowImportError
 
 class ImportThread(QtCore.QThread):
 
@@ -28,6 +30,9 @@ class ImportThread(QtCore.QThread):
         self.terminate()
 
     def run(self):
-        self.dataset.importData()
-        self.finished.emit(self.dataset)
+        try:
+            self.dataset.importData()
+            self.finished.emit(self.dataset)
+        except WillowImportError:
+            self.msgPosted.emit('Memory limit exceeded: %3.2f' % config.importLimit_GB)
 

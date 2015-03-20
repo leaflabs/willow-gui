@@ -2,6 +2,7 @@ import socket
 from PyQt4 import QtCore, QtGui
 import hwif
 from WatchdogThread import WatchdogThread
+import config
 
 GOOD_STYLE = 'QLabel {background-color: #8fdb90; font: bold}'
 UNKNOWN_STYLE = 'QLabel {background-color: gray; font: bold}'
@@ -9,7 +10,7 @@ BAD_STYLE = 'QLabel {background-color: orange; font: bold}'
 STREAM_STYLE = 'QLabel {background-color: rgb(0,191,255); font: bold}'
 RECORD_STYLE = 'QLabel {background-color: red; font: bold}'
 
-MAX_DISK_INDEX = 250e6   # this depends on disk size, assuming 1TB
+MAX_DISK_INDEX = 250e3*config.storageCapacity_GB
 DISK_FILLUP_FRACTION = 0.97
 
 class StatusBar(QtGui.QWidget):

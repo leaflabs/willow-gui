@@ -19,9 +19,14 @@
         "description" : "proto2bytes Forwarding Port",
         "value" : 7654
     },
-    "storageCapacity" : {
-        "type" : "str",
-        "description" : "Datanode Storage Capacity",
-        "value" : "1TB"
+    "storageCapacity_GB" : {
+        "type" : "float",
+        "description" : "Datanode Storage Capacity (GB)",
+        "value" : 1000
+    },
+    "importLimit_GB" : {
+        "type" : "float",
+        "description" : "Datset Import Limit (GB)",
+        "value" : 8
     }
 }
