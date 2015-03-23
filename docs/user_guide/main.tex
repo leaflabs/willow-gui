@@ -88,7 +88,7 @@ The GUI will present its main window (Figure~\ref{fig_mainwindow}), which consis
 \begin{center}
 \includegraphics[width=6cm]{screenshots/mainwindow.png}
 \end{center}
-\caption{GUI main window, immediately after startup, showing the statusbar at the top, the button panel in the middle, and the message log at the bottom.}
+\caption{GUI main window, immediately after startup, showing the status bar at the top, the button panel in the middle, and the message log at the bottom.}
 \label{fig_mainwindow}
 \end{figure}
 
@@ -104,7 +104,7 @@ The status bar is an array of labels at the top of the main window, which indica
 \begin{center}
 \includegraphics[width=17cm]{screenshots/statusbar_threestates.png}
 \end{center}
-\caption{Statusbar in three states: Daemon up and connected to Datanode, showing firmware version, error state, and streaming/recording states (\textit{left}); Daemon up but datanode unresponsive (\textit{center}); Daemon down or unreachable, hardware state unknown (\textit{right}).}
+\caption{Status bar in three states: Daemon up and connected to Datanode, showing firmware version, error state, and streaming/recording states (\textit{left}); Daemon up but datanode unresponsive (\textit{center}); Daemon down or unreachable, hardware state unknown (\textit{right}).}
 \label{fig_statusbar}
 \end{figure}
 
@@ -119,6 +119,14 @@ The Watchdog process can be disabled by un-checking the ``Watchdog'' box at the 
 \subsection{Message Log}
 \label{sec_usage_messagelog}
 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=8cm]{screenshots/msgLog.png}
+\end{center}
+\caption{The message log, showing a list of actions taken, with timestamps.}
+\label{fig_statusbar}
+\end{figure}
+
 At the bottom of the main window is the message log, which displays and logs messages from the GUI. Examples of messages include success/failure reports from requested actions, status updates from background threads, and general errors. Each message is prepended with a timestamp of the form \texttt{HH:mm:ss}. The message log can be cleared, or saved to a log file using the buttons at the top-right. Message logs are saved to the \texttt{log/} subdirectory by default, but can be saved anywhere by navigating the presented file dialog.
 
 The message log is intended to serve as a supplement to the experimentalist's lab notebook, logging the actions taken --- and their results --- to help contextualize the data for future analysis.
@@ -131,89 +139,47 @@ The message log is intended to serve as a supplement to the experimentalist's la
 At the center of the main GUI window is the button panel, containing 8 buttons with symbolic icons. These buttons are your starting point for all the capabilities offered by the GUI. Mousing over a button will display a tooltip which describes its action.
 
 \subsubsection{Streaming}
-\label{sec_usage_acquire_streaming}
+\label{sec_usage_buttonpanel_streaming}
 
 Streaming is the real-time visualization of data from the Intan chips. When streaming, the data acquired from the ADC's is routed directly to the GUI, without being saved to SATA. Currently, users can view one channel at a time, as a scrolling waveform in a stream window.
 
-To launch a stream window, click ``Launch Stream Window'' in the Acquire Tab. You will be presented with a dialog (Figure~\ref{fig_streamdialog}) to configure the stream parameters. Fill in the channel number you want to view, the plotting range, and the refresh rate --- or, accept the default values and click ``OK''. The stream window will appear (Figure~\ref{fig_streamwindow}), though it will not be streaming yet. To start/stop the stream, use the ``Start'' and ``Stop'' buttons. You can also navigate the plot, even while streaming, using the Navigation Toolbar at the bottom of the stream window. To undo/redo navigation changes, use the back and forward arrows; to return to the original view, click the home icon.
-
-\begin{figure}[h!]
-\begin{center}
-\includegraphics[width=12cm]{screenshots/streamdialog.png}
-\end{center}
-\caption{Stream window configuration dialog.}
-\label{fig_streamdialog}
-\end{figure}
+To launch a stream window, click the ``Launch Stream Window'' button in the Button Panel. You will be presented with a dialog to configure the stream parameters. Fill in the channel number you wish to view, the plotting range, and the refresh rate --- or, accept the default values and click ``OK''. The stream window will appear (Figure~\ref{fig_streamwindow}) in an idle state. To start/stop the stream, use the ``Start'' and ``Stop'' buttons. You can also navigate the plot, even while streaming, using the Navigation Toolbar at the bottom of the stream window. To undo/redo navigation changes, use the back and forward arrows; to return to the original view, click the home icon.
 
 Live streaming in matplotlib is reasonably CPU intensive, so you may want to pause the stream while running other tasks within the application. Adjusting the ``refresh rate'' parameter in the stream dialog may help alleviate performance issues.
 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics[width=12cm]{screenshots/streamwindow.png}
+\includegraphics[width=14cm]{screenshots/streamwindow.png}
 \end{center}
 \caption{Stream window showing 60 Hz noise from a bare Intan chip.}
 \label{fig_streamwindow}
 \end{figure}
 
 \subsubsection{Snapshots}
-\label{sec_usage_acquire_snapshot}
+\label{sec_usage_buttonpanel_snapshot}
 
 A snapshot is a short (\textless~10 second) acquisition of board samples (all 1024 channels) which is saved directly to the workstation. It is essentially a stream which gets saved to a file (HDF5 format by default) to be analyzed offline. Like streaming, taking a snapshot does not involve the SATA drive, so you can take snapshots without worrying about overwriting your experiment on disk.
 
-To take a snapshot, first make sure that any Stream Windows are stopped; then click ``Take Snapshot'' in the Acquire Tab. You will be presented with a dialog (Figure~\ref{fig_snapshotdialog}) to configure the snapshot. Fill in the number of samples you want to acquire (remember that 1 second = 30000 samples), and the filename you want to save to, and click ``OK''. The default filename is generated from your \texttt{DATA\_DIR} variable and a timestamp taken at the moment you clicked ``Take Snapshot'' --- the format is \texttt{DATA\_DIR/snapshot\_YYYYMMDD-hhmmss.h5}, so the filename should be unique up to 1 second of granularity.
+To take a snapshot, first make sure that any Stream Windows are stopped; then click the ``Take Snapshot'' button in the Button Panel. You will be presented with a dialog to configure the snapshot. Fill in the number of seconds you wish to acquire, and the filename you want to save to, and click ``OK''. The default filename is generated from the ``Data Directory'' parameter in your settings (see Section~\ref{sec_usage_buttonpanel_settings}) and a timestamp taken at the moment you clicked ``Take Snapshot'' --- the format is \texttt{dataDir/snapshot\_YYYYMMDD-hhmmss.h5}, so the filename should be unique up to 1 second of granularity.
 
 The snapshot dialog also gives you the option to ``Plot when finished'' by checking the box in the lower-left corner. If this is selected, then after the snapshot is saved, the GUI will automatically import the file and present it in a Plot Window (refer to Section~\ref{sec_usage_plot} for information on using the Plot Window).
 
-\begin{figure}[h!]
-\begin{center}
-\includegraphics[width=14cm]{screenshots/snapshotdialog.png}
-\end{center}
-\caption{Snapshot dialog.}
-\label{fig_snapshotdialog}
-\end{figure}
-
 \subsubsection{Recording}
-\label{sec_usage_acquire_recording}
+\label{sec_usage_buttonpanel_recording}
 
-Recording is the acquisition of data directly to the SATA disk. It is the only acquisition mode that is guaranteed to be robust, and is intended for scientific experiments. To start a recording, click ``Start'' on the Acquire Tab. The large status box will turn from gray to red, and the disk usage bar will start advancing to indicate how much disk space is left (Figure~\ref{fig_recording}). To stop recording, click ``Stop''.
+Recording is the acquisition of data directly to the SATA disk. It is the only acquisition mode that is guaranteed to be robust, and is intended for scientific experiments. To start a recording, click the ``Start Recording'' button in the Button Panel. The corresponding label in the status bar will turn from green to red, and the label will begin displaying the disk usage. Accurate reporting of disk usage is depending on the ``Datanode Storage Capacity'' parameter in your settings (see Section~\ref{sec_usage_buttonpanel_settings}). To stop recording, click the ``Stop Recording'' button.
 
 \vspace{5mm}
-\noindent \textbf{IMPORTANT:} Every time you click ``Start'', the system will start recording from the beginning of the disk, over-writing any previous experiments you may have recorded. If you've just recorded an experiment and want to preserve the data, it is recommended that you \underline{transfer} the data over to your workstation immediately after clicking ``Stop'' (see Section~\ref{sec_usage_transfer}). If storage space is an issue on your workstation, an alternative is to remove the SATA disk and label it, thus repurposing the disk buffer as an archival system.
+\noindent \textbf{IMPORTANT:} Every time you click ``Start'', the system will start recording from the beginning of the disk, over-writing any previous experiments you may have recorded. In this sense, the disk acts as a temporary (non-volatile) buffer for experimental data. If you've just recorded an experiment and want to preserve the data, it is recommended that you \underline{transfer} the data over to your workstation immediately after stopping recording (see Section~\ref{sec_usage_buttonpanel_transfer}). If storage space is an issue on your workstation, an alternative is to remove the SATA disk and label it, thus repurposing the disk buffer as an archival system.
 
-\begin{figure}[h!]
-\begin{center}
-\includegraphics[width=8cm]{screenshots/recording.png}
-\end{center}
-\caption{A recording in progress.}
-\label{fig_recording}
-\end{figure}
+\subsubsection{Transferring Experiments}
+\label{sec_usage_buttonpanel_transfer}
 
-\subsection{Transfer Tab}
-\label{sec_usage_transfer}
+The transfer function is used to transfer an experiment from the SATA disk to the workstation's file system. An experiment must be transferred before it can be analyzed --- but even if analysis is not immediately necessary, it is wise to transfer important experiments over as soon as they are recorded, because (as explained in Section~\ref{sec_usage_buttonpanel_recording}) experiments on disk are in danger of being over-written by subsequent recordings.
 
-The Transfer Tab is used to transfer an experiment from the SATA disk to the workstation's file system. An experiment must be transferred over before it can be analyzed --- but even if analysis is not immediately necessary, it is wise to transfer important experiments over as soon as they are recorded, because (as explained in Section~\ref{sec_usage_acquire_recording}) experiments on disk are in danger of being over-written by subsequent recordings.
+To perform a transfer, click the ``Transfer Experiment'' button in the button panel. You will be presented with a dialog to specify how much of the experiment you wish to transfer (either the entire experiment, or a subset), and the target filename. Click ``OK'' to begin the transfer. An infinite progress bar will appear until the transfer is complete --- once it is, a success message will appear in the message box.
 
-To perform a transfer, enter the number of samples you want to transfer over (remember that 1 second = 30000 samples), or leave the field blank to transfer the entire experiment on disk. Then, choose a target filename, and click ``Transfer Data''. The GUI (and the hardware) will be unavailable until the transfer is complete.
-
-Transfer times are approximately equal to recording times; if your recording lasted $n$ minutes, you can expect to wait $\sim n$ minutes for a transfer to complete. To get some estimate of how long is the experiment on disk, click ``Determine Lenght of Experiment on Disk'' near the top of the Transfer Tab. This will perform a binary search to determine where the experiment ends, and then print out the result, along with the ``experiment cookie'', which is the Unix timestamp from the moment the experiment was begun. The binary search takes about 30 seconds; an example of the resulting information is shown in Figure~\ref{fig_transfertab}.
-
-\begin{figure}[h!]
-\begin{center}
-\includegraphics[width=8cm]{screenshots/transfertab.png}
-\end{center}
-\caption{The Transfer Tab, with binary search results showen.}
-\label{fig_transfertab}
-\end{figure}
-
-\subsection{Plot Tab}
-\label{sec_usage_plot}
-
-The Plot Tab is used to import data files (either snapshots or recordings) into Plot Windows for inspection. To open a Plot Window, enter a filename (either manually or using the Browse button), select whether you want the entire data set or just a subset, and click ``Launch''. The software will load the data into memory (this can take a while for large data sets --- a progress bar indicates the status of the import operation) and present a Plot Window.
-
-\subsubsection{Plot Window}
-\label{sec_usage_plot_plotwindow}
-
-The Plot Window (Figure~\ref{fig_plotwindow}) allows you to view the data in some detail as an array of 1-dimensional waveforms. A control panel at the top allows you to adjust how many channels are shown at once, which bank of channels is currently being displayed, and the range of the plotting axes. A ``bank'' here represents a contiguous, ordered set of $n$ channels, where $n$ can range from 1 to 16. To page through banks, use the spinbox in the control panel --- when activated, it can be controlled using the arrow keys on your keyboard.
+A couple of things to consider before initiating a transfer: First, transferred experiment files can be quite large (as large as the datanode storage capacity, i.e. 1~TB), so make sure you have the space on your workstation to store these files. Second, transfer times are approximately equal to recording times; if your recording lasted $n$ minutes, you can expect to wait $\sim n$ minutes for a transfer to complete. In order to avoid daemon contention, you will be locked out of any GUI interactions until the transfer is complete.
 
 \begin{figure}[h!]
 \begin{center}
@@ -223,15 +189,6 @@ The Plot Window (Figure~\ref{fig_plotwindow}) allows you to view the data in som
 \label{fig_plotwindow}
 \end{figure}
 
-The ``Zoom Control'' section allows you to set the plotting range of \textbf{all} plots in the window simultaneously. By default, the zoom mode is ``Auto'', which looks at the current bank of channels and chooses a $y$-range based on its min and max; the auto-range updates every time you advance banks, or change the number of channels displayed. In ``Manual'' mode, you can set exactly the $x$-range and $y$-range of all the plots in the array --- just enter the extrema and click ``Refresh''. Another way to adjust the plots is by using the Navigation Toolbar at the bottom of the window. This allows you to zoom in on one plot in particular, leaving the others unchanged. To get back to the zoom settings defined by the ``Zoom Control'' group, just click the home icon.
-
-Near the top-right corner of the Plot Window, you'll find a button labeled ``Waterfall''. Click here to launch the Waterfall Plot Window.
-
-\subsubsection{Waterfall Plot Window}
-\label{sec_usage_plot_waterfall}
-
-The Waterfall Plot Window (Figure~\ref{fig_waterfall}) shows \textbf{all} the data from a given import, in a 2-dimensional color plot. The $x$-axis is time (with units in sample number), the $y$-axis is channel number, and color represents signal (voltage), with values indicated by the colorbar on the right.
-
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[width=17cm]{screenshots/waterfall.png}
@@ -240,8 +197,6 @@ The Waterfall Plot Window (Figure~\ref{fig_waterfall}) shows \textbf{all} the da
 \label{fig_waterfall}
 \end{figure}
 
-When you first open the Waterfall Plot Window, it will show the entire 1024-channel dataset. If some (or most) of those channels were not connected to a live Intan chip, they will show up as zeros, which will appear as a large black band on the Waterfall Plot. To zoom in on the channels of interest, adjust the ``Y-Range'' parameters in the control panel at the top. As usual, you can also zoom into subregions of the plot by using the Navigation Toolbar at the bottom. And finally, it's likely that you will want to adjust the limits of the color mapping to bring out interesting features in your data set. In Figure~\ref{fig_waterfall_zoom}, we have used these techniques to zoom in on a spike train that registered across several channels.
-
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[width=17cm]{screenshots/waterfall_zoom.png}
@@ -249,6 +204,35 @@ When you first open the Waterfall Plot Window, it will show the entire 1024-chan
 \caption{A train of 6 spikes, shown on several channels in the Waterfall Plot.}
 \label{fig_waterfall_zoom}
 \end{figure}
+\subsubsection{Plotting Data}
+\label{sec_usage_buttonpanel_plot}
+
+In addition to its primary purpose as the driver software for the Willow hardware, the GUI also offers some basic plotting utilities for exploring datasets. To plot a dataset (either a snapshot or a recording), click the ``Launch Plot Window'' button in the button panel. In the file dialog that appears, select the file you wish to import, and click ``OK''. Then enter how much data to import: either the entire file, or a subset. Be aware of the time and memory requirements before initiating an import --- 1 second of data can take nearly 10 seconds to import, and large datasets can quickly consume memory resources. To prevent excessive memory consumption, the GUI will refuse to import datasets larger than the ``Dataset Import Limit'' parameter in the settings (see Section~\ref{sec_usage_buttonpanel_settings}.
+
+The dataset will be imported in a background thread, with a progress dialog indicating the status of the operation. Once complete, a Plot Window will appear (Figure~\ref{fig_plotwindow}), showing the data as an array of 1-dimensional waveforms. A control panel at the top allows you to adjust how many channels are shown at once, which bank of channels is currently being displayed, and the range of the plotting axes. A ``bank'' here represents a contiguous, ordered set of $n$ channels, where $n$ can range from 1 to 16. To page through banks, use the spinbox in the control panel --- when activated, it can be controlled using the arrow keys on your keyboard.
+
+The ``Zoom Control'' section allows you to set the plotting range of \textbf{all} plots in the window simultaneously. By default, the zoom mode is ``Auto'', which looks at the current bank of channels and chooses a $y$-range based on its min and max; the auto-range updates every time you advance banks, or change the number of channels displayed. In ``Manual'' mode, you can set exactly the $x$-range and $y$-range of all the plots in the array --- just enter the extrema and click ``Refresh''. Another way to adjust the plots is by using the Navigation Toolbar at the bottom of the window. This allows you to zoom in on one plot in particular, leaving the others unchanged. To get back to the zoom settings defined by the ``Zoom Control'' group, just click the home icon.
+
+Near the top-right corner of the Plot Window, you'll find a button labeled ``Waterfall''. Click here to launch the Waterfall Plot Window. The Waterfall Plot Window (Figure~\ref{fig_waterfall}) shows \textbf{all} the data from a given import, in a 2-dimensional color plot. The $x$-axis is time (with units in sample number), the $y$-axis is channel number, and color represents signal (voltage), with values indicated by the colorbar on the right. When you first open the Waterfall Plot Window, it will show the entire 1024-channel dataset. If any of the channels were not connected to a live Intan chip, they will show up as zeros, which will appear as a large red band on the Waterfall Plot. To zoom in on the channels of interest, adjust the ``Channel Range'' parameters in the control panel at the top --- this can be done manually, or automatically by probe type. To zoom in on a window of time, adjust the ``Time Range'' parameters. As usual, you can also zoom into subregions of the plot by using the Navigation Toolbar at the bottom. Finally, to adjust the limits of the color mapping, an interactive value histogram is provided at the top-right of the Waterfall Plot Window. The red and blue vertical lines represent the lower and upper limits of the color map, and these can be adjusted by left-clicking and right-clicking, respectively, on the histogram. In Figure~\ref{fig_waterfall_zoom}, we have used these techniques to zoom in on a spike train that registered across several channels.
+
+
+\subsubsection{Impedance Testing}
+\label{sec_usage_buttonpanel_impedance}
+
+The Intan headstages offer impedance testing functionality which can be accessed from the GUI. Click the ``Run Impedance Test'' button on the button panel --- this will present a dialog where you can choose to measure the impedance of a single channel, or of all channels in sequence. If you choose ``Single Channel'', the process will take about 10 seconds, and the result will be posted on the message log. If you choose ``All Channels'', the loop will run for about 3 minutes, and the result will be saved in a time-stamped \texttt{.npy} file, also reported in the message log. In ``All Channels'' mode, you also have the option to ``Plot When Finished'', which will bring up a plot window showing the impedance results across all channels (see Figure~\ref{fig_impedance}). All impedance measurements are taken at $f = 1\text{ kHz}$.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=15cm]{screenshots/impedance.png}
+\end{center}
+\caption{Impedance results from a measurement taken with 4 of 8 headstages bare headstages connected. As expected, channels 0-511 show an approximate, 32-channel periodicity from the PCB traces, and channels 512-1023 are dead.}
+\label{fig_impedance}
+\end{figure}
+
+\subsubsection{Settings}
+\label{sec_usage_buttonpanel_settings}
+
+Blah blah settings.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

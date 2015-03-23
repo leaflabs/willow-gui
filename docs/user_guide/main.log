@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.1.21)  17 MAR 2015 18:42
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.1.21)  20 MAR 2015 19:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -378,7 +378,11 @@ Package: bm 2004/02/26 v1.1c Bold Symbol Support (DPC/FMi)
 \symboldsymbols=\mathgroup8
 LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 138.
 LaTeX Info: Redefining \bm on input line 204.
-) (./main.aux)
+) (./main.aux
+
+LaTeX Warning: Label `fig_statusbar' multiply defined.
+
+)
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 10.
@@ -395,8 +399,7 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 10.
 LaTeX Font Info:    ... okay on input line 10.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 10.
 LaTeX Font Info:    ... okay on input line 10.
-
-(/usr/share/texlive/texmf-dist/tex/context/base/supp-pdf.mkii
+ (/usr/share/texlive/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count134
 \scratchdimen=\dimen140
@@ -525,27 +528,21 @@ Package pdftex.def Info: screenshots/statusbar_threestates.png used on input li
 ne 105.
 (pdftex.def)             Requested size: 483.69684pt x 56.11023pt.
  [3 <./screenshots/mainwindow.png> <./screenshots/statusbar_threestates.png>]
-<screenshots/streamdialog.png, id=107, 507.8975pt x 169.63374pt>
-File: screenshots/streamdialog.png Graphic file (type png)
+<screenshots/msgLog.png, id=106, 320.19624pt x 254.9525pt>
+File: screenshots/msgLog.png Graphic file (type png)
 
-<use screenshots/streamdialog.png>
-Package pdftex.def Info: screenshots/streamdialog.png used on input line 142.
-(pdftex.def)             Requested size: 341.43306pt x 114.03967pt.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-<screenshots/streamwindow.png, id=108, 688.5725pt x 646.415pt>
+<use screenshots/msgLog.png>
+Package pdftex.def Info: screenshots/msgLog.png used on input line 124.
+(pdftex.def)             Requested size: 227.62204pt x 181.24316pt.
+ [4 <./screenshots/msgLog.png>]
+<screenshots/streamwindow.png, id=114, 1139.25626pt x 677.53125pt>
 File: screenshots/streamwindow.png Graphic file (type png)
 
 <use screenshots/streamwindow.png>
 Package pdftex.def Info: screenshots/streamwindow.png used on input line 152.
-(pdftex.def)             Requested size: 341.43306pt x 320.52383pt.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
+(pdftex.def)             Requested size: 398.33858pt x 236.89136pt.
 LaTeX Font Info:    Try loading font information for OML+cmr on input line 161.
+
 
 (/usr/share/texlive/texmf-dist/tex/latex/base/omlcmr.fd
 File: omlcmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
@@ -553,99 +550,92 @@ File: omlcmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <10.95> not available
 (Font)              Font shape `OML/cmm/m/it' tried instead on input line 161.
 
-Overfull \hbox (11.89595pt too wide) in paragraph at lines 163--164
-\OT1/cmr/m/n/10.95 taken at the mo-ment you clicked ``Take Snap-shot'' --- the 
-for-mat is \OT1/cmtt/m/n/10.95 DATA[]DIR/snapshot[]YYYYMMDD-hhmmss.h5\OT1/cmr/m
-/n/10.95 ,
- []
 
-[4] <screenshots/snapshotdialog.png, id=119, 809.0225pt x 140.525pt>
-File: screenshots/snapshotdialog.png Graphic file (type png)
+LaTeX Warning: Reference `sec_usage_plot' on page 5 undefined on input line 165
+.
 
-<use screenshots/snapshotdialog.png>
-Package pdftex.def Info: screenshots/snapshotdialog.png used on input line 169.
-
-(pdftex.def)             Requested size: 398.33858pt x 69.1902pt.
-
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[5 <./screenshots/streamdialog.png> <./screenshots/streamwindow.png>]
-LaTeX Font Info:    Try loading font information for U+msa on input line 181.
+[5 <./screenshots/streamwindow.png>]
+LaTeX Font Info:    Try loading font information for U+msa on input line 173.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 181.
+LaTeX Font Info:    Try loading font information for U+msb on input line 173.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-<screenshots/recording.png, id=129, 493.845pt x 595.22375pt>
-File: screenshots/recording.png Graphic file (type png)
-
-<use screenshots/recording.png>
-Package pdftex.def Info: screenshots/recording.png used on input line 185.
-(pdftex.def)             Requested size: 227.62204pt x 274.3421pt.
- [6 <./screenshots/snapshotdialog.png> <./screenshots/recording.png>]
-<screenshots/transfertab.png, id=139, 504.88625pt x 595.22375pt>
-File: screenshots/transfertab.png Graphic file (type png)
-
-<use screenshots/transfertab.png>
-Package pdftex.def Info: screenshots/transfertab.png used on input line 202.
-(pdftex.def)             Requested size: 227.62204pt x 268.34775pt.
-
-<screenshots/plotwindow.png, id=141, 1612.0225pt x 830.10126pt>
+<screenshots/plotwindow.png, id=126, 1612.0225pt x 830.10126pt>
 File: screenshots/plotwindow.png Graphic file (type png)
 
 <use screenshots/plotwindow.png>
-Package pdftex.def Info: screenshots/plotwindow.png used on input line 220.
+Package pdftex.def Info: screenshots/plotwindow.png used on input line 186.
 (pdftex.def)             Requested size: 483.69684pt x 249.0703pt.
- [7 <./screenshots/transfertab.png>]
-<screenshots/waterfall.png, id=151, 1612.0225pt x 899.36pt>
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+<screenshots/waterfall.png, id=127, 1612.0225pt x 830.10126pt>
 File: screenshots/waterfall.png Graphic file (type png)
 
 <use screenshots/waterfall.png>
-Package pdftex.def Info: screenshots/waterfall.png used on input line 237.
-(pdftex.def)             Requested size: 483.69684pt x 269.85124pt.
+Package pdftex.def Info: screenshots/waterfall.png used on input line 194.
+(pdftex.def)             Requested size: 483.69684pt x 249.0703pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-<screenshots/waterfall_zoom.png, id=153, 1612.0225pt x 899.36pt>
+<screenshots/waterfall_zoom.png, id=128, 1612.0225pt x 830.10126pt>
 File: screenshots/waterfall_zoom.png Graphic file (type png)
 
 <use screenshots/waterfall_zoom.png>
-Package pdftex.def Info: screenshots/waterfall_zoom.png used on input line 247.
+Package pdftex.def Info: screenshots/waterfall_zoom.png used on input line 202.
 
-(pdftex.def)             Requested size: 483.69684pt x 269.85124pt.
+(pdftex.def)             Requested size: 483.69684pt x 249.0703pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 256.
-[8 <./screenshots/plotwindow.png>] [9 <./screenshots/waterfall.png> <./screensh
-ots/waterfall_zoom.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 256.
- (./main.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 256.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 256.
+[6] [7 <./screenshots/plotwindow.png> <./screenshots/waterfall.png>]
+<screenshots/impedance.png, id=147, 1210.5225pt x 629.35126pt>
+File: screenshots/impedance.png Graphic file (type png)
+
+<use screenshots/impedance.png>
+Package pdftex.def Info: screenshots/impedance.png used on input line 226.
+(pdftex.def)             Requested size: 426.79134pt x 221.88956pt.
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 240.
+[8 <./screenshots/waterfall_zoom.png>] [9 <./screenshots/impedance.png>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 240.
+
+(./main.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 240.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 240.
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 546BA2646F0A8D4A3EE5226B51170706;1026.
+(rerunfilecheck)             Checksum: 349C55A0721D7CFE9FDF5589AEE68B31;1056.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 256.
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: There were multiply-defined labels.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 240.
  ) 
 Here is how much of TeX's memory you used:
- 8371 strings out of 493307
- 120140 string characters out of 6139905
- 222370 words of memory out of 5000000
- 11668 multiletter control sequences out of 15000+600000
+ 8357 strings out of 493307
+ 119822 string characters out of 6139905
+ 223255 words of memory out of 5000000
+ 11658 multiletter control sequences out of 15000+600000
  12782 words of font info for 47 fonts, out of 8000000 for 9000
  957 hyphenation exceptions out of 8191
- 31i,5n,32p,852b,349s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 31i,5n,32p,1528b,328s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texl
@@ -654,10 +644,10 @@ mf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts
 /type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/type1
 /public/amsfonts/cm/cmtt10.pfb>
-Output written on main.pdf (9 pages, 2092269 bytes).
+Output written on main.pdf (9 pages, 2809598 bytes).
 PDF statistics:
- 207 PDF objects out of 1000 (max. 8388607)
- 164 compressed objects within 2 object streams
- 38 named destinations out of 1000 (max. 500000)
- 192 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 197 PDF objects out of 1000 (max. 8388607)
+ 158 compressed objects within 2 object streams
+ 36 named destinations out of 1000 (max. 500000)
+ 182 words of extra memory for PDF output out of 10000 (max. 10000000)
 
