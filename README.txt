@@ -1,20 +1,23 @@
-This repository contains source code for the WiredLeaf GUI software.
-====================================================================
+willowGUI:
+GUI software for the Willow electrophysiology system
+www.leaflabs.com/neuroscience
+====================================================
 
 Setup
 -----
 
-Install dependencies:
+1. Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-qt4 \
-	python-h5py python-progressbar
+    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-h5py
 
-Modify src/parameters.py to store the location of relevant directories on your system:
+2. Make sure your system is set up to work with the daemon (see README in the leafysd repo)
+
+3. Modify src/config.json to point to  the location of relevant directories on your system:
 
     DAEMON_DIR = <location of leafysd repo>
     DATA_DIR = <default location of data files> (can be updated from the GUI)
 
-Run:
+4. Run:
 
     $ src/main.py
 
@@ -22,13 +25,9 @@ Run:
 Usage
 ----
 
-Before starting the GUI:
+See the User Guide in docs/user_guide for usage instructions. To compile the user guide:
 
-    - make sure your system is set up to work with the daemon (see section 3
-        of the wired-leaf-docs User Guide for directions)
-    - change the DAEMON_DIR string variable in src/parameters.py to point to the
-        location of the sng-daemon repo on your system
+    $ cd docs/user_guide
+    $ pdflatex main
 
-
-============================
-Chris Chronopoulos, 20141229
+Then open main.pdf

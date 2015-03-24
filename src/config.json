@@ -2,17 +2,17 @@
     "daemonDir" : {
         "type" : "str",
         "description" : "Daemon Directory",
-        "value" : "/home/chrono/sng/sng-daemon"
+        "value" : "/home/chrono/willow/leafysd"
+    },
+    "dataDir" : {
+        "type" : "str",
+        "description" : "Data Directory",
+        "value" : "/home/chrono/willow/data"
     },
     "defaultForwardAddr" : {
         "type" : "str",
         "description" : "proto2bytes Forwarding Address",
         "value" : "127.0.0.1"
-    },
-    "dataDir" : {
-        "type" : "str",
-        "description" : "Data Directory",
-        "value" : "/home/chrono/sng/data"
     },
     "defaultForwardPort" : {
         "type" : "int",
