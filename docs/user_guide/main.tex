@@ -12,10 +12,18 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=15cm]{screenshots/gui_windowtiling.png}
+\end{center}
+\caption{Willow GUI, with several plotting windows open.}
+\label{fig_sw}
+\end{figure}
+
 \section{Introduction}
 \label{sec_intro}
 
-This is the user guide for the Willow GUI --- a desktop application for interacting with Willow, a 1024-channel electrophysiology system developed by LeafLabs (www.leaflabs.com) in collaboration with MIT's Synthetic Neurobiology Group (SNG). This document, which is contained in the source code repository in \texttt{docs/user\_guide/}, contains information for end-users. Developers should check out the developer's guide, which can be found in \texttt{docs/dev\_guide/}.
+This is the user guide for the Willow GUI software: a desktop application for interacting with Willow, a 1024-channel electrophysiology system developed by LeafLabs (www.leaflabs.com) in collaboration with MIT's Synthetic Neurobiology Group (SNG). This document, which is contained in the source code repository in \texttt{docs/user\_guide/}, contains information for end-users. Developers should check out the developer's guide, which can be found in \texttt{docs/dev\_guide/}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -26,9 +34,9 @@ Willow is based on a Spartan 6 FPGA which collects and routes data from up to 32
 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics[width=6cm]{screenshots/full_setup.png}
+\includegraphics[width=12cm]{screenshots/willow_photoshoot_downsampled.jpg}
 \end{center}
-\caption{Willow hardware with a single headstage connected.}
+\caption{Willow datanode with a headstage assembly.}
 \label{fig_hw}
 \end{figure}
 
@@ -232,7 +240,15 @@ The Intan headstages offer impedance testing functionality which can be accessed
 \subsubsection{Settings}
 \label{sec_usage_buttonpanel_settings}
 
-Blah blah settings.
+The GUI preferences can be viewed and modified by clicking the ``Configure Settings'' button on the button panel. This will present a key-value dialog (see Figure~\ref{fig_settings}) for the various configuration parameters. These values are stored in \texttt{src/config.json}, which offers an alternative way to set the preferences.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=10cm]{screenshots/settings.png}
+\end{center}
+\caption{Settings window, showing default default configuration parameters.}
+\label{fig_settings}
+\end{figure}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
