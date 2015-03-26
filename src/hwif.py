@@ -42,7 +42,7 @@ import daemon_control as dc
 
 def init():
     global DAEMON_SOCK, DAEMON_MUTEX
-    DAEMON_SOCK = dc.get_daemon_control_sock(retry=True, max_retries=100)
+    DAEMON_SOCK = dc.get_daemon_control_sock(retry=True, max_retries=200)
     DAEMON_MUTEX = QtCore.QMutex()
     print 'hwif initialized'
 
