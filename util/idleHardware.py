@@ -5,7 +5,6 @@ import subprocess, os, sys, time
 sys.path.append('../src')
 
 import hwif, config
-import CustomExceptions as ex
 
 def startDaemon():
     subprocess.call(['killall', 'leafysd'])

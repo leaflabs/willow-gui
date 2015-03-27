@@ -10,6 +10,12 @@ from daemon_control import *
 
 FFT_INDEX_1KHZ = 500
 
+def saveImpedance_hdf5(data, timestamp, filename):
+    f = h5py.File(filename, 'w-') # create file, fail if exists
+    dset = f.create_dataset('impedanceMeasurements', data=data)
+    dset.attrs['timestamp'] = timestamp
+    f.close()
+    
 class ImpedanceThread(QtCore.QThread):
 
     progressUpdated = QtCore.pyqtSignal(int)
@@ -79,8 +85,10 @@ class ImpedanceThread(QtCore.QThread):
         else:
             return -1
 
+
     def allChipsRoutine(self):
-        dt = datetime.datetime.fromtimestamp(time.time())
+        timestamp  = time.time()
+        dt = datetime.datetime.fromtimestamp(timestamp)
         strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
         self.impedanceMeasurements = np.zeros(1024)
         # start streaming
@@ -114,8 +122,9 @@ class ImpedanceThread(QtCore.QThread):
         hwif.stopStreaming()
         self.progressUpdated.emit(1)
         # save result and post message
-        impedanceFilename = os.path.abspath('../cal/impedance_%s.npy' % strtime)
-        np.save(impedanceFilename, self.impedanceMeasurements)
+        impedanceFilename = os.path.abspath('../cal/impedance_%s.h5' % strtime)
+        #np.save(impedanceFilename, self.impedanceMeasurements)
+        saveImpedance_hdf5(self.impedanceMeasurements, timestamp, impedanceFilename)
         self.msgPosted.emit('Impedance measurements saved to %s' % impedanceFilename)
         if self.plot:
             self.dataReady.emit(self.impedanceMeasurements)
@@ -185,5 +194,9 @@ class ImpedanceThread(QtCore.QThread):
         except hwif.hwifError as e:
             self.msgPosted.emit(e.message)
         finally:
+            try:
+                hwif.stopStreaming()
+            except hwif.AlreadyError:
+                pass
             self.finished.emit()
 
