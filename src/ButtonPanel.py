@@ -42,6 +42,10 @@ def targetDirExists(filename):
     targetDir = os.path.split(filename)[0]
     return os.path.exists(targetDir)
 
+def isCalibrationFile(filename):
+    f = h5py.File(filename)
+    return 'impedanceMeasurements' in f.keys()
+
 class ButtonPanel(QtGui.QWidget):
 
     def __init__(self, msgLog):
@@ -209,31 +213,37 @@ class ButtonPanel(QtGui.QWidget):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', config.dataDir)
         if filename:
             filename = str(filename)
-            dlg = ImportDialog()
-            if dlg.exec_():
-                params = dlg.getParams()
-                sampleRange = params['sampleRange']
-                if not isSampleRangeValid(sampleRange):
-                    self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
-                    return
-                try:
-                    dataset = WillowDataset(filename, sampleRange)
-                    self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename,
-                        'Cancel', 0, dataset.nsamples)
-                    self.importProgressDialog.setMinimumDuration(1000)
-                    self.importProgressDialog.setModal(False)
-                    self.importProgressDialog.setWindowTitle('Data Import Progress')
-                    self.importProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-                    self.importThread = ImportThread(dataset)
-                    self.importThread.progressUpdated.connect(self.importProgressDialog.setValue)
-                    self.importThread.msgPosted.connect(self.postStatus) # TODO convert these to postMessage name
-                    self.importThread.finished.connect(self.launchPlotWindow)
-                    self.importThread.canceled.connect(self.importProgressDialog.cancel)
-                    self.importProgressDialog.canceled.connect(self.importThread.terminate)
-                    self.importProgressDialog.show()
-                    self.importThread.start()
-                except IndexError as e:
-                    self.msgLog.post(e.message)
+            if isCalibrationFile(filename):
+                f = h5py.File(filename)
+                dset = f['impedanceMeasurements']
+                impedanceMeasurements = dset[:]
+                self.launchImpedancePlotWindow(impedanceMeasurements)
+            else:
+                dlg = ImportDialog()
+                if dlg.exec_():
+                    params = dlg.getParams()
+                    sampleRange = params['sampleRange']
+                    if not isSampleRangeValid(sampleRange):
+                        self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
+                        return
+                    try:
+                        dataset = WillowDataset(filename, sampleRange)
+                        self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename,
+                            'Cancel', 0, dataset.nsamples)
+                        self.importProgressDialog.setMinimumDuration(1000)
+                        self.importProgressDialog.setModal(False)
+                        self.importProgressDialog.setWindowTitle('Data Import Progress')
+                        self.importProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
+                        self.importThread = ImportThread(dataset)
+                        self.importThread.progressUpdated.connect(self.importProgressDialog.setValue)
+                        self.importThread.msgPosted.connect(self.postStatus) # TODO convert these to postMessage name
+                        self.importThread.finished.connect(self.launchPlotWindow)
+                        self.importThread.canceled.connect(self.importProgressDialog.cancel)
+                        self.importProgressDialog.canceled.connect(self.importThread.terminate)
+                        self.importProgressDialog.show()
+                        self.importThread.start()
+                    except IndexError as e:
+                        self.msgLog.post(e.message)
 
     def launchPlotWindow(self, willowDataset):
         self.plotWindow = PlotWindow(willowDataset)
