@@ -182,7 +182,9 @@ def _doRegRead(module, address):
     mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
     resp = dc.do_control_cmd(dc.reg_read(module, address), control_socket=DAEMON_SOCK)
     if resp:
-        if resp.type == dc.ControlResponse.ERR:
+        if resp.type == dc.ControlResponse.REG_IO:
+            return resp.reg_io.val
+        elif resp.type == dc.ControlResponse.ERR:
             raise hwifError(1, resp.err.code)
     else:
         raise hwifError(2)
@@ -249,6 +251,9 @@ def getChipsAlive():
     resp = _controlCmdWrapper(cmd)
     mask = resp.reg_io.val
     return [i for i in range(32) if (mask & (0x1 << i))]
+
+def getErrorBitmask(module):
+    return _doRegRead(module, 0)
 
 def setSubsamples_byChip(chip):
     """

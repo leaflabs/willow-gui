@@ -13,6 +13,60 @@ RECORD_STYLE = 'QLabel {background-color: red; font: bold}'
 MAX_DISK_INDEX = 250e3*config.storageCapacity_GB
 DISK_FILLUP_FRACTION = 0.97
 
+
+CENTRAL_ERRORDICT = {
+    0 : 'Configuration Error'
+}
+
+SATA_ERRORDICT = {
+    0 :  'Configuration Error',
+    1 :  'Disk Not Ready',
+    2 :  'SATA-UDP FIFO Underflow',
+    3 :  'SATA-UDP FIFO Overflow',
+    4 :  'SATA Read FIFO Underflow',
+    5 :  'SATA Read FIFO Overflow',
+    6 :  'Disk Removed',
+    7 :  'Other error',
+    8 :  'Low-Level SATA Error' # (see bits 23:16)
+}
+
+DAQ_ERRORDICT = {
+    0 :  'Configuration Error',
+    1 :  'DAQ-UDP FIFO Underflow',
+    2 :  'DAQ-UDP FIFO Overflow',
+    3 :  'DAQ-SATA FIFO Underflow',
+    4 :  'DAQ-SATA FIFO Overflow'
+}
+
+UDP_ERRORDICT = {
+    0 : 'Configuration Error',
+    7 : 'Other Error'
+}
+
+GPIO_ERRORDICT = {
+    0 : 'Configuration error'
+}
+
+ERRORDICT_DICT = {
+    1 : ('Central', CENTRAL_ERRORDICT),
+    2 : ('SATA', SATA_ERRORDICT),
+    3 : ('DAQ', DAQ_ERRORDICT),
+    4 : ('UDP', UDP_ERRORDICT),
+    5 : ('GPIO', GPIO_ERRORDICT)
+}
+
+def getErrorInfo(errorRegister):
+    infoText = ''
+    for i in range(1,6):
+        if (errorRegister & 1<<i):
+            moduleName, errorDict = ERRORDICT_DICT[i]
+            errorBitmask = hwif.getErrorBitmask(i)
+            for j in range(9):
+                if (errorBitmask & 1<<j):
+                    errorMsg = errorDict[j]
+                    infoText += '%s: %s, ' % (moduleName, errorMsg)
+    return infoText[:-2]
+
 class StatusBar(QtGui.QWidget):
 
     diskFillupDetected = QtCore.pyqtSignal()
@@ -41,6 +95,8 @@ class StatusBar(QtGui.QWidget):
         layout.addWidget(self.firmwareLabel, 2,0)
 
         self.errorLabel = QtGui.QLabel('(errors)')
+        #self.errorLabel = QtGui.QPushButton('(errors)')
+        self.errorLabel.setToolTip('No Errors')
         self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
         layout.addWidget(self.errorLabel, 2,1)
 
@@ -110,7 +166,8 @@ class StatusBar(QtGui.QWidget):
             self.errorLabel.setText('No Errors')
             self.errorLabel.setStyleSheet(GOOD_STYLE)
         else:
-            self.errorLabel.setText('Errors: %s' % bin(tmp)[2:].zfill(6))
+            self.errorLabel.setText('Errors (mouseover)')
+            self.errorLabel.setToolTip(getErrorInfo(tmp))
             self.errorLabel.setStyleSheet(BAD_STYLE)
 
         tmp = vitals['stream']
@@ -128,7 +185,7 @@ class StatusBar(QtGui.QWidget):
         if tmp == True:
             try:
                 diskIndex = hwif.getSataBSI()
-                if (diskIndex >= DISK_FILLUP_FRACTION*MAX_DISK_INDEX): # TODO magic numbers
+                if (diskIndex >= DISK_FILLUP_FRACTION*MAX_DISK_INDEX):
                     self.diskFillupDetected.emit()
                 self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/MAX_DISK_INDEX*100))
                 self.recordLabel.setStyleSheet(RECORD_STYLE)
