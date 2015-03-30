@@ -182,13 +182,10 @@ def _doRegRead(module, address):
     mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
     resp = dc.do_control_cmd(dc.reg_read(module, address), control_socket=DAEMON_SOCK)
     if resp:
-        if resp.type == dc.ControlResponse.REG_IO:
-            return resp.reg_io.val
-        elif resp.type==dc.ControlResponse.ERR:
-            raise ex.ERROR_DICT[resp.err.code]
+        if resp.type == dc.ControlResponse.ERR:
+            raise hwifError(1, resp.err.code)
     else:
-        raise ex.NoResponseError
-
+        raise hwifError(2)
 
 #
 ##
