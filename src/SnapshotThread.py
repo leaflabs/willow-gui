@@ -4,6 +4,12 @@ import numpy as np
 import hwif
 from WillowDataset import WillowDataset
 
+class MissingTargetError(Exception):
+
+    def __init__(self, targetDir):
+        Exception.__init__(self)
+        self.targetDir = targetDir
+
 class SnapshotThread(QtCore.QThread):
 
     progressUpdated = QtCore.pyqtSignal(int)
@@ -30,6 +36,9 @@ class SnapshotThread(QtCore.QThread):
 
     def run(self):
         try:
+            targetDir = os.path.dirname(self.filename)
+            if not os.path.exists(targetDir):
+                raise MissingTargetError(targetDir) 
             nsamples_actual = hwif.takeSnapshot(nsamples=self.nsamples_requested, filename=self.filename)
             self.msgPosted.emit('Snapshot Complete: %d samples saved to %s' %
                 (nsamples_actual, self.filename))
@@ -44,5 +53,7 @@ class SnapshotThread(QtCore.QThread):
             self.msgPosted.emit('StateChangeError: %s' % e.message)
         except hwif.hwifError as e:
             self.msgPosted.emit(e.message)
+        except MissingTargetError as e:
+            self.msgPosted.emit('Error: Target directory %s does not exist' % e.targetDir)
         finally:
             self.finished.emit()
