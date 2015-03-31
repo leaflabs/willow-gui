@@ -10,6 +10,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
 
+import select
+
 import hwif
 
 def calculateTicks(axisrange):
@@ -97,7 +99,7 @@ class StreamWindow(QtGui.QWidget):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
 
-        self.proto2bytes = os.path.join(config.daemonDir, 'build/proto2bytes')
+        self.proto2bytes_filename = os.path.join(config.daemonDir, 'build/proto2bytes')
 
         ###################
         # Top-level stuff
@@ -141,7 +143,6 @@ class StreamWindow(QtGui.QWidget):
     def stopStreaming(self):
         try:
             hwif.stopStreaming()
-            self.toggleStdin(False)
             self.msgLog.post('Stopped streaming.')
         except hwif.AlreadyError:
             self.toggleStdin(False)
@@ -151,11 +152,15 @@ class StreamWindow(QtGui.QWidget):
             self.msgLog.post('AttributeError: Pipe object does not exist')
         except hwif.hwifError as e:
             self.msgLog.post(e.message)
+        finally:
+            self.toggleStdin(False)
 
     def toggleStdin(self, enable):
         if enable:
-            self.proto2bytes_po = subprocess.Popen([self.proto2bytes, '-s',
+            self.proto2bytes_po = subprocess.Popen([self.proto2bytes_filename, '-s',
                 '-c', str(self.chan)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.proto2bytes_poller = select.poll()
+            self.proto2bytes_poller.register(self.proto2bytes_po.stdout, select.POLLIN)
             self.timer.start(self.fp)
             print 'timer started'
         else:
@@ -166,11 +171,15 @@ class StreamWindow(QtGui.QWidget):
                 pass
 
     def updatePlot(self):
-        for i in range(self.nrefresh):
-            self.newBuff[i] = self.proto2bytes_po.stdout.readline()
-        self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],self.newBuff))
-        self.waveform[0].set_data(self.xvalues, self.plotBuff)
-        self.canvas.draw()
+        if self.proto2bytes_poller.poll(1000):
+            for i in range(self.nrefresh):
+                self.newBuff[i] = self.proto2bytes_po.stdout.readline()
+            self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],self.newBuff))
+            self.waveform[0].set_data(self.xvalues, self.plotBuff)
+            self.canvas.draw()
+        else:
+            self.msgLog.post('Read from proto2bytes timed out!')
+            self.stopStreaming()
 
     def closeEvent(self, event):
         try:
