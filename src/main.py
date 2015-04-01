@@ -56,10 +56,9 @@ class MainWindow(QtGui.QWidget):
             self.msgLog.post('Could not establish a connection with the daemon.')
 
     def startDaemon(self):
-        #subprocess.call([os.path.join(config.daemonDir, 'build/leafysd'), '-A', '192.168.1.2'])
         subprocess.call(['killall', 'leafysd'])
         self.daemonProcess = subprocess.Popen([os.path.join(config.daemonDir, 'build/leafysd'),
-                                                '-N', '-A', '192.168.1.2', '-I', 'eth0'],
+                                                '-N', '-A', '192.168.1.2', '-I', config.networkInterface],
                                                 stdout=oFile, stderr=eFile)
         self.msgLog.post('Daemon started.')
         print 'daemon started'
