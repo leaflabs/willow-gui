@@ -81,22 +81,25 @@ class HistoControl(QtGui.QWidget):
         
 
     def setDataSubset(self, c1, c2, t1, t2):
+        self.subsetMin = np.min(self.dataset.data_uv[c1:c2, t1:t2])
+        self.subsetMax = np.max(self.dataset.data_uv[c1:c2, t1:t2])
+        self.subsetRange = self.subsetMax - self.subsetMin
         self.hist = np.histogram(self.dataset.data_uv[c1:c2, t1:t2],
-            bins=np.linspace(self.uvMin, self.uvMax, 256))
-        self.x = self.hist[1][1:-2]
-        self.y = self.hist[0][1:-1] # exclude first and last bins
+            bins=np.linspace(self.subsetMin, self.subsetMax, 256))
+        self.x = self.hist[1][:-1]
+        self.y = self.hist[0][:]
         self.width = self.x[1] - self.x[0]
         self.fig.clear()
         self.axes = self.fig.add_subplot(111)
         self.axes.set_axis_bgcolor('k')
         self.axes.bar(self.x,self.y, width=self.width, color='#8fdb90')
         self.axes.set_title('Value Histogram (microVolts)', fontsize=10)
-        self.axes.set_xlim([self.uvMin,self.uvMax])
+        self.axes.set_xlim([self.subsetMin-self.subsetRange/5., self.subsetMax+self.subsetRange/5.])
         self.axes.get_yaxis().set_visible(False)
         self.fig.subplots_adjust(left=0.05, bottom=0.08, right=0.92, top=0.92)
         # vlines
-        self.vmin = np.min(self.dataset.data_uv[c1:c2, t1:t2])
-        self.vmax = np.max(self.dataset.data_uv[c1:c2, t1:t2])
+        self.vmin = self.subsetMin
+        self.vmax = self.subsetMax
         self.vlineL = self.axes.axvline(x=self.vmin, linewidth=2, color='r')
         self.vlineR = self.axes.axvline(x=self.vmax, linewidth=2, color='b')
         self.canvas.draw()
