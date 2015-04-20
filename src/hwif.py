@@ -72,17 +72,6 @@ class StateChangeError(Exception):
     """
     pass
 
-class NoResponseError(Exception):
-    """
-    This error means that do_control_cmd(cmd) returned None
-    This happens when, e.g. trying to do a ControlCommand.STORE with nsamples missing,
-    but the DAQ's BSI register is empty (because e.g. the hardware was recently booted).
-    (This is a bug in the daemon which needs to be fixed.)
-    (It can also happen as a result of the daemon refusing new client connection because
-    'another is ongoing')
-    """
-    pass
-
 class AlreadyError(Exception):
     """
     This error indicates that the user requested a transition into some state,
@@ -94,7 +83,7 @@ class hwifError(Exception):
     """
     This error can be thrown by any hwif function, it is an umbrella case for I/O exceptions.
     type = 0 means socket.error
-    type = 1 means daemon transaction error, and should be accomapnied by an error code
+    type = 1 means daemon transaction error, and should be accompanied by an error code
     type = 2 means resp = None, which happens, eg:
         when trying to do a ControlCommand.STORE with nsamples missing,
             but the DAQ's BSI register is empty (because e.g. the hardware was recently booted).
@@ -449,6 +438,8 @@ def takeSnapshot(nsamples, filename):
 def doTransfer(filename, sampleRange=None):
     """
     Perform a transfer (aka save_stored), save to filename (HDF5 format).
+    Returns a tuple (success, nsamples) where success is False is a timeout
+        occurred, True otherwise.
     If sampleRange is specified, then only transfer BSI's from within that range.
     If sampleRange is not specified or NoneType, transfer the entire experiment.
     WARNING: make sure to check that the DAQ's "Current Board Sample Number" register
@@ -473,6 +464,10 @@ def doTransfer(filename, sampleRange=None):
             # leave nsamples missing, which indicates whole experiment
         cmd.store.path = filename
         resp = _controlCmdWrapper(cmd)
+        if resp.store.status == dc.ControlResStore.DONE:
+            return True, resp.store.nsamples
+        elif resp.store.status == dc.ControlResStore.TIMEOUT:
+            return False, resp.store.nsamples
 
 def enableZCheck(chan, capscale):
     """

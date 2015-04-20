@@ -58,17 +58,23 @@ class TransferThread(QtCore.QThread):
                 self.statusUpdated.emit('Error: Could not transfer experiment because BSI is missing.')
                 self.statusUpdated.emit('Please specify subset parameters in the Transfer Dialog and try again.')
             else:
-                hwif.doTransfer(self.filename, self.sampleRange)
+                success, nsamples = hwif.doTransfer(self.filename, self.sampleRange)
                 if self.rename:
                     tmpFilename = self.filename
                     f = h5py.File(tmpFilename)
                     timestamp = f['wired-dataset'].attrs['experiment_cookie'][0]
                     dt = datetime.datetime.fromtimestamp(timestamp)
-                    strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+                    strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour,
+                        dt.minute, dt.second)
                     self.filename = os.path.join(config.dataDir, 'experiment_C%s.h5' % strtime)
                     os.rename(tmpFilename, self.filename)
-                self.statusUpdated.emit('Transfer complete: %s' % self.filename)
+                if success:
+                    self.statusUpdated.emit('Transfer complete, %d samples saved to: %s' %
+                        (nsamples, self.filename))
+                else:
+                    self.statusUpdated.emit('WARNING: Timeout occurred, transfer incomplete! '
+                        '%d samples saved to: %s' % (nsamples, self.filename))
         except hwif.StateChangeError:
-            self.statusUpdated.emit('Caught StateChangeError')
+            self.statusUpdated.emit('State-change Error: transfer can only be performed from an idle state')
         except hwif.hwifError as e:
             self.statusUpdated.emit(e.message)
