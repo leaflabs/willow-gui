@@ -196,7 +196,7 @@ class ImpedanceThread(QtCore.QThread):
         finally:
             try:
                 hwif.stopStreaming()
-            except hwif.AlreadyError:
+            except (hwif.AlreadyError, hwif.hwifError):
                 pass
             self.finished.emit()
 
