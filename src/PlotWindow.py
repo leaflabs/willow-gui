@@ -3,8 +3,6 @@ import os, sys, h5py
 
 import numpy as np
 
-from progressbar import ProgressBar
-
 import numpy as np
 
 import matplotlib
