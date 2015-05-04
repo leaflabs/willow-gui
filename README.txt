@@ -8,7 +8,12 @@ Setup
 
 1. Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-h5py
+    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk
+    $ sudo pip install h5py
+
+   Note: Old versions of h5py are known to have bugs which can affect GUI usage. In
+     particular, v2.2.1 is known to be buggy. This bug is fixed in v2.5.0. Make sure
+     you've got the latest version by installing with pip instead of apt-get.
 
 2. Make sure your system is set up to work with the daemon (see README in the leafysd repo)
 
