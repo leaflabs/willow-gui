@@ -6,18 +6,18 @@ Willow Control Panel GUI
 Chris Chronopoulos (chrono@leaflabs.com) - 20140522
 """
 
-import sys, os, subprocess, socket
-
+import sys, os, subprocess, socket, signal
 from PyQt4 import QtCore, QtGui
 
 # change workdir to src/
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
+import config
+import hwif
+
 from StatusBar import StatusBar
 from ButtonPanel import ButtonPanel
 from MessageLog import MessageLog
-import config
-import hwif
 
 if not os.path.isdir('../log'):
     os.mkdir('../log')
@@ -76,7 +76,7 @@ class MainWindow(QtGui.QWidget):
 
 
 if __name__=='__main__':
-    print 'PID = %d' % os.getpid()
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     app = QtGui.QApplication(sys.argv)
     main = MainWindow()
     main.show()
