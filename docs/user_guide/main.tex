@@ -25,13 +25,6 @@
 
 This is the user guide for the Willow GUI software: a desktop application for interacting with Willow, a 1024-channel electrophysiology system developed by LeafLabs (www.leaflabs.com) in collaboration with MIT's Synthetic Neurobiology Group (SNG). This document, which is contained in the source code repository in \texttt{docs/user\_guide/}, contains information for end-users. Developers should check out the developer's guide, which can be found in \texttt{docs/dev\_guide/}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{System Overview}
-\label{sec_overview}
-
-Willow is based on a Spartan 6 FPGA which collects and routes data from up to 32 amplifier/digitizer chips (Intan RHD2132), each chip sampling 32 channels of electrophysiology signals. The primary purpose of the hardware is to record all 1024 channels of data directly to an SSD, which is connected via SATA interface to the Willow board. A photograph of the bare hardware, connected and ready to record from a single headstage, is shown in Figure~\ref{fig_hw}.
-
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[width=12cm]{screenshots/willow_photoshoot_downsampled.jpg}
@@ -40,57 +33,62 @@ Willow is based on a Spartan 6 FPGA which collects and routes data from up to 32
 \label{fig_hw}
 \end{figure}
 
-The Willow board communicates over TCP and UDP connections with a workstation computer running a daemon server called \texttt{leafysd}. All interactions with the hardware go through the daemon, which exposes an interface based on Google's Protocol Buffers (protobuf). The daemon repository includes command-line utilities for sending and receiving protobuf messages to and from the daemon. The GUI was designed to replace the command-line workflow with a more accessible and streamlined graphical approach.
-
-There are many layers to the full Willow system; to learn more about them in detail, see \texttt{wired-leaf-docs/user\_guide}. For the end-user, however, it is sufficient to be familiar with the basic architecture of the system. Namely, that the only robust mode of data acquisition is recording, which saves data directly to the SSD, and not to the workstation. To tighten the feedback look for data validation, there are other modes of acquisition (namely streaming and snapshots) which route data directly to the workstation, but these are not robust to data loss. For scientific experiments, the workflow is: record to SATA disk, then transfer over to a workstation for analysis. This is further explained in Section~\ref{sec_usage}.
+The full Willow system consists of probes, headstages, a ``datanode'', and a workstation computer running custom software. The datanode and headstage assembly is shown in Figure~\ref{fig_hw}. This user guide details the setup and usage of the GUI software. For documentation on the rest of the Willow system, refer to the Willow 1.0 User Guide.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Setup}
+\section{Installation and Setup}
 \label{sec_setup}
 
-This setup guide assumes you have already installed the daemon and configured your network; if not, refer to the Willow user guide in \texttt{wired-leaf-docs/user\_guide}.
+\subsection{System Overview}
 
-\subsection{Obtaining the GUI}
+The Willow board communicates over TCP and UDP connections with a workstation computer running a daemon server called \texttt{leafysd}. All interactions with the hardware go through the daemon, which exposes an interface based on Google's Protocol Buffers (protobuf). The daemon repository includes command-line utilities for sending and receiving protobuf messages to and from the daemon. The GUI was designed to replace the command-line workflow with a more accessible and streamlined graphical approach.
+
+This setup guide assumes you have already installed the daemon and configured your network; if not, refer to the Willow 1.0 User Guide for instructions on how to do this.
+
+\subsection{Installation}
 \label{sec_setup_obtaining}
 
-To access the GUI repository, you'll need to be given permissions on the server --- to request access, email \texttt{neuro@leaflabs.com}. Once you have permissions, you can clone the repo like so
+\noindent
+To access the GUI repository, clone it from GitHub:
 
 \vspace{5mm}
-\texttt{\$ git clone git@git.leaflabs.com:sng-gui}
+\texttt{\$ git clone https://github.com/leaflabs/willowgui.git}
 \vspace{5mm}
 
-\subsection{Dependencies}
-\label{sec_setup_deps}
-
-Before running the GUI, install these mandatory dependencies:
+\noindent
+Before running the GUI, you'll need to install these mandatory dependencies:
 
 \vspace{5mm}
-\texttt{\$ sudo apt-get install python-numpy python-matplotlib python-qt4 python-h5py \textbackslash}
+\texttt{\$ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk}
 
-\hspace*{20mm}\texttt{python-progressbar}
+\texttt{\$ sudo pip install h5py}
 \vspace{5mm}
 
-\subsection{Configuration}
-\label{sec_setup_config}
+\noindent
+(note the use of pip instead of apt-get for h5py; see the README for details). Now you can start the GUI with:
 
-The GUI uses a configuration file, \texttt{src/parameters.py}, which stores variables related to the daemon installation, data storage, and other parameters. Before running the GUI, open \texttt{src/parameters.py} in an editor and modify the \texttt{DAEMON\_DIR} and \texttt{DATA\_DIR} variables to point to the locations of the \texttt{sng-daemon} repo and the preferred top-level data directory on your system.
+\vspace{5mm}
+\texttt{\$ src/main.py}
+\vspace{5mm}
+
+\noindent
+The first time you run the GUI, a Configuration Wizard will appear (Figure~\ref{fig_wizard}). Follow the instructions and click ``Finish''. If the setup was successful, the WillowGUI control panel will appear on the screen (Figure~\ref{fig_mainwindow}).
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=10cm]{screenshots/configWizard.png}
+\end{center}
+\caption{WillowGUI Configuration Wizard intro page.}
+\label{fig_wizard}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Usage}
 \label{sec_usage}
 
-To run the GUI:
-
-\vspace{5mm}
-\texttt{\$ cd src/}
-
-\texttt{\$ ./main.py}
-\vspace{5mm}
-
-\noindent
-The GUI will present its main window (Figure~\ref{fig_mainwindow}), which consists of the status bar, the button panel, and the message log. The daemon is automatically started in the background, with \texttt{stderr} and \texttt{stdout} redirected to \texttt{log/eFile} and \texttt{log/oFile}, respectively. The message log should display a line indicating that the daemon was started successfully.
+The main window (Figure~\ref{fig_mainwindow}) is the control panel, which consists of the status bar, the button panel, and the message log. The daemon is automatically started in the background, with \texttt{stderr} and \texttt{stdout} redirected to \texttt{log/eFile} and \texttt{log/oFile}, respectively. The message log should display a line indicating that the daemon was started successfully.
 
 \begin{figure}[h!]
 \begin{center}
@@ -240,7 +238,7 @@ The Intan headstages offer impedance testing functionality which can be accessed
 \subsubsection{Settings}
 \label{sec_usage_buttonpanel_settings}
 
-The GUI preferences can be viewed and modified by clicking the ``Configure Settings'' button on the button panel. This will present a key-value dialog (see Figure~\ref{fig_settings}) for the various configuration parameters. These values are stored in \texttt{src/config.json}, which offers an alternative way to set the preferences.
+The GUI preferences can be viewed and modified by clicking the ``Configure Settings'' button on the button panel. This will present a key-value dialog (see Figure~\ref{fig_settings}) for the various configuration parameters. These values are stored in \texttt{src/config.json}, and persist across restarts.
 
 \begin{figure}[h!]
 \begin{center}
