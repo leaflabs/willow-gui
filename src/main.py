@@ -29,4 +29,5 @@ if __name__=='__main__':
         wizard = ConfigWizard()
         wizard.show()
         app.exec_()
-        wizard.main.exit()
+        if wizard.mainWindow:
+            wizard.mainWindow.exit()
