@@ -21,9 +21,12 @@ if __name__=='__main__':
         from MainWindow import MainWindow
         main = MainWindow()
         main.show()
+        app.exec_()
+        main.exit()
     else:
         print 'config.json does not exist, launching wizard..'
         from ConfigWizard import ConfigWizard
         wizard = ConfigWizard()
         wizard.show()
-    app.exec_()
+        app.exec_()
+        wizard.main.exit()
