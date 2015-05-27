@@ -55,9 +55,6 @@ class DaemonDirPage(QtGui.QWizardPage):
         layout.addWidget(self.label2, 2,0)
         self.setLayout(layout)
 
-    def initializePage(self):
-        self.dirLine.setText('/home/chrono/daemon') # TODO remove this
-
     def browse(self):
         dirName = QtGui.QFileDialog.getExistingDirectory(self, 'Select Daemon Directory', expanduser("~"))
         if dirName:
@@ -88,9 +85,6 @@ class DataDirPage(QtGui.QWizardPage):
         layout.addWidget(self.browseButton, 1,1)
         self.setLayout(layout)
 
-    def initializePage(self):
-        self.dirLine.setText('/home/chrono/neuro/data') # TODO remove this
-
     def browse(self):
         dirName = QtGui.QFileDialog.getExistingDirectory(self, 'Select Data Directory', expanduser("~"))
         if dirName:
@@ -109,7 +103,7 @@ class NetworkInterfacePage(QtGui.QWizardPage):
         self.textLabel.setWordWrap(True)
         self.textLabel.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
 
-        self.interfaceLabel = QtGui.QLabel('Network Interface')
+        self.interfaceLabel = QtGui.QLabel('<b>Network Interface:</b>')
         self.interfaceLine = QtGui.QLineEdit()
         self.registerField('networkInterface*', self.interfaceLine)
 
@@ -136,13 +130,13 @@ class StorageCapacityPage(QtGui.QWizardPage):
 
         self.textLabel = QtGui.QLabel("What is the storage capacity of your Willow datanode? "
             "Willow ships with a 1000 GB drive inside, but you or someone in your "
-            "lab may have swapped out the drive at some point. This parameters is "
+            "lab may have swapped out the drive at some point. This parameter is "
             "used by the software to gauge disk usage. Enter your storage capacity "
             "in gigabytes (GB) below.")
         self.textLabel.setWordWrap(True)
         self.textLabel.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
 
-        self.storageCapacityLabel = QtGui.QLabel('Storage Capacity (GB)')
+        self.storageCapacityLabel = QtGui.QLabel('<b>Storage Capacity (GB):</b>')
         self.storageCapacityLine = QtGui.QLineEdit()
         self.registerField('storageCapacity*', self.storageCapacityLine)
 
@@ -176,7 +170,7 @@ class ImportLimitPage(QtGui.QWizardPage):
         self.textLabel.setWordWrap(True)
         self.textLabel.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
 
-        self.importLimitLabel = QtGui.QLabel('Import Limit (GB)')
+        self.importLimitLabel = QtGui.QLabel('<b>Import Limit (GB):</b>')
         self.importLimitLine = QtGui.QLineEdit()
         self.registerField('importLimit*', self.importLimitLine)
 
@@ -268,7 +262,7 @@ class ConfigWizard(QtGui.QWizard):
         self.jsonDict['storageCapacity_GB'] = {'type': 'float', 'description': 'Datanode Storage Capacity (GB)'}
         self.jsonDict['importLimit_GB'] = {'type': 'float', 'description': 'Datset Import Limit (GB)'}
 
-        self.configDone = False
+        self.mainWindow = None
 
         self.setWindowTitle("WillowGUI Configuration Wizard")
         self.addPage(IntroPage())
