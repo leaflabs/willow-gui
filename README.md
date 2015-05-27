@@ -1,14 +1,16 @@
 # willowGUI
 GUI software for the Willow electrophysiology system
+
 www.leaflabs.com/neuroscience
 
-![gui_windowtiling](/docs/user_guide/screenshots.png)
+![gui_windowtiling](https://github.com/leaflabs/willowgui/blob/master/docs/user_guide/screenshots/gui_windowtiling.png)
 
 ## Setup
 
 1. Install dependencies:
 
     $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk
+
     $ sudo pip install h5py
 
    Note: Old versions of h5py are known to have bugs which can affect GUI
@@ -27,7 +29,7 @@ www.leaflabs.com/neuroscience
 ## Usage
 
 See the User Guide in docs/user_guide for usage instructions. A compiled
-version is distributed with this repo as willogui_userguide.pdf.
+version is distributed with this repo as willowgui_userguide.pdf.
 
 To compile the user guide yourself:
 
