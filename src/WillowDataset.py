@@ -4,6 +4,7 @@ from PyQt4 import QtCore
 import config
 
 MAX_NSAMPLES = config.importLimit_GB*5e5
+MICROVOLTS_PER_COUNT = 0.195
 
 class WillowImportError(Exception):
     pass
@@ -67,7 +68,7 @@ class WillowDataset(QtCore.QObject):
             if (i%1000==0):
                 self.progressUpdated.emit(i)
         self.progressUpdated.emit(self.nsamples)
-        self.data_uv = (np.array(self.data_raw, dtype='float')-2**15)*0.2
+        self.data_uv = (np.array(self.data_raw, dtype='float')-2**15)*MICROVOLTS_PER_COUNT
         self.dataMin = np.min(self.data_uv)
         self.dataMax = np.max(self.data_uv)
         self.limits = [self.timeMin, self.timeMax, self.dataMin, self.dataMax]
