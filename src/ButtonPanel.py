@@ -92,7 +92,7 @@ class ButtonPanel(QtGui.QWidget):
         self.impedanceButton.setIcon(QtGui.QIcon('../img/impedance.png'))
         self.impedanceButton.setIconSize(QtCore.QSize(48,48))
         self.impedanceButton.setToolTip('Run Impedance Test')
-        self.impedanceButton.clicked.connect(self.runImpedanceTest)
+        self.impedanceButton.clicked.connect(self.handleImpedanceStart)
 
         self.settingsButton = QtGui.QPushButton()
         self.settingsButton.setIcon(QtGui.QIcon('../img/settings.png'))
@@ -180,6 +180,17 @@ class ButtonPanel(QtGui.QWidget):
             self.msgLog.post('Already not recording.')
         except hwif.hwifError as e:
             self.msgLog.post(e.message)
+
+    def handleImpedanceStart(self):
+        if hwif.isRecording():
+            self.msgLog.post('Cannot check impedance while recording. Please complete recording and try again.')
+            return
+        elif hwif.isStreaming():
+            self.msgLog.post('Halting current data stream to perform impedance test.')
+            self.streamWindow.stopStreaming()
+            self.runImpedanceTest()
+        else:
+            self.runImpedanceTest()
 
     def handleDiskFillup(self):
         try:
