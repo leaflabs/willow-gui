@@ -10,6 +10,12 @@ from daemon_control import *
 
 FFT_INDEX_1KHZ = 500
 
+class SnapshotLoadError(Exception):
+    """ 
+    For reporting that a snapshot that we try to access is not actually saved on disk.
+    """
+    pass
+
 def saveImpedance_hdf5(data, timestamp, filename):
     f = h5py.File(filename, 'w-') # create file, fail if exists
     dset = f.create_dataset('impedanceMeasurements', data=data)
@@ -60,7 +66,18 @@ class ImpedanceThread(QtCore.QThread):
         return abs(amplitude*2/self.nsamples) * 0.195e-6
 
     def importSnapshot(self, tmpSnapshotFilename, emit=False):
-        dataset = WillowDataset(tmpSnapshotFilename, -1)
+        # do incomplete snapshots ever get saved if UDP packets are dropped? yes.
+        # so, we could
+        # hard-code a check for file size, rather than just checking that the file exists...
+        if not os.path.isfile(tmpSnapshotFilename):
+            raise SnapshotLoadError
+        try:
+            dataset = WillowDataset(tmpSnapshotFilename, -1)
+        # a ValueError raised by python if saved is improperly formatted
+        # (this can happen due to a dropped UDP packet and possibly due to
+        # other reasons)
+        except ValueError:
+            raise SnapshotLoadError
         if emit:
             dataset.progressUpdated.connect(self.progressUpdated)
         dataset.importData()
@@ -85,30 +102,33 @@ class ImpedanceThread(QtCore.QThread):
         else:
             return -1
 
-
-    def allChipsRoutine(self):
-        timestamp  = time.time()
-        dt = datetime.datetime.fromtimestamp(timestamp)
-        strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-        self.impedanceMeasurements = np.zeros(1024)
-        # start streaming
+    # these are attempts to reduce boilerplate for (single/all) channel z tests
+    # could still use some cleanup, maybe
+    def startStreaming(self):
         self.progressUpdated.emit(0)
         self.maxChanged.emit(1)
         self.textChanged.emit('Starting streaming..')
         hwif.startStreaming_boardsamples()
         self.progressUpdated.emit(1)
-        # main loop
-        self.progressUpdated.emit(0)
-        self.maxChanged.emit(32)
-        self.textChanged.emit('Testing all chips...')
-        for chan in range(32):
-            if not self.isTerminated:
-                self.progressUpdated.emit(chan)
-            hwif.enableZCheck(chan, self.capscale) 
-            tmpSnapshotFilename = os.path.abspath('../tmp/tmpSnapshot%02d.h5' % chan)
-            hwif.takeSnapshot(self.nsamples, tmpSnapshotFilename) # alreadyStreaming branch
+    
+    def channelSnapshotRoutine(self, chan, singleChannel=True):
+        # enable ZCheck registers
+        hwif.enableZCheck(chan, self.capscale)
+        self.textChanged.emit('Analyzing channel {0}..'.format(chan))
+        # take snapshot
+        tmpSnapshotFilename = os.path.abspath('../tmp/tmpSnapshot.h5') if singleChannel else os.path.abspath('../tmp/tmpSnapshot%02d.h5' % chan)
+        hwif.takeSnapshot(self.nsamples, tmpSnapshotFilename) # alreadyStreaming branch
+        # import snapshot
+        try:
             snapshotDataset = self.importSnapshot(tmpSnapshotFilename)
-            impedance = self.analyzeSnapshot_allChipsOneChan(snapshotDataset, chan)
+        except SnapshotLoadError:
+            # only possible exception for now is SnapshotLoadError
+            raise
+        # analyze snapshot
+        impedance = self.analyzeSnapshot_oneChannel(snapshotDataset, self.absChan) if singleChannel else self.analyzeSnapshot_allChipsOneChan(snapshotDataset, chan)
+        return impedance
+            
+    def stopZCheck(self):
         # disable ZCheck registers
         self.progressUpdated.emit(0)
         self.maxChanged.emit(1)
@@ -121,6 +141,35 @@ class ImpedanceThread(QtCore.QThread):
         self.textChanged.emit('Turning off streaming..')
         hwif.stopStreaming()
         self.progressUpdated.emit(1)
+        
+    def allChipsRoutine(self):
+        timestamp  = time.time()
+        dt = datetime.datetime.fromtimestamp(timestamp)
+        strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+        self.impedanceMeasurements = np.zeros(1024)
+        self.startStreaming()
+        # main loop
+        self.progressUpdated.emit(0)
+        self.maxChanged.emit(32)
+        self.textChanged.emit('Testing all chips...')
+        for chan in range(32):
+            #thisChanAttempts = 0
+            # this is a grody way to handle UDP packet drops. clean up later?
+            
+            try:
+                thisChanImpedance = self.channelSnapshotRoutine(chan, singleChannel=False)
+            except SnapshotLoadError:
+                self.msgPosted.emit('There was an error recording impedance from channel {0}. Trying again..'.format(chan))
+                #thisChanAttempts += 1
+                # if at first you don't succeed, try again. but don't try, try again. what a waste of time /that/ would be.
+                try:
+                    thisChanImpedance = self.channelSnapshotRoutine(chan, singleChannel=False)
+                except:
+                    self.msgPosted.emit('Another error recording impedance from channel {0}. Giving up -- please check network configuration, cable connections, etc. if problem continues to persist.'.format(chan))
+                    return
+            if not self.isTerminated:
+                self.progressUpdated.emit(chan+1)
+        self.stopZCheck()
         # save result and post message
         impedanceFilename = os.path.abspath('../cal/impedance_%s.h5' % strtime)
         #np.save(impedanceFilename, self.impedanceMeasurements)
@@ -129,62 +178,31 @@ class ImpedanceThread(QtCore.QThread):
         if self.plot:
             self.dataReady.emit(self.impedanceMeasurements)
 
-
     def oneChannelRoutine(self):
-        # start streaming
+        self.startStreaming()
         self.progressUpdated.emit(0)
         self.maxChanged.emit(1)
-        self.textChanged.emit('Starting streaming..')
-        hwif.startStreaming_boardsamples()
+        try:
+            thisChanImpedance = self.channelSnapshotRoutine(self.absChan % 32, singleChannel=True)
+        except:
+            self.msgPosted.emit('There was an error recording impedance from channel {0}. Trying again..'.format(chan))
+            try:
+                thisChanImpedance = self.channelSnapshotRoutine(self.absChan % 32, singleChannel=True)
+            except:
+                self.msgPosted.emit('Another error recording impedance from channel {0}. Giving up -- please check network configuration if problem persists.'.format(chan))
         self.progressUpdated.emit(1)
-        # enable ZCheck registers
-        self.progressUpdated.emit(0)
-        self.maxChanged.emit(1)
-        self.textChanged.emit('Enabling Intan impedance check..')
-        hwif.enableZCheck(self.absChan % 32, self.capscale) 
-        self.progressUpdated.emit(1)
-        # take snapshot
-        self.progressUpdated.emit(0)
-        self.maxChanged.emit(1)
-        self.textChanged.emit('Taking snapshot..')
-        tmpSnapshotFilename = os.path.abspath('../tmp/tmpSnapshot.h5')
-        hwif.takeSnapshot(self.nsamples, tmpSnapshotFilename) # alreadyStreaming branch
-        self.progressUpdated.emit(1)
-        # disable ZCheck registers
-        self.progressUpdated.emit(0)
-        self.maxChanged.emit(1)
-        self.textChanged.emit('Disabling Intan impedance check..')
-        hwif.disableZCheck()
-        self.progressUpdated.emit(1)
-        # stop streaming
-        self.progressUpdated.emit(0)
-        self.maxChanged.emit(1)
-        self.textChanged.emit('Turning off streaming..')
-        hwif.stopStreaming()
-        self.progressUpdated.emit(1)
-        # import snapshot
-        self.progressUpdated.emit(0)
-        self.maxChanged.emit(self.nsamples)
-        self.textChanged.emit('Importing snapshot..')
-        snapshotData = self.importSnapshot(tmpSnapshotFilename, emit=True)
-        self.progressUpdated.emit(self.nsamples)
-        # analyze snapshot
-        self.progressUpdated.emit(0)
-        self.maxChanged.emit(1)
-        self.textChanged.emit('Analyzing snapshot..')
-        impedance = self.analyzeSnapshot_oneChannel(snapshotData, self.absChan)
-        self.progressUpdated.emit(1)
-        if impedance > 0:
-            self.msgPosted.emit('Impedance Result for Channel %d: %10.2f' % (self.absChan, impedance))
+        if thisChanImpedance > 0:
+            self.msgPosted.emit('Impedance Result for Channel %d: %10.2f' % (self.absChan, thisChanImpedance))
         else:
             self.msgPosted.emit('Error: Chip %d is not alive, cannot measure impedance.' % (self.absChan//32))
 
+        self.stopZCheck()
+
     def run(self):
         try:
-            if hwif.isRecording() or hwif.isStreaming():
-                self.msgPosted.emit('ImpedanceThread: Cannot check impedance while recording or streaming')
             if self.params['routine'] == 0:
                 self.plot = self.params['plot']
+                self.msgPosted.emit('starting allChipsRoutine...')
                 self.allChipsRoutine()
             elif self.params['routine'] == 1:
                 self.absChan = self.params['channel']

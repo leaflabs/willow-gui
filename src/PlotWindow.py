@@ -3,8 +3,6 @@ import os, sys, h5py
 
 import numpy as np
 
-import numpy as np
-
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
