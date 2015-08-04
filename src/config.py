@@ -1,14 +1,4 @@
-"""
-config module:
-    jsonDict is a dict of dicts which organizes the state of the configuration
-    jsonDict can be modified from within the application (as in SettingsWindow.py),
-        and then:
-            (a) dumped into the module attributes using updateAttributes(jsonDict)
-            (b) saved to the file config.json using saveJSON(jsonDict)
-"""
-
-import json, sys, os
-from PyQt4 import QtCore, QtGui
+import json, sys
 
 def loadJSON():
     """
@@ -34,4 +24,8 @@ def updateAttributes(jDict):
     setattr(currentModule, 'defaultForwardPort', 7654)
     # finally, save jsonDict itself:
     setattr(currentModule, 'jsonDict', jDict)
+####
+
+#jsonDict = loadJSON()
+#updateAttributes(jsonDict)
 

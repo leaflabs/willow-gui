@@ -21,6 +21,8 @@ class MainWindow(QtGui.QWidget):
         self.statusBar = StatusBar(self.msgLog)
         self.buttonPanel = ButtonPanel(self.msgLog)
         self.statusBar.diskFillupDetected.connect(self.buttonPanel.handleDiskFillup)
+        self.statusBar.daemonRestartRequested.connect(self.restartDaemon)
+
 
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.statusBar)
@@ -34,14 +36,7 @@ class MainWindow(QtGui.QWidget):
         self.center()
 
         ###
-
-        self.startDaemon()
-        try:
-            hwif.init()
-            self.statusBar.initializeWatchdog()
-            self.msgLog.post('Daemon connection established, watchdog started')
-        except socket.error:
-            self.msgLog.post('Could not establish a connection with the daemon.')
+        self.restartDaemon()
 
     def startDaemon(self):
         subprocess.call(['killall', 'leafysd'])
@@ -50,6 +45,15 @@ class MainWindow(QtGui.QWidget):
                                                 stdout=oFile, stderr=eFile)
         self.msgLog.post('Daemon started.')
         print 'daemon started'
+
+    def restartDaemon(self):
+        self.startDaemon()
+        try:
+            hwif.init()
+            self.statusBar.initializeWatchdog()
+            self.msgLog.post('Daemon connection established, watchdog started')
+        except socket.error:
+            self.msgLog.post('Could not establish a connection with the daemon.')
 
     def exit(self):
         print 'Cleaning up, then exiting..'
