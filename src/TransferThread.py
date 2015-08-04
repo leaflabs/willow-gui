@@ -54,7 +54,7 @@ class TransferThread(QtCore.QThread):
             self.statusUpdated.emit('Target filename not valid: %s' % repr(self.filename))
             return
         try:
-            if (self.sampleRange == None) and (hwif.getDaqBSI() == 0):
+            if (self.sampleRange == None) and (hwif.getDaqBSI() == 0 or hwif.getSataBSI() == 0):
                 self.statusUpdated.emit('Error: Could not transfer experiment because BSI is missing.')
                 self.statusUpdated.emit('Please specify subset parameters in the Transfer Dialog and try again.')
             else:
