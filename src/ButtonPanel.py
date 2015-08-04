@@ -48,9 +48,14 @@ def isCalibrationFile(filename):
 
 class ButtonPanel(QtGui.QWidget):
 
+    logPackageRequested = QtCore.pyqtSignal()
+
     def __init__(self, msgLog):
         super(ButtonPanel, self).__init__()
+
         self.msgLog = msgLog
+        self.streamWindow = None
+        self.settingsWindow = None
 
         self.streamButton = QtGui.QPushButton()
         self.streamButton.setIcon(QtGui.QIcon('../img/stream.ico'))
@@ -100,15 +105,26 @@ class ButtonPanel(QtGui.QWidget):
         self.settingsButton.setToolTip('Configure Settings')
         self.settingsButton.clicked.connect(self.configureSettings)
 
-        layout = QtGui.QGridLayout()
-        layout.addWidget(self.streamButton, 0,0)
-        layout.addWidget(self.snapshotButton, 0,1)
-        layout.addWidget(self.startRecordingButton, 1,0)
-        layout.addWidget(self.stopRecordingButton, 1,1)
-        layout.addWidget(self.transferButton, 2,0)
-        layout.addWidget(self.plotButton, 2,1)
-        layout.addWidget(self.impedanceButton, 3,0)
-        layout.addWidget(self.settingsButton, 3,1)
+        self.logPackageLabel = QtGui.QLabel('Zip error logs (for bug reporting)')
+        self.logPackageButton = QtGui.QPushButton('Zip logs')
+        self.logPackageButton.pressed.connect(self.logPackageRequested)
+
+        layout = QtGui.QVBoxLayout()
+        logPackageLayout = QtGui.QGridLayout()
+        logPackageLayout.addWidget(self.logPackageLabel, 0,0)
+        logPackageLayout.addWidget(self.logPackageButton, 0,1)
+        layout.addLayout(logPackageLayout)
+
+        gridLayout = QtGui.QGridLayout()
+        gridLayout.addWidget(self.streamButton, 0,0)
+        gridLayout.addWidget(self.snapshotButton, 0,1)
+        gridLayout.addWidget(self.startRecordingButton, 1,0)
+        gridLayout.addWidget(self.stopRecordingButton, 1,1)
+        gridLayout.addWidget(self.transferButton, 2,0)
+        gridLayout.addWidget(self.plotButton, 2,1)
+        gridLayout.addWidget(self.impedanceButton, 3,0)
+        gridLayout.addWidget(self.settingsButton, 3,1)
+        layout.addLayout(gridLayout)
 
         self.setLayout(layout)
 
@@ -141,13 +157,21 @@ class ButtonPanel(QtGui.QWidget):
         dlg = StreamDialog()
         if dlg.exec_():
             params = dlg.getParams()
+            self.msgLog.actionPost(str("the following streaming params requested:"+"\n"+str(params)))
             self.streamWindow = StreamWindow(params, self.msgLog)
             self.streamWindow.show()
+
+    def killStreamWindow(self):
+        if self.streamWindow is not None:
+            self.streamWindow.close()
+        else:
+            pass
 
     def takeSnapshot(self):
         dlg = SnapshotDialog()
         if dlg.exec_():
             params = dlg.getParams()
+            self.msgLog.actionPost(str("the following snapshot params requested:"+"\n"+str(params)))
             self.snapshotThread = SnapshotThread(params)
             self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
             self.snapshotProgressDialog.setWindowTitle('Snapshot Progress')
@@ -206,6 +230,7 @@ class ButtonPanel(QtGui.QWidget):
         dlg = TransferDialog()
         if dlg.exec_():
             params = dlg.getParams()
+            self.msgLog.actionPost(str("the following transfer params requested:"+"\n"+str(params)))
             self.transferThread = TransferThread(params)
             self.transferProgressDialog = QtGui.QProgressDialog('Transferring Experiment..', 'Cancel', 0, 0)
             self.transferProgressDialog.setWindowTitle('Transfer Progress')
@@ -224,15 +249,19 @@ class ButtonPanel(QtGui.QWidget):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', config.dataDir)
         if filename:
             filename = str(filename)
+            self.msgLog.actionPost(str("imported:"+"\n"+filename))
             if isCalibrationFile(filename):
+                self.msgLog.actionPost("(calibration file)")
                 f = h5py.File(filename)
                 dset = f['impedanceMeasurements']
                 impedanceMeasurements = dset[:]
                 self.launchImpedancePlotWindow(impedanceMeasurements)
             else:
+                self.msgLog.actionPost("(data file)")
                 dlg = ImportDialog()
                 if dlg.exec_():
                     params = dlg.getParams()
+                    self.msgLog.actionPost(str("the following import params requested:"+"\n"+str(params)))
                     sampleRange = params['sampleRange']
                     if not isSampleRangeValid(sampleRange):
                         self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))

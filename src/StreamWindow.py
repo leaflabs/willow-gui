@@ -158,7 +158,10 @@ class StreamWindow(QtGui.QWidget):
     def toggleStdin(self, enable):
         if enable:
             self.proto2bytes_po = subprocess.Popen([self.proto2bytes_filename, '-s',
-                '-c', str(self.chan)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                '-c', str(self.chan)], stdout=subprocess.PIPE, 
+                # comment this out to view stderr in terminal (kinda useful for debugging?)
+                stderr=subprocess.PIPE
+                )
             self.proto2bytes_poller = select.poll()
             self.proto2bytes_poller.register(self.proto2bytes_po.stdout, select.POLLIN)
             self.timer.start(self.fp)

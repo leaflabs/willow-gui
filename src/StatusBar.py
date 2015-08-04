@@ -3,6 +3,9 @@ from PyQt4 import QtCore, QtGui
 import hwif
 from WatchdogThread import WatchdogThread
 import config
+import datetime, time
+
+import pprint
 
 GOOD_STYLE = 'QLabel {background-color: #8fdb90; font: bold}'
 UNKNOWN_STYLE = 'QLabel {background-color: gray; font: bold}'
@@ -153,7 +156,10 @@ class StatusBar(QtGui.QWidget):
         ###
 
         self.watchdogThread = WatchdogThread()
+        self.vitalsLog = QtGui.QTextEdit()
+        self.vitalsLog.setReadOnly(True)
         self.watchdogThread.vitalsChecked.connect(self.updateGUI)
+        self.watchdogThread.vitalsDifferent.connect(self.noteNewVitals)
 
     def dontRestartDaemon(self):
         self.keepDaemonDead = True
