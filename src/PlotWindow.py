@@ -52,7 +52,7 @@ class ControlPanel(QtGui.QWidget):
         for item in LAYOUT_DICT.items():
             self.nchannelsDropdown.addItem(str(item[0]))
         self.nchannelsDropdown.setCurrentIndex(6)
-        self.nchannelsDropdown.currentIndexChanged.connect(self.handleNChannelChange)
+        self.nchannelsDropdown.currentIndexChanged[QtCore.QString].connect(self.handleNChannelChange)
 
         self.bankSpinBox = QtGui.QSpinBox()
         nchannels = int(self.nchannelsDropdown.currentText())
@@ -68,8 +68,7 @@ class ControlPanel(QtGui.QWidget):
         self.channelsGroup.setMaximumWidth(220)
 
     def handleNChannelChange(self, index):
-        # Q: how to handle overloaded pyqt signal to get the value?
-        nchannels = int(self.nchannelsDropdown.currentText())
+        nchannels = int(index)
         self.bankSpinBox.setValue(0)
         self.bankSpinBox.setMaximum(1023//nchannels)
         self.channelsUpdated.emit(self.getParams())
