@@ -222,7 +222,7 @@ class StatusBar(QtGui.QWidget):
             self.firmwareLabel.setText('(firmware)')
             self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
         else:
-            self.firmwareLabel.setText('Firmware: %x' % tmp)
+            self.firmwareLabel.setText('Firmware: {0}'.format(format(tmp, '08x')))
             self.firmwareLabel.setStyleSheet(GOOD_STYLE)
 
         tmp = vitals['errors']
