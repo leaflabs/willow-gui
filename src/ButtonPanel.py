@@ -206,15 +206,18 @@ class ButtonPanel(QtGui.QWidget):
             self.msgLog.post(e.message)
 
     def handleImpedanceStart(self):
-        if hwif.isRecording():
-            self.msgLog.post('Cannot check impedance while recording. Please complete recording and try again.')
-            return
-        elif hwif.isStreaming():
-            self.msgLog.post('Halting current data stream to perform impedance test.')
-            self.streamWindow.stopStreaming()
-            self.runImpedanceTest()
-        else:
-            self.runImpedanceTest()
+        try:
+            if hwif.isRecording():
+                self.msgLog.post('Cannot check impedance while recording. Please complete recording and try again.')
+                return
+            elif hwif.isStreaming():
+                self.msgLog.post('Halting current data stream to perform impedance test.')
+                self.streamWindow.stopStreaming()
+                self.runImpedanceTest()
+            else:
+                self.runImpedanceTest()
+        except hwif.hwifError as e:
+            self.msgLog.post(e.message)
 
     def handleDiskFillup(self):
         try:
