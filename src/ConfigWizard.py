@@ -245,14 +245,16 @@ class ConclusionPage(QtGui.QWizardPage):
         config.updateAttributes(self.jsonDict)
         # now create the main window as an attribute of the wizard
         from MainWindow import MainWindow
-        self.wizard().mainWindow = MainWindow()
+        self.wizard().mainWindow = MainWindow(self.wizard().debugFlag)
         self.wizard().mainWindow.show()
         return True
 
 class ConfigWizard(QtGui.QWizard):
 
-    def __init__(self):
+    def __init__(self, debugFlag):
         QtGui.QWizard.__init__(self)
+
+        self.debugFlag = debugFlag
 
         # initialize jsonDict with missing values
         self.jsonDict = {}

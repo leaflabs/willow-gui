@@ -56,7 +56,7 @@ if __name__=='__main__':
     else:
         print 'config.json does not exist; launching wizard..'
         from ConfigWizard import ConfigWizard
-        wizard = ConfigWizard()
+        wizard = ConfigWizard(args.debug)
         wizard.show()
         app.exec_()
         if wizard.mainWindow:
