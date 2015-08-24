@@ -14,6 +14,8 @@ import select
 
 import hwif
 
+MICROVOLTS_PER_COUNT = 0.195
+
 def calculateTicks(axisrange):
     delta = axisrange[1] - axisrange[0]
     # delta must be greater than 1 but less than 100000; check for this somewhere
@@ -42,7 +44,8 @@ class StreamWindow(QtGui.QWidget):
         ymin = params['ymin']
         ymax = params['ymax']
         self.yrange_uV = [ymin, ymax]
-        self.yrange_cnts = [int(y*5+2**15) for y in self.yrange_uV]
+        # conversion factor from microvolts to ADC = 1/0.195
+        self.yrange_cnts = [int((y/MICROVOLTS_PER_COUNT)+2**15) for y in self.yrange_uV]
         self.refreshRate = params['refreshRate']
 
         try:
