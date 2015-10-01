@@ -36,6 +36,8 @@ import time, struct
 from PyQt4 import QtCore
 
 import config
+if not config.initialized:
+    config.updateAttributes(config.loadJSON())
 
 sys.path.append(os.path.join(config.daemonDir, 'util'))
 import daemon_control as dc

@@ -1,5 +1,7 @@
 import json, sys
 
+initialized = False
+
 def loadJSON():
     """
     Reads in config.json, returns jDict
@@ -16,6 +18,7 @@ def saveJSON(jDict):
         json.dump(jDict, f, indent=4, separators=(',', ' : '))
 
 def updateAttributes(jDict):
+    global initialized
     currentModule = sys.modules[__name__]
     for varName, varDict in jDict.items():
         setattr(currentModule, varName, varDict['value']) # TODO implement type-casting?
@@ -24,6 +27,7 @@ def updateAttributes(jDict):
     setattr(currentModule, 'defaultForwardPort', 7654)
     # finally, save jsonDict itself:
     setattr(currentModule, 'jsonDict', jDict)
+    initialized = True
 ####
 
 #jsonDict = loadJSON()
