@@ -62,7 +62,8 @@ class TransferThread(QtCore.QThread):
                 if self.rename:
                     tmpFilename = self.filename
                     f = h5py.File(tmpFilename)
-                    timestamp = f['wired-dataset'].attrs['experiment_cookie'][0]
+                    # backwards-compatibility doesn't really apply here
+                    timestamp = f.attrs['experiment_cookie'][0]
                     dt = datetime.datetime.fromtimestamp(timestamp)
                     strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour,
                         dt.minute, dt.second)
