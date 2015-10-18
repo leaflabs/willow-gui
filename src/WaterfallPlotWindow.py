@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from PyQt4 import QtCore, QtGui
 import os, sys, h5py
 import numpy as np
@@ -153,8 +155,10 @@ class ControlPanel(QtGui.QWidget):
 
     def createTimeGroup(self):
         self.timeGroup = QtGui.QGroupBox('Time Range (ms)')
-        self.timeMinLine = QtGui.QLineEdit(str(self.dataset.timeMin))
-        self.timeMaxLine = QtGui.QLineEdit(str(self.dataset.timeMax))
+        self.timeMinLine = QtGui.QLineEdit(str(int(self.dataset.timeMin)))
+        # bit of a kludge to make the formatting of the initial timerange
+        #   look reasonable:
+        self.timeMaxLine = QtGui.QLineEdit(str(self.dataset.nsamples/30))
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.timeMinLine)
         layout.addWidget(self.timeMaxLine)
@@ -301,8 +305,8 @@ if __name__=='__main__':
         if dlg.exec_():
             params = dlg.getParams()
             sampleRange = params['sampleRange']
-        dataset = WillowDataset(filename, sampleRange)
-        dataset.importData()
-        waterfallPlotWindow = WaterfallPlotWindow(dataset)
-        waterfallPlotWindow.show()
-        app.exec_()
+            dataset = WillowDataset(filename, sampleRange)
+            dataset.importData()
+            waterfallPlotWindow = WaterfallPlotWindow(dataset)
+            waterfallPlotWindow.show()
+            app.exec_()

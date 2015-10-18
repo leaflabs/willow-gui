@@ -98,8 +98,6 @@ class WillowDataset(QtCore.QObject):
                     self.progressUpdated.emit(i)
         else:
             self.progressUpdated.emit(0)
-            print 'nsamples = ', self.nsamples
-            print 'sampleRange = ', self.sampleRange
             self.data_raw = np.array(self.fileObject['channel_data'][self.sampleRange[0]*1024:(self.sampleRange[1]+1)*1024], dtype='uint16').reshape((self.nsamples, 1024)).transpose()
         self.progressUpdated.emit(self.nsamples)
         self.data_uv = (np.array(self.data_raw, dtype='float')-2**15)*MICROVOLTS_PER_COUNT
