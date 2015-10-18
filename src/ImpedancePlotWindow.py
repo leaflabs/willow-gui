@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
+import h5py
 
 class ImpedancePlotWindow(QtGui.QWidget):
 
@@ -48,7 +49,9 @@ if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
     filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Select Impedance File', '../cal'))
     if filename:
-        impedanceMeasurements = np.load(filename)
+        f = h5py.File(filename)
+        dset = f['impedanceMeasurements']
+        impedanceMeasurements = dset[:]
         impedancePlotWindow = ImpedancePlotWindow(impedanceMeasurements)
         impedancePlotWindow.show()
-        app.exec_()
+    app.exec_()
