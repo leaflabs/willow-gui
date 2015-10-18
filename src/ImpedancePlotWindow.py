@@ -31,7 +31,7 @@ class ImpedancePlotWindow(QtGui.QWidget):
     def createPlot(self):
         self.axes = self.fig.add_subplot(111)
         self.axes.set_axis_bgcolor('k')
-        self.axes.plot(self.data, color='#8fdb90')
+        self.axes.semilogy(self.data, color='#8fdb90', linestyle='', marker='D')
         self.axes.set_title('Impedance at 1 kHz')
         self.axes.set_xlabel('Channel Number')
         self.axes.set_ylabel('Z (ohms)')
