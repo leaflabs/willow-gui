@@ -1,11 +1,8 @@
 *.pyc
 *.swp
-eFile
-oFile
-log/*.log
-cal/*.npy
-tmp/*.h5
-tmp.h5
+log/
+cal/
+tmp/
 docs/user_guide/main.log
 docs/user_guide/main.aux
 src/config.json

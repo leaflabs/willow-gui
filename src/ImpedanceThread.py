@@ -67,8 +67,7 @@ class ImpedanceThread(QtCore.QThread):
 
     def importSnapshot(self, tmpSnapshotFilename, emit=False):
         # do incomplete snapshots ever get saved if UDP packets are dropped? yes.
-        # so, we could
-        # hard-code a check for file size, rather than just checking that the file exists...
+        # TODO: implement a check for file size, rather than just checking that the file exists
         if not os.path.isfile(tmpSnapshotFilename):
             raise SnapshotLoadError
         try:
@@ -153,15 +152,10 @@ class ImpedanceThread(QtCore.QThread):
         self.maxChanged.emit(32)
         self.textChanged.emit('Testing all chips...')
         for chan in range(32):
-            #thisChanAttempts = 0
-            # this is a grody way to handle UDP packet drops. clean up later?
-            
             try:
                 thisChanImpedance = self.channelSnapshotRoutine(chan, singleChannel=False)
             except SnapshotLoadError:
                 self.msgPosted.emit('There was an error recording impedance from channel {0}. Trying again..'.format(chan))
-                #thisChanAttempts += 1
-                # if at first you don't succeed, try again. but don't try, try again. what a waste of time /that/ would be.
                 try:
                     thisChanImpedance = self.channelSnapshotRoutine(chan, singleChannel=False)
                 except:
@@ -172,7 +166,6 @@ class ImpedanceThread(QtCore.QThread):
         self.stopZCheck()
         # save result and post message
         impedanceFilename = os.path.abspath('../cal/impedance_%s.h5' % strtime)
-        #np.save(impedanceFilename, self.impedanceMeasurements)
         saveImpedance_hdf5(self.impedanceMeasurements, timestamp, impedanceFilename)
         self.msgPosted.emit('Impedance measurements saved to %s' % impedanceFilename)
         if self.plot:
@@ -200,6 +193,8 @@ class ImpedanceThread(QtCore.QThread):
 
     def run(self):
         try:
+            if not os.path.isdir('../tmp'):
+                os.mkdir('../tmp')
             if self.params['routine'] == 0:
                 self.plot = self.params['plot']
                 self.msgPosted.emit('starting allChipsRoutine...')
