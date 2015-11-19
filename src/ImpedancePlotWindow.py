@@ -37,6 +37,9 @@ class ImpedancePlotWindow(QtGui.QWidget):
         self.axes.set_xlabel('Channel Number')
         self.axes.set_ylabel('Z (ohms)')
         self.axes.set_xlim([0,1023])
+        self.axes.tick_params(axis='both', which='both', direction='out', width=1.5)
+        self.axes.tick_params(axis='both', which='major', length=8) 
+        self.axes.tick_params(axis='both', which='minor', length=4) 
 
     def center(self):
         fmgeo = self.frameGeometry()
