@@ -159,7 +159,7 @@ class StatusBar(QtGui.QWidget):
         self.vitalsLog = QtGui.QTextEdit()
         self.vitalsLog.setReadOnly(True)
         self.watchdogThread.vitalsChecked.connect(self.updateGUI)
-        self.watchdogThread.vitalsDifferent.connect(self.noteNewVitals)
+        self.watchdogThread.vitalsChecked.connect(self.noteNewVitals)
 
     def dontRestartDaemon(self):
         self.keepDaemonDead = True
