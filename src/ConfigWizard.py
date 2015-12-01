@@ -194,16 +194,18 @@ class ConclusionPage(QtGui.QWizardPage):
         QtGui.QWizardPage.__init__(self)
         self.jsonDict = jsonDict
 
+
         self.setTitle('All done!')
         self.mainLabel = QtGui.QLabel('Here are the parameters you selected.')
         self.mainLabel.setWordWrap(True)
         self.mainLabel.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
 
-        self.daemonDirLabel = QtGui.QLabel('<b>daemonDir: </b>')
-        self.dataDirLabel = QtGui.QLabel('<b>dataDir: </b>')
-        self.networkInterfaceLabel = QtGui.QLabel('<b>networkInterface: </b>')
-        self.storageCapacityLabel = QtGui.QLabel('<b>storageCapacity_GB: </b>')
-        self.importLimitLabel = QtGui.QLabel('<b>importLimit_GB: </b>')
+        self.daemonDirLabel = QtGui.QLabel()
+        self.dataDirLabel = QtGui.QLabel()
+        self.networkInterfaceLabel = QtGui.QLabel()
+        self.storageCapacityLabel = QtGui.QLabel()
+        self.importLimitLabel = QtGui.QLabel()
+        self.initializeLabels()
 
         self.finalLabel = QtGui.QLabel('Click "Finished" to save these settings and '
             'start the GUI. You can change the configuration at any time from '
@@ -222,7 +224,15 @@ class ConclusionPage(QtGui.QWizardPage):
         layout.addWidget(self.finalLabel)
         self.setLayout(layout)
 
+    def initializeLabels(self):
+        self.daemonDirLabel.setText('<b>daemonDir: </b>')
+        self.dataDirLabel.setText('<b>dataDir: </b>')
+        self.networkInterfaceLabel.setText('<b>networkInterface: </b>')
+        self.storageCapacityLabel.setText('<b>storageCapacity_GB: </b>')
+        self.importLimitLabel.setText('<b>importLimit_GB: </b>')
+
     def initializePage(self):
+        self.initializeLabels()
         self.daemonDir = self.field('daemonDir').toString()
         self.daemonDirLabel.setText(self.daemonDirLabel.text().append(self.daemonDir))
         self.dataDir = self.field('dataDir').toString()
