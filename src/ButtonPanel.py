@@ -1,5 +1,6 @@
-import socket, os, datetime
 from PyQt4 import QtCore, QtGui
+import os, h5py
+
 import hwif
 
 from StreamWindow import StreamWindow
@@ -8,6 +9,7 @@ from SnapshotDialog import SnapshotDialog
 from StreamDialog import StreamDialog
 
 from SnapshotThread import SnapshotThread
+from SnapshotAnalysisThread import SnapshotAnalysisThread
 
 from ImportDialog import ImportDialog
 from ImportThread import ImportThread
@@ -21,11 +23,9 @@ from ImpedancePlotWindow import ImpedancePlotWindow
 
 from SettingsWindow import SettingsWindow
 
-import config
-
-import h5py
-
 from WillowDataset import WillowDataset
+
+import config
 
 def isSampleRangeValid(sampleRange):
     if isinstance(sampleRange, list) and (len(sampleRange)==2):
@@ -126,6 +126,8 @@ class ButtonPanel(QtGui.QWidget):
         gridLayout.addWidget(self.settingsButton, 3,1)
         layout.addLayout(gridLayout)
 
+        self.subprocessThreads = []
+
         self.setLayout(layout)
 
     def runImpedanceTest(self):
@@ -178,14 +180,22 @@ class ButtonPanel(QtGui.QWidget):
             self.snapshotProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
             self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
             self.snapshotThread.msgPosted.connect(self.postStatus) # TODO see others
-            self.snapshotThread.importFinished.connect(self.launchPlotWindow)
-            self.snapshotThread.labelChanged.connect(self.snapshotProgressDialog.setLabelText)
-            self.snapshotThread.maxChanged.connect(self.snapshotProgressDialog.setMaximum)
-            self.snapshotThread.progressUpdated.connect(self.snapshotProgressDialog.setValue)
             self.snapshotThread.finished.connect(self.snapshotProgressDialog.reset) # necessary?
+            self.snapshotThread.finished.connect(self.handleSnapshotFinished)
             self.snapshotProgressDialog.show()
             self.snapshotThread.start()
 
+    def handleSnapshotFinished(self, params):
+        finalAction = params['whenFinished'][0]
+        if finalAction == -3: # "willowgui data explorer"
+            dataset = WillowDataset(params['filename'], -1)
+            dataset.importData()
+            self.launchPlotWindow(dataset)
+        elif finalAction == -4: # custom script
+            sat = SnapshotAnalysisThread(params)
+            sat.msgPosted.connect(self.postStatus)
+            self.subprocessThreads.append(sat) # necessary to prevent garbage collection
+            sat.start()
 
     def startRecording(self):
         try:
