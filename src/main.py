@@ -6,7 +6,7 @@ Willow Control Panel GUI
 Chris Chronopoulos (chrono@leaflabs.com) - 20140522
 """
 
-import sys, os
+import sys, os, subprocess
 
 from PyQt4 import QtCore, QtGui
 
@@ -35,6 +35,8 @@ class StdOutLogger(object):
         self.log.flush()
 
 if __name__=='__main__':
+    subprocess.call(['killall', 'leafysd'])
+    subprocess.call(['killall', 'proto2bytes'])
     import argparse
     parser = argparse.ArgumentParser(description='Run the GUI for the Willow.')
     parser.add_argument('-d', '--debug', action='store_true',
