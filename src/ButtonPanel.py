@@ -11,7 +11,7 @@ from StreamDialog import StreamDialog
 from SnapshotThread import SnapshotThread
 from SnapshotAnalysisThread import SnapshotAnalysisThread
 
-from ImportDialog import ImportDialog
+from ImportDialog import ImportDialog_experiment, ImportDialog_snapshot
 from ImportThread import ImportThread
 
 from TransferDialog import TransferDialog
@@ -45,6 +45,10 @@ def targetDirExists(filename):
 def isCalibrationFile(filename):
     f = h5py.File(filename)
     return 'impedanceMeasurements' in f.keys()
+
+def isSnapshotFile(filename):
+    dataset = WillowDataset(filename, -1)
+    return dataset.type == 'snapshot'
 
 class ButtonPanel(QtGui.QWidget):
 
@@ -269,9 +273,27 @@ class ButtonPanel(QtGui.QWidget):
                 dset = f['impedanceMeasurements']
                 impedanceMeasurements = dset[:]
                 self.launchImpedancePlotWindow(impedanceMeasurements)
+            elif isSnapshotFile(filename):
+                self.msgLog.actionPost("(snapshot file)")
+                dlg = ImportDialog_snapshot()
+                if dlg.exec_():
+                    params = dlg.getParams()
+                    if params['customScript']:
+                        # TODO make this consistent with the original SAI routines
+                        params['filename'] = filename
+                        params['whenFinished'] = (-4, params['customScript'])
+                        sat = SnapshotAnalysisThread(params)
+                        sat.msgPosted.connect(self.postStatus)
+                        self.subprocessThreads.append(sat) # necessary to prevent garbage collection
+                        sat.start()
+                    else:
+                        sampleRange = params['sampleRange']
+                        dataset = WillowDataset(filename, sampleRange);
+                        dataset.importData()
+                        self.launchPlotWindow(dataset)
             else:
-                self.msgLog.actionPost("(data file)")
-                dlg = ImportDialog()
+                self.msgLog.actionPost("(experiment file)")
+                dlg = ImportDialog_experiment()
                 if dlg.exec_():
                     params = dlg.getParams()
                     self.msgLog.actionPost(str("the following import params requested:"+"\n"+str(params)))
