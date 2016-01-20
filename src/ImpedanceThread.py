@@ -37,26 +37,10 @@ class ImpedanceThread(QtCore.QThread):
         self.capscale = 0b00        # hardcoded for now
         self.capcurrent = 0.38e-9   # depends on capscale, hardcoded for now
         self.nsamples = 15000       # hardcoded for now
-        self.isTerminated = False
+        self.stopRequested = False
 
     def handleCancel(self):
-        """
-        This is required to prevent the race condition between QProgressDialog
-        and this thread. self.isTerminated is checked before emission of progressUpdated.
-        """
-        self.isTerminated = True
-        try:
-            hwif.disableZCheck()
-            hwif.stopStreaming()
-        except hwif.AlreadyError:
-            pass
-        except hwif.StateChangeError:
-            self.msgPosted.emit('Caught StateChangeError')
-        except hwif.hwifError as e:
-            self.msgPosted.emit(e.message)
-        finally:
-            self.finished.emit()
-            self.terminate()
+        self.stopRequested = True
 
     def fft2volts(self, amplitude):
         """
@@ -152,24 +136,28 @@ class ImpedanceThread(QtCore.QThread):
         self.maxChanged.emit(32)
         self.textChanged.emit('Testing all chips...')
         for chan in range(32):
-            try:
-                thisChanImpedance = self.channelSnapshotRoutine(chan, singleChannel=False)
-            except SnapshotLoadError:
-                self.msgPosted.emit('There was an error recording impedance from channel {0}. Trying again..'.format(chan))
+            if self.stopRequested:
+                self.msgPosted.emit('allChipsRoutine canceled')
+                break
+            else:
                 try:
                     thisChanImpedance = self.channelSnapshotRoutine(chan, singleChannel=False)
-                except:
-                    self.msgPosted.emit('Another error recording impedance from channel {0}. Giving up -- please check network configuration, cable connections, etc. if problem continues to persist.'.format(chan))
-                    return
-            if not self.isTerminated:
+                except SnapshotLoadError:
+                    self.msgPosted.emit('There was an error recording impedance from channel {0}. Trying again..'.format(chan))
+                    try:
+                        thisChanImpedance = self.channelSnapshotRoutine(chan, singleChannel=False)
+                    except:
+                        self.msgPosted.emit('Another error recording impedance from channel {0}. Giving up -- please check network configuration, cable connections, etc. if problem continues to persist.'.format(chan))
+                        break
                 self.progressUpdated.emit(chan+1)
         self.stopZCheck()
-        # save result and post message
-        impedanceFilename = os.path.abspath('../cal/impedance_%s.h5' % strtime)
-        saveImpedance_hdf5(self.impedanceMeasurements, timestamp, impedanceFilename)
-        self.msgPosted.emit('Impedance measurements saved to %s' % impedanceFilename)
-        if self.plot:
-            self.dataReady.emit(self.impedanceMeasurements)
+        if not self.stopRequested:
+            # save result and post message
+            impedanceFilename = os.path.abspath('../cal/impedance_%s.h5' % strtime)
+            saveImpedance_hdf5(self.impedanceMeasurements, timestamp, impedanceFilename)
+            self.msgPosted.emit('Impedance measurements saved to %s' % impedanceFilename)
+            if self.plot:
+                self.dataReady.emit(self.impedanceMeasurements)
 
     def oneChannelRoutine(self):
         self.startStreaming()
