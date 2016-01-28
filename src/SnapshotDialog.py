@@ -3,7 +3,7 @@ import time, datetime, os, sys
 
 import config
 
-LAST_WHENFINISHED = None
+LAST_PARAMS = None
 
 class SnapshotDialog(QtGui.QDialog):
 
@@ -11,7 +11,7 @@ class SnapshotDialog(QtGui.QDialog):
         super(SnapshotDialog, self).__init__(parent)
 
         # length and filename
-        self.lengthLine = QtGui.QLineEdit('1')
+        self.lengthLine = QtGui.QLineEdit('1.0')
         dt = datetime.datetime.fromtimestamp(time.time())
         strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
         filename = os.path.join(config.dataDir, 'snapshot_%s.h5' % strtime)
@@ -37,10 +37,13 @@ class SnapshotDialog(QtGui.QDialog):
         layout.addWidget(self.button3, 2,0, 1,1)
         layout.addWidget(self.scriptDropdown, 2,1, 1,1)
         self.finishedWidget.setLayout(layout)
-        if LAST_WHENFINISHED:
-            lastButton = self.finishedGroup.button(LAST_WHENFINISHED[0])
+        if LAST_PARAMS:
+            length = LAST_PARAMS['nsamples']/30000.
+            self.lengthLine.setText(str(length))
+            last_whenFinished = LAST_PARAMS['whenFinished']
+            lastButton = self.finishedGroup.button(last_whenFinished[0])
             lastButton.setChecked(True)
-            lastIndex = self.scriptDropdown.findText(LAST_WHENFINISHED[1])
+            lastIndex = self.scriptDropdown.findText(last_whenFinished[1])
             if lastIndex >= 0:
                 self.scriptDropdown.setCurrentIndex(lastIndex)
 
@@ -81,7 +84,7 @@ class SnapshotDialog(QtGui.QDialog):
         self.scriptDropdown.setEnabled(checked)
 
     def getParams(self):
-        global LAST_WHENFINISHED
+        global LAST_PARAMS
         params = {}
         params['nsamples'] = int(float(self.lengthLine.text())*30000)
         filename = str(self.filenameLine.text())
@@ -91,7 +94,7 @@ class SnapshotDialog(QtGui.QDialog):
             filename = filename + '.h5'
         params['filename'] = filename
         params['whenFinished'] = (self.finishedGroup.checkedId(), str(self.scriptDropdown.currentText()))
-        LAST_WHENFINISHED = params['whenFinished']
+        LAST_PARAMS = params
         return params
 
     def browse(self):
