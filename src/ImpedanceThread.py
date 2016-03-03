@@ -153,7 +153,7 @@ class ImpedanceThread(QtCore.QThread):
         self.stopZCheck()
         if not self.stopRequested:
             # save result and post message
-            impedanceFilename = os.path.abspath('../cal/impedance_%s.h5' % strtime)
+            impedanceFilename = os.path.join(config.dataDir, 'impedance_%s.h5' % strtime)
             saveImpedance_hdf5(self.impedanceMeasurements, timestamp, impedanceFilename)
             self.msgPosted.emit('Impedance measurements saved to %s' % impedanceFilename)
             if self.plot:
