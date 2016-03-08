@@ -471,6 +471,36 @@ def doTransfer(filename, sampleRange=None):
         elif resp.store.status == dc.ControlResStore.TIMEOUT:
             return False, resp.store.nsamples
 
+def connectChanElecTest(chan):
+    """
+    Connect a single channel to the elec_test pin for electroplating
+    chan is an int between 0 and 31 inclusive
+    Make sure DAQ is running, e.g. by calling startStreaming_boardSamples(), before
+        calling this function.
+    """
+    # truncate the switch-matrix channel number to 5 bits
+    reg7_payload = (chan & 0b11111)
+    # prepare reg5 payload
+    enable = 0b1
+    reg5_payload = enable # just set zcheck_en=1
+    ####
+    cmds = []
+    cmds.append(_intanRegWrite(address=7, data=reg7_payload))
+    cmds.append(_intanRegWrite(address=5, data=reg5_payload))
+    cmds.append(_intanRegWrite(clear=True))
+    resps = _controlCmdWrapper(cmds)
+
+def disconnectAllElecTest():
+    """
+    Disconnect all channels from the elec_test pin
+    Make sure DAQ is running, e.g. by calling startStreaming_boardSamples(), before
+        calling this function.
+    """
+    cmds = []
+    cmds.append(_intanRegWrite(address=5, data=0))
+    cmds.append(_intanRegWrite(clear=True))
+    resps = _controlCmdWrapper(cmds)
+
 def enableZCheck(chan, capscale):
     """
     Enable Intan impedance testing
