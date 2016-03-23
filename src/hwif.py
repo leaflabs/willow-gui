@@ -152,19 +152,27 @@ def _isValidSampleRange(sampleRange):
     else:
         return False
 
-def _intanRegWrite(clear=False, address=None, data=None):
+def _intanRegWrite(clear=False, address=None, data=None, chip=0xFF):
     """
     Use this to generate a control command for writing to the intan chips.
-    Can only write to all chips simultaneously, due to hardware limitations.
-    (Can actually write at "headstage resolution", but this isn't particularly useful.)
-    Use cmd_clear = _intanRegWrite(clear=True) to generate a clear command.
+    You are only able to address individual headstages, but not individual
+    chips. The chips that act as masters for their headstages are:
+        headstage[0] = chip[3]
+        headstage[1] = chip[7]
+        headstage[2] = chip[11]
+        headstage[3] = chip[15]
+        headstage[4] = chip[19]
+        headstage[5] = chip[23]
+        headstage[6] = chip[27]
+        headstage[7] = chip[31]
+    Use 0xFF to address all chips
     """
     if clear:
         cmdData = 0
     else:
         cmdData = ((0x1 << 24) |                    # aux command write enable
-                   (0xFF << 16) |                   # all chips
-                   ((0b10000000 | address) << 8) | # intan register address
+                   (chip << 16) |                   # zero indexed int, 0xFF for all
+                   ((0b10000000 | address) << 8) |  # intan register address
                    data)                            # data
     cmd = dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData)
     return cmd
