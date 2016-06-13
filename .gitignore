@@ -1,7 +1,6 @@
 *.pyc
 *.swp
 log/
-cal/
 tmp/
 docs/user_guide/main.log
 docs/user_guide/main.aux
