@@ -1,5 +1,7 @@
 import os, subprocess, socket 
 
+from git import Repo
+
 import config, hwif
 from StatusBar import StatusBar
 from ButtonPanel import ButtonPanel
@@ -35,7 +37,12 @@ class MainWindow(QtGui.QWidget):
         mainLayout.addWidget(self.msgLog)
         self.setLayout(mainLayout)
 
-        self.setWindowTitle('Willow Control Panel')
+        versionFile = open('../VERSION', 'r')
+        versionNumber = versionFile.readline().rstrip('\n')
+        branchName = Repo('..').active_branch.name
+        versionText = versionNumber if (branchName == 'master') else branchName
+
+        self.setWindowTitle('WillowGUI (%s)' % versionText)
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         #self.resize(400,200)
         self.center()
