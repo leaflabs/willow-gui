@@ -1,0 +1,127 @@
+#!/usr/bin/python
+
+"""
+versionPush - Update version and push to master.
+Chris Chronopoulos 20160624
+---
+willowgui developers should only push to master using this script
+run it from the top-level:
+
+    $ util/versionPush
+
+and then respond with the change type. versionPush will add a new commit,
+of the form:
+
+    VERSION updated to w.x.y.z
+
+"""
+
+import subprocess, git, sys
+
+class RemoteAccessError(Exception):
+    pass
+
+class BranchError(Exception):
+    pass
+
+class NothingToPushError(Exception):
+    pass
+
+class RemoteNotInParentsError(Exception):
+    pass
+
+####
+
+def canAccessRemote(repo):
+    remote_url = repo.remotes.origin.url
+    po = subprocess.Popen(['git', 'ls-remote', '--exit-code', remote_url],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    po.wait()
+    return (po.returncode==0)
+
+def isMasterBranch(repo):
+    return repo.head.ref == repo.heads.master
+
+def equalsRemote(repo):
+    local_commit = repo.head.ref.commit
+    remote_commit = repo.remotes.origin.refs.master.commit
+    return local_commit == remote_commit
+
+def remoteHeadInParents(repo):
+    # TODO: confirm that this works
+    remote_commit = repo.remotes.origin.refs.master.commit
+    local_commit = repo.head.ref.commit
+    return remote_commit in local_commit.iter_parents()
+
+def getCurrentVersion():
+    with open('VERSION', 'r') as f:
+        version = f.readline()
+    return tuple(map(int, version.split('.')[:3]))
+
+def updateAndCommitCurrentVersion(version, repo):
+    with open('VERSION', 'w') as f:
+        f.write('%d.%d.%d.a\n' % version)
+    repo.git.add('VERSION')
+    repo.git.commit(m=('VERSION updated to %d.%d.%d.a' % version))
+
+def push(repo):
+    origin = repo.remotes.origin
+    origin.push()
+
+####
+
+def main(repo):
+    currentVersion = getCurrentVersion()
+    print 'Current version is %d.%d.%d' % currentVersion
+    print 'What kind of change is this?\n'
+    print '  (M)ajor Update'
+    print '  (F)eature Add'
+    print '  (B)ug Fix'
+    resp = raw_input('\nEnter M, F, B; or q to quit: ')
+    if resp=='M' or resp=='m':
+        newVersion = (currentVersion[0]+1, 0, 0)
+    elif resp=='F' or resp=='f':
+        newVersion = (currentVersion[0], currentVersion[1]+1, 0)
+    elif resp=='B' or resp=='b':
+        newVersion = (currentVersion[0], currentVersion[1], currentVersion[2]+1)
+    elif resp=='Q' or resp=='q':
+        return
+    else:
+        print 'Unrecognized response'
+        return
+    updateAndCommitCurrentVersion(newVersion, repo)
+    print 'New version is %d.%d.%d' % newVersion
+    push(repo)
+    
+
+if __name__=='__main__':
+    try:
+        repo = git.Repo()
+        if repo.is_dirty():
+            resp = raw_input('Repo is Dirty! Are you sure you want to proceed? (y/n): ')
+            if not (resp=='y' or resp=='Y'):
+                sys.exit(0)
+        if not canAccessRemote(repo):
+            raise RemoteAccessError
+        if not isMasterBranch(repo):
+            raise BranchError
+        if equalsRemote(repo):
+            raise NothingToPushError
+        if not remoteHeadInParents(repo):
+            raise RemoteNotInParentsError
+        main(repo)
+    except git.exc.InvalidGitRepositoryError:
+        print 'Error: Invalid git repository'
+        sys.exit(1)
+    except RemoteAccessError:
+        print 'Error: Could not access remote'
+        sys.exit(1)
+    except BranchError:
+        print 'Error: Branch is not master'
+        sys.exit(1)
+    except NothingToPushError:
+        print 'Nothing to push, returning.'
+        sys.exit(0)
+    except RemoteNotInParentsError:
+        print "Error: Remote not found in local commit's parents. Try 'git pull' first?"
+        sys.exit(1)
