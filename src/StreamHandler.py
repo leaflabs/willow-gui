@@ -8,7 +8,7 @@ import config
 class StreamHandler(QtCore.QObject):
 
     msgPosted = QtCore.pyqtSignal(str)
-    
+
     def __init__(self, script_name):
         super(StreamHandler, self).__init__()
 
@@ -23,6 +23,7 @@ class StreamHandler(QtCore.QObject):
         self.streamProcess = QtCore.QProcess(self)
         self.streamProcess.readyReadStandardError.connect(self.routeStdErr)
         self.streamProcess.readyReadStandardOutput.connect(self.routeStdOut)
+        self.streamProcess.finished.connect(self.streamFinishedHandler)
 
         # For parsing self.streamProcess's requests for hwif calls. Maps
         # from strings representing functions to the functions themselves,
@@ -39,17 +40,10 @@ class StreamHandler(QtCore.QObject):
             config.daemonDir, 'build/proto2bytes'))
         self.streamProcess.start(self.exec_path, QtCore.QStringList(proto2bytes_path))
         self.msgPosted.emit('Subprocess %s spawned. Streaming widget running now...' %
-                            self.script_name) 
-        #self.returncode = self.analysisProcess.returncode
-        #self.msgPosted.emit('Subprocess %s completed with return code %d. Output saved in %s and %s' %
-        #                    (self.script_name, self.returncode,
-        #                    os.path.relpath(self.oFile.name, config.streamAnalysisDir),
-        #                    os.path.relpath(self.eFile.name, config.streamAnalysisDir)))
+                            self.script_name)
     def routeStdErr(self):
         err = str(self.streamProcess.readAllStandardError())
         self.eFile.write(err)
-        # for debugging
-        print 'from subprocess: ' + err
         request_prepend = 'hwif_req: '
         if err[:len(request_prepend)] == request_prepend:
             # translate requested function from a str into a Python function
@@ -58,10 +52,42 @@ class StreamHandler(QtCore.QObject):
             call, unstringifiers = self.hwif_calls[s_fun][0], self.hwif_calls[s_fun][1:]
             # call the function with any remaining arguments
             real_args = []
+
+            # TODO maybe handle potential hwif calls and errors more selectively
             for i in xrange(len(s_args)):
                 real_args.append(unstringifiers[i](s_args[i]))
-            call(*real_args)
+            try:
+                call(*real_args)
+                if call == hwif.startStreaming_subsamples:
+                    print 'Started streaming.'
+                elif call == hwif.stopStreaming:
+                    print 'Stopped streaming.'
+                pass
+            except hwif.AlreadyError:
+                already_message = 'Hardware was already '
+                if call == hwif.stopStreaming:
+                    already_message = already_message + 'not streaming.'
+                elif call == hwif.startStreaming_subsamples or call == hwif.startStreaming_boardsamples:
+                    already_message = already_message + \
+                        'streaming. Try stopping and restarting stream.'
+                print already_message
+                pass
+            except AttributeError:
+                # TODO what's up with this?
+                print 'AttributeError: Pipe object does not exist'
+                pass
+            except hwif.hwifError as e:
+                print e.message
+                pass
 
     def routeStdOut(self):
         out = str(self.streamProcess.readAllStandardOutput())
         self.oFile.write(out)
+
+    def streamFinishedHandler(self, exitCode, exitStatus):
+        hwif.stopStreaming()
+        self.msgPosted.emit('Subprocess {0} completed with return code {1} \
+            and status {2}. \n Output saved in {3} and {4}.'.format(
+            self.script_name, exitCode, exitStatus,
+            os.path.relpath(self.oFile.name, config.streamAnalysisDir),
+            os.path.relpath(self.eFile.name, config.streamAnalysisDir)))
