@@ -4,7 +4,7 @@ import os, h5py
 import hwif
 
 from StreamPickDialog import StreamPickDialog
-from StreamThread import StreamThread
+from StreamHandler import StreamHandler
 from StreamWindow import StreamWindow
 from StreamDialog import StreamDialog
 
@@ -177,9 +177,9 @@ class ButtonPanel(QtGui.QWidget):
                     self.streamWindow.show()
             else:
                 self.msgLog.actionPost(str("the following streaming script chosen:"+"\n"+str(streamChoice)))
-                self.streamThread = StreamThread(streamChoice)
-                self.streamThread.msgPosted.connect(self.postStatus)
-                self.streamThread.start()
+                self.streamHandler = StreamHandler(streamChoice)
+                self.streamHandler.msgPosted.connect(self.postStatus)
+                self.streamHandler.run()
 
     def takeSnapshot(self):
         dlg = SnapshotDialog()
