@@ -14,7 +14,7 @@ class StreamHandler(QtCore.QObject):
 
         self.script_name = script_name
 
-        self.script_dir = os.path.join(config.streamAnalysisDir, self.script_name)
+        self.script_dir = os.path.join(config.analysisDirStreaming, self.script_name)
         self.exec_path = os.path.join(self.script_dir, 'main')
 
         self.oFile = open(os.path.join(self.script_dir, 'oFile'), 'w')
@@ -85,9 +85,12 @@ class StreamHandler(QtCore.QObject):
         self.oFile.write(out)
 
     def streamFinishedHandler(self, exitCode, exitStatus):
-        hwif.stopStreaming()
+        try:
+            hwif.stopStreaming()
+        except hwif.AlreadyError:
+            pass
         self.msgPosted.emit('Subprocess {0} completed with return code {1} \
             and status {2}. \n Output saved in {3} and {4}.'.format(
             self.script_name, exitCode, exitStatus,
-            os.path.relpath(self.oFile.name, config.streamAnalysisDir),
-            os.path.relpath(self.eFile.name, config.streamAnalysisDir)))
+            os.path.relpath(self.oFile.name, config.analysisDirStreaming),
+            os.path.relpath(self.eFile.name, config.analysisDirStreaming)))

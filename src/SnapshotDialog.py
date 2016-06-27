@@ -71,9 +71,9 @@ class SnapshotDialog(QtGui.QDialog):
 
     def createScriptDropdown(self):
         dropdown = QtGui.QComboBox()
-        analysisDirList = os.listdir(config.analysisDir)
+        analysisDirList = os.listdir(config.analysisDirSnapshot)
         for entry in analysisDirList:
-            entrypath = os.path.join(config.analysisDir, entry)
+            entrypath = os.path.join(config.analysisDirSnapshot, entry)
             if os.path.isdir(entrypath):
                 mainpath = os.path.join(entrypath, 'main')
                 if os.path.isfile(mainpath) and os.access(mainpath, os.X_OK):

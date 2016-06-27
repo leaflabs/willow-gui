@@ -44,9 +44,9 @@ class StreamPickDialog(QtGui.QDialog):
             
     def createScriptDropdown(self):
         dropdown = QtGui.QComboBox()
-        streamDirList = os.listdir(config.streamAnalysisDir)
+        streamDirList = os.listdir(config.analysisDirStreaming)
         for entry in streamDirList:
-            entry_path = os.path.join(config.streamAnalysisDir, entry)
+            entry_path = os.path.join(config.analysisDirStreaming, entry)
             if os.path.isdir(entry_path):
                 mainpath = os.path.join(entry_path, 'main')
                 if os.path.isfile(mainpath) and os.access(mainpath, os.X_OK):
@@ -60,7 +60,7 @@ class StreamPickDialog(QtGui.QDialog):
         global LAST_SCRIPT
         if self.scriptDropdown.isEnabled():
             entry = str(self.scriptDropdown.currentText())
-            entry_path = os.path.join(config.streamAnalysisDir, entry)
+            entry_path = os.path.join(config.analysisDirStreaming, entry)
             # check that last choice is still there
             if os.path.isdir(entry_path):
                 mainpath = os.path.join(entry_path, 'main')

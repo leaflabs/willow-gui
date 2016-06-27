@@ -90,7 +90,7 @@ class DataDirPage(QtGui.QWizardPage):
         if dirName:
             self.dirLine.setText(dirName)
 
-class AnalysisDirPage(QtGui.QWizardPage):
+class SnapshotAnalysisDirPage(QtGui.QWizardPage):
 
     def __init__(self):
         QtGui.QWizardPage.__init__(self)
@@ -105,7 +105,7 @@ class AnalysisDirPage(QtGui.QWizardPage):
 
         self.dirLine = QtGui.QLineEdit()
         self.dirLine.setDisabled(True)
-        self.registerField('analysisDir*', self.dirLine)
+        self.registerField('analysisDirSnapshot*', self.dirLine)
         self.browseButton = QtGui.QPushButton('Browse')
         self.browseButton.clicked.connect(self.browse)
 
@@ -116,7 +116,37 @@ class AnalysisDirPage(QtGui.QWizardPage):
         self.setLayout(layout)
 
     def browse(self):
-        dirName = QtGui.QFileDialog.getExistingDirectory(self, 'Select Analysis Directory', expanduser("~"))
+        dirName = QtGui.QFileDialog.getExistingDirectory(self, 'Select Snapshot Analysis Directory', expanduser("~"))
+        if dirName:
+            self.dirLine.setText(dirName)
+
+class StreamingAnalysisDirPage(QtGui.QWizardPage):
+
+    def __init__(self):
+        QtGui.QWizardPage.__init__(self)
+
+        self.setTitle('Streaming Analysis Directory')
+
+        self.label1 = QtGui.QLabel("WillowGUI allows you to automatically run "
+            "custom analysis scripts on streaming data. Select the location of "
+            "your analysis scripts here.")
+        self.label1.setWordWrap(True)
+        self.label1.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
+
+        self.dirLine = QtGui.QLineEdit()
+        self.dirLine.setDisabled(True)
+        self.registerField('analysisDirStreaming*', self.dirLine)
+        self.browseButton = QtGui.QPushButton('Browse')
+        self.browseButton.clicked.connect(self.browse)
+
+        layout = QtGui.QGridLayout()
+        layout.addWidget(self.label1, 0,0)
+        layout.addWidget(self.dirLine, 1,0)
+        layout.addWidget(self.browseButton, 1,1)
+        self.setLayout(layout)
+
+    def browse(self):
+        dirName = QtGui.QFileDialog.getExistingDirectory(self, 'Select Streaming Analysis Directory', expanduser("~"))
         if dirName:
             self.dirLine.setText(dirName)
 
@@ -232,7 +262,8 @@ class ConclusionPage(QtGui.QWizardPage):
 
         self.daemonDirLabel = QtGui.QLabel()
         self.dataDirLabel = QtGui.QLabel()
-        self.analysisDirLabel = QtGui.QLabel()
+        self.analysisDirSnapshotLabel = QtGui.QLabel()
+        self.analysisDirStreamingLabel = QtGui.QLabel()
         self.networkInterfaceLabel = QtGui.QLabel()
         self.storageCapacityLabel = QtGui.QLabel()
         self.importLimitLabel = QtGui.QLabel()
@@ -249,7 +280,8 @@ class ConclusionPage(QtGui.QWizardPage):
         layout.addWidget(self.mainLabel)
         layout.addWidget(self.daemonDirLabel)
         layout.addWidget(self.dataDirLabel)
-        layout.addWidget(self.analysisDirLabel)
+        layout.addWidget(self.analysisDirSnapshotLabel)
+        layout.addWidget(self.analysisDirStreamingLabel)
         layout.addWidget(self.networkInterfaceLabel)
         layout.addWidget(self.storageCapacityLabel)
         layout.addWidget(self.importLimitLabel)
@@ -259,7 +291,8 @@ class ConclusionPage(QtGui.QWizardPage):
     def initializeLabels(self):
         self.daemonDirLabel.setText('<b>daemonDir: </b>')
         self.dataDirLabel.setText('<b>dataDir: </b>')
-        self.analysisDirLabel.setText('<b>analysisDir: </b>')
+        self.analysisDirSnapshotLabel.setText('<b>analysisDirSnapshot: </b>')
+        self.analysisDirStreamingLabel.setText('<b>analysisDirStreaming: </b>')
         self.networkInterfaceLabel.setText('<b>networkInterface: </b>')
         self.storageCapacityLabel.setText('<b>storageCapacity_GB: </b>')
         self.importLimitLabel.setText('<b>importLimit_GB: </b>')
@@ -270,8 +303,10 @@ class ConclusionPage(QtGui.QWizardPage):
         self.daemonDirLabel.setText(self.daemonDirLabel.text().append(self.daemonDir))
         self.dataDir = self.field('dataDir').toString()
         self.dataDirLabel.setText(self.dataDirLabel.text().append(self.dataDir))
-        self.analysisDir = self.field('analysisDir').toString()
-        self.analysisDirLabel.setText(self.analysisDirLabel.text().append(self.analysisDir))
+        self.analysisDirSnapshot = self.field('analysisDirSnapshot').toString()
+        self.analysisDirStreaming = self.field('analysisDirStreaming').toString()
+        self.analysisDirSnapshotLabel.setText(self.analysisDirSnapshotLabel.text().append(self.analysisDirSnapshot))
+        self.analysisDirStreamingLabel.setText(self.analysisDirStreamingLabel.text().append(self.analysisDirStreaming))
         self.networkInterface = self.field('networkInterface').toString()
         self.networkInterfaceLabel.setText(self.networkInterfaceLabel.text().append(self.networkInterface))
         self.storageCapacity = self.field('storageCapacity').toString()
@@ -282,7 +317,8 @@ class ConclusionPage(QtGui.QWizardPage):
     def validatePage(self):
         self.jsonDict['daemonDir']['value'] = str(self.daemonDir)
         self.jsonDict['dataDir']['value'] = str(self.dataDir)
-        self.jsonDict['analysisDir']['value'] = str(self.analysisDir)
+        self.jsonDict['analysisDirSnapshot']['value'] = str(self.analysisDirSnapshot)
+        self.jsonDict['analysisDirStreaming']['value'] = str(self.analysisDirStreaming)
         self.jsonDict['networkInterface']['value'] = str(self.networkInterface)
         self.jsonDict['storageCapacity_GB']['value'] = int(self.storageCapacity)
         self.jsonDict['importLimit_GB']['value'] = int(self.importLimit)
@@ -307,7 +343,8 @@ class ConfigWizard(QtGui.QWizard):
         self.jsonDict = {}
         self.jsonDict['daemonDir'] = {'type': 'str', 'description': 'Daemon Directory'}
         self.jsonDict['dataDir'] = {'type': 'str', 'description': 'Data Directory'}
-        self.jsonDict['analysisDir'] = {'type': 'str', 'description': 'Snapshot Analysis Directory'}
+        self.jsonDict['analysisDirSnapshot'] = {'type': 'str', 'description': 'Snapshot Analysis Directory'}
+        self.jsonDict['analysisDirStreaming'] = {'type': 'str', 'description': 'Streaming Analysis Directory'}
         self.jsonDict['networkInterface'] = {'type': 'str', 'description': 'Network Interface Name'}
         self.jsonDict['storageCapacity_GB'] = {'type': 'float', 'description': 'Datanode Storage Capacity (GB)'}
         self.jsonDict['importLimit_GB'] = {'type': 'float', 'description': 'Dataset Import Limit (GB)'}
@@ -318,7 +355,8 @@ class ConfigWizard(QtGui.QWizard):
         self.addPage(IntroPage())
         self.addPage(DaemonDirPage())
         self.addPage(DataDirPage())
-        self.addPage(AnalysisDirPage())
+        self.addPage(SnapshotAnalysisDirPage())
+        self.addPage(StreamingAnalysisDirPage())
         self.addPage(NetworkInterfacePage())
         self.addPage(StorageCapacityPage())
         self.addPage(ImportLimitPage())
