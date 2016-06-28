@@ -243,8 +243,6 @@ def getChipsAlive():
     """
     Returns a list of indices of live Intan chips, by reading the bitmask in
         hardware register (3,4)
-    WARNING: This bitmask will be inaccurate upon startup, until the DAQ is run.
-        This is an HDL bug, see ticket Willow-94.
     """
     cmd = dc.reg_read(dc.MOD_DAQ, dc.DAQ_CHIP_ALIVE)
     resp = _controlCmdWrapper(cmd)
