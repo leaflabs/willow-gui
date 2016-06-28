@@ -118,12 +118,10 @@ def getErrorInfo(errorRegister):
     for i in range(1,6):
         if (errorRegister & 1<<i):
             moduleName, errorDict = ERRORDICT_DICT[i]
-            errorBitmask = hwif.getErrorBitmask(i)
-            for j in range(9):
-                if (errorBitmask & 1<<j):
-                    errorMsg = errorDict[j]
-                    infoText += '%s: %s' % (moduleName, errorMsg)
-    return infoText
+            errorCode = hwif.getErrorBitmask(i)
+            errorMsg = errorDict[errorCode]
+            infoText += '%s: %s, ' % (moduleName, errorMsg)
+    return infoText[:-2]
 
 class StatusBar(QtGui.QWidget):
 
