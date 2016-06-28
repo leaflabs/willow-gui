@@ -95,6 +95,24 @@ class DaemonRestartDialog(QtGui.QDialog):
         self.daemonDontRestartPasser.emit()
         self.close()
 
+class ErrorInfoDialog(QtGui.QDialog):
+    def __init__(self, error, parent=None):
+        super(ErrorInfoDialog, self).__init__(parent)
+
+        error_label = QtGui.QLabel(getErrorInfo(error))
+        error_label.setAlignment(QtCore.Qt.AlignHCenter)
+
+        dismissButton = QtGui.QPushButton("OK")
+        dismissButton.pressed.connect(self.accept)
+
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(error_label)
+        layout.addWidget(dismissButton)
+
+        self.setLayout(layout)
+        self.setWindowTitle('Willow error information')
+        self.resize(200,75)
+
 def getErrorInfo(errorRegister):
     infoText = ''
     for i in range(1,6):
@@ -120,6 +138,7 @@ class StatusBar(QtGui.QWidget):
         layout = QtGui.QGridLayout()
 
         self.keepDaemonDead = None
+        self.acknowledgedError = None
 
         self.watchdogCheckbox = QtGui.QCheckBox('Watchdog')
         self.watchdogCheckbox.stateChanged.connect(self.toggleWatchdog)
@@ -136,12 +155,6 @@ class StatusBar(QtGui.QWidget):
         self.firmwareLabel = QtGui.QLabel('(firmware)')
         self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
         layout.addWidget(self.firmwareLabel, 2,0)
-
-        self.errorLabel = QtGui.QLabel('(errors)')
-        #self.errorLabel = QtGui.QPushButton('(errors)')
-        self.errorLabel.setToolTip('No Errors')
-        self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
-        layout.addWidget(self.errorLabel, 2,1)
 
         self.streamLabel = QtGui.QLabel('Not Streaming')
         self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
@@ -235,16 +248,13 @@ class StatusBar(QtGui.QWidget):
             self.firmwareLabel.setStyleSheet(GOOD_STYLE)
 
         tmp = vitals['errors']
-        if tmp == None:
-            self.errorLabel.setText('(errors)')
-            self.errorLabel.setStyleSheet(UNKNOWN_STYLE)
-        elif tmp == 0:
-            self.errorLabel.setText('No Errors')
-            self.errorLabel.setStyleSheet(GOOD_STYLE)
-        else:
-            self.errorLabel.setText('Errors (mouseover)')
-            self.errorLabel.setToolTip(getErrorInfo(tmp))
-            self.errorLabel.setStyleSheet(BAD_STYLE)
+        if tmp != self.acknowledgedError:
+            self.acknowledgedError = None
+            if tmp != None and tmp != 0:
+                error_dialog = ErrorInfoDialog(tmp)
+                if error_dialog.exec_():
+                    error_dialog.show()
+                self.acknowledgedError = tmp
 
         tmp = vitals['stream']
         if tmp == True:
