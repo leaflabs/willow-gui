@@ -9,7 +9,7 @@ www.leaflabs.com/neuroscience
 
 1. Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk
+    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk python-git
 
     $ sudo pip install h5py
 
