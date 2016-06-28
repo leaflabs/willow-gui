@@ -575,6 +575,7 @@ def checkVitals():
     """
     vitals = {  'daemon' : None,
                 'datanode' : None,
+                'chips_live': None,
                 'firmware' : None,
                 'errors' : None,
                 'stream' : None,
@@ -584,6 +585,7 @@ def checkVitals():
         pingDatanode()
         vitals['daemon'] = True
         vitals['datanode'] = True
+        vitals['chips_live'] = getChipsAlive()
         vitals['firmware'] = _doRegRead(dc.MOD_CENTRAL, dc.CENTRAL_GIT_SHA_PIECE)
         vitals['errors'] = _doRegRead(dc.MOD_ERR, dc.ERR_ERR0)
         vitals['stream'] = isStreaming()
@@ -593,6 +595,7 @@ def checkVitals():
             # cannot connect to daemon
             vitals['daemon'] = False
             vitals['datanode'] = None
+            vitals['chips_live'] = None
             vitals['firmware'] = None
             vitals['errors'] = None
             vitals['stream'] = None
@@ -602,6 +605,7 @@ def checkVitals():
                 # cannot connect to datanode
                 vitals['daemon'] = True
                 vitals['datanode'] = False
+                vitals['chips_live'] = None 
                 vitals['firmware'] = None
                 vitals['errors'] = None
                 vitals['stream'] = None
@@ -610,6 +614,7 @@ def checkVitals():
                 # datanode is responding, but error condition is present
                 vitals['daemon'] = True
                 vitals['datanode'] = True
+                vitals['chips_live'] = getChipsAlive()
                 vitals['firmware'] = _doRegRead(dc.MOD_CENTRAL, dc.CENTRAL_GIT_SHA_PIECE)
                 vitals['errors'] = _doRegRead(dc.MOD_ERR, dc.ERR_ERR0)
                 vitals['stream'] = isStreaming()

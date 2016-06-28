@@ -68,7 +68,7 @@ class DaemonRestartDialog(QtGui.QDialog):
 
         label = QtGui.QLabel('Daemon died. Manually restart?\n(Strongly recommended)')
         label.setAlignment(QtCore.Qt.AlignHCenter)
-        
+
         dialogButtons = QtGui.QWidget()
         OkButton = QtGui.QPushButton("OK")
         OkButton.pressed.connect(self.okHandler)
@@ -150,6 +150,10 @@ class StatusBar(QtGui.QWidget):
         self.recordLabel = QtGui.QLabel('Not Recording')
         self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
         layout.addWidget(self.recordLabel)
+
+        self.chipsLabel = QtGui.QLabel('(ADCs live)')
+        self.chipsLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.chipsLabel)
 
         self.setLayout(layout)
 
@@ -269,6 +273,15 @@ class StatusBar(QtGui.QWidget):
         elif tmp == None:
             self.recordLabel.setText('(record)')
             self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
+
+        tmp = vitals['chips_live']
+        if tmp == None:
+            self.chipsLabel.setText('(ADCs live)')
+            self.chipsLabel.setStyleSheet(UNKNOWN_STYLE)
+        else:
+            self.chipsLabel.setText('{0} ADCs live'.format(len(tmp)))
+            self.chipsLabel.setToolTip('chips {0} alive'.format(', '.join([str(c) for c in tmp])))
+            self.chipsLabel.setStyleSheet(GOOD_STYLE)
 
         if self.watchdogLoop:
             self.watchdogThread.start()
