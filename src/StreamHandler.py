@@ -32,6 +32,7 @@ class StreamHandler(QtCore.QObject):
         self.hwif_calls = {
             'setSubsamples_byChip' : [hwif.setSubsamples_byChip, int],
             'startStreaming_subsamples' : [hwif.startStreaming_subsamples],
+            'startStreaming_boardsamples' : [hwif.startStreaming_boardsamples],
             'stopStreaming': [hwif.stopStreaming]
             }
 
