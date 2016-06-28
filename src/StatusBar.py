@@ -251,6 +251,8 @@ class StatusBar(QtGui.QWidget):
         if tmp != self.acknowledgedError:
             self.acknowledgedError = None
             if tmp != None and tmp != 0:
+                self.msgLog.post('Willow error: {}'.format(
+                                 getErrorInfo(tmp)))
                 error_dialog = ErrorInfoDialog(tmp)
                 if error_dialog.exec_():
                     error_dialog.show()
