@@ -122,8 +122,8 @@ def getErrorInfo(errorRegister):
             for j in range(9):
                 if (errorBitmask & 1<<j):
                     errorMsg = errorDict[j]
-                    infoText += '%s: %s, ' % (moduleName, errorMsg)
-    return infoText[:-2]
+                    infoText += '%s: %s' % (moduleName, errorMsg)
+    return infoText
 
 class StatusBar(QtGui.QWidget):
 
@@ -156,6 +156,10 @@ class StatusBar(QtGui.QWidget):
         self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
         layout.addWidget(self.firmwareLabel, 2,0)
 
+        self.chipsLabel = QtGui.QLabel('(chips live)')
+        self.chipsLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.chipsLabel)
+
         self.streamLabel = QtGui.QLabel('Not Streaming')
         self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
         layout.addWidget(self.streamLabel)
@@ -163,10 +167,6 @@ class StatusBar(QtGui.QWidget):
         self.recordLabel = QtGui.QLabel('Not Recording')
         self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
         layout.addWidget(self.recordLabel)
-
-        self.chipsLabel = QtGui.QLabel('(ADCs live)')
-        self.chipsLabel.setStyleSheet(UNKNOWN_STYLE)
-        layout.addWidget(self.chipsLabel)
 
         self.setLayout(layout)
 
@@ -288,10 +288,10 @@ class StatusBar(QtGui.QWidget):
 
         tmp = vitals['chips_live']
         if tmp == None:
-            self.chipsLabel.setText('(ADCs live)')
+            self.chipsLabel.setText('(chips live)')
             self.chipsLabel.setStyleSheet(UNKNOWN_STYLE)
         else:
-            self.chipsLabel.setText('{0} ADCs live'.format(len(tmp)))
+            self.chipsLabel.setText('{0} chips live'.format(len(tmp)))
             self.chipsLabel.setToolTip('chips {0} alive'.format(', '.join([str(c) for c in tmp])))
             self.chipsLabel.setStyleSheet(GOOD_STYLE)
 
