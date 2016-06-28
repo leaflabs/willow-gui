@@ -14,7 +14,7 @@ class SnapshotAnalysisThread(QtCore.QThread):
         self.filename = params['filename']
         self.scriptName = params['whenFinished'][1]
 
-        self.cwd = os.path.join(config.analysisDir, self.scriptName)
+        self.cwd = os.path.join(config.analysisDirSnapshot, self.scriptName)
         self.execPath = os.path.join(self.cwd, 'main')
 
         self.oFile = open(os.path.join(self.cwd, 'oFile'), 'w')
@@ -27,5 +27,5 @@ class SnapshotAnalysisThread(QtCore.QThread):
         self.returncode = self.analysisProcess.returncode
         self.msgPosted.emit('Subprocess %s completed with return code %d. Output saved in %s and %s' %
                             (self.scriptName, self.returncode,
-                            os.path.relpath(self.oFile.name, config.analysisDir),
-                            os.path.relpath(self.eFile.name, config.analysisDir)))
+                            os.path.relpath(self.oFile.name, config.analysisDirSnapshot),
+                            os.path.relpath(self.eFile.name, config.analysisDirSnapshot)))

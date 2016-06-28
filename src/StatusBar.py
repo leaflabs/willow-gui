@@ -215,12 +215,12 @@ class StatusBar(QtGui.QWidget):
             self.daemonLabel.setStyleSheet(GOOD_STYLE)
         elif tmp == False:
             self.daemonLabel.setStyleSheet(BAD_STYLE)
-            if not self.keepDaemonDead:
-                dRD = DaemonRestartDialog()
-                dRD.daemonRestartPasser.connect(self.daemonRestartRequested)
-                dRD.daemonDontRestartPasser.connect(self.dontRestartDaemon)
-                if dRD.exec_():
-                    dRD.show()
+            #if not self.keepDaemonDead:
+            #    dRD = DaemonRestartDialog()
+            #    dRD.daemonRestartPasser.connect(self.daemonRestartRequested)
+            #    dRD.daemonDontRestartPasser.connect(self.dontRestartDaemon)
+            #    if dRD.exec_():
+            #        dRD.show()
         elif tmp == None:
             self.daemonLabel.setStyleSheet(UNKNOWN_STYLE)
 

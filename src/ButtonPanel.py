@@ -3,11 +3,14 @@ import os, h5py
 
 import hwif
 
+from StreamPickDialog import StreamPickDialog
+from StreamHandler import StreamHandler
 from StreamWindow import StreamWindow
-from PlotWindow import PlotWindow 
-from SnapshotDialog import SnapshotDialog
 from StreamDialog import StreamDialog
 
+from PlotWindow import PlotWindow 
+
+from SnapshotDialog import SnapshotDialog
 from SnapshotThread import SnapshotThread
 from SnapshotAnalysisThread import SnapshotAnalysisThread
 
@@ -160,18 +163,23 @@ class ButtonPanel(QtGui.QWidget):
         self.settingsWindow.show()
 
     def launchStreamWindow(self):
-        dlg = StreamDialog()
+        dlg = StreamPickDialog()
         if dlg.exec_():
-            params = dlg.getParams()
-            self.msgLog.actionPost(str("the following streaming params requested:"+"\n"+str(params)))
-            self.streamWindow = StreamWindow(params, self.msgLog)
-            self.streamWindow.show()
-
-    def killStreamWindow(self):
-        if self.streamWindow is not None:
-            self.streamWindow.close()
-        else:
-            pass
+            streamChoice = dlg.getChoice()
+            if streamChoice == 'default':
+                self.msgLog.actionPost(str("default streaming window chosen"))
+                # request parameters
+                dlg = StreamDialog()
+                if dlg.exec_():
+                    params = dlg.getParams()
+                    self.msgLog.actionPost(str("the following streaming params requested:"+"\n"+str(params)))
+                    self.streamWindow = StreamWindow(params, self.msgLog)
+                    self.streamWindow.show()
+            else:
+                self.msgLog.actionPost(str("the following streaming script chosen:"+"\n"+str(streamChoice)))
+                self.streamHandler = StreamHandler(streamChoice)
+                self.streamHandler.msgPosted.connect(self.postStatus)
+                self.streamHandler.run()
 
     def takeSnapshot(self):
         dlg = SnapshotDialog()

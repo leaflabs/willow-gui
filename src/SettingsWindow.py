@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, QtGui
-import config
+import config, os
 
 class DirectoryButton(QtGui.QPushButton):
 
@@ -36,7 +36,7 @@ class SettingsWindow(QtGui.QWidget):
             description = str(config.jsonDict[varName]['description'])
             value = str(config.jsonDict[varName]['value'])
             self.typeMap[varName] = type(config.jsonDict[varName]['value']) # shouldn't this be 'type'?
-            if (varName[-3:] == 'Dir'): # special treatment for directory parameters
+            if os.path.isdir(value): # special treatment for directory parameters
                 layout.addWidget(QtGui.QLabel(description), i,0)
                 dirButton = DirectoryButton(description, value)
                 layout.addWidget(dirButton, i,1)
