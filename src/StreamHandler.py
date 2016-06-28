@@ -60,9 +60,9 @@ class StreamHandler(QtCore.QObject):
             try:
                 call(*real_args)
                 if call == hwif.startStreaming_subsamples:
-                    print 'Started streaming.'
+                    self.msgPosted.emit('Started streaming.')
                 elif call == hwif.stopStreaming:
-                    print 'Stopped streaming.'
+                    self.msgPosted.emit('Stopped streaming.')
                 pass
             except hwif.AlreadyError:
                 already_message = 'Hardware was already '
