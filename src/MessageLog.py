@@ -63,7 +63,6 @@ class MessageLog(QtGui.QWidget):
                 f.write(logText)
             self.post('Saved {} Log to {}'.format(log.objectName, filename), 
                     log=self.messageLog)
-            print "saved"
         else:
             filename = str(QtGui.QFileDialog.getSaveFileName(self,
                 'Save {} File'.format(log.objectName), '../log/{}'.format(log.objectName).lower()))
