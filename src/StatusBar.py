@@ -118,7 +118,8 @@ def getErrorInfo(errorRegister):
     for i in range(1,6):
         if (errorRegister & 1<<i):
             moduleName, errorDict = ERRORDICT_DICT[i]
-            errorCode = hwif.getErrorBitmask(i)
+            errorCode = hwif.getErrorCode(i)
+            print moduleName, errorCode
             errorMsg = errorDict[errorCode]
             infoText += '%s: %s, ' % (moduleName, errorMsg)
     return infoText[:-2]

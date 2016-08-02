@@ -249,7 +249,7 @@ def getChipsAlive():
     mask = resp.reg_io.val
     return [i for i in range(32) if (mask & (0x1 << i))]
 
-def getErrorBitmask(module):
+def getErrorCode(module):
     return _doRegRead(module, 0)
 
 def setSubsamples_byChip(chip):

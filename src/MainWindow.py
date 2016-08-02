@@ -81,20 +81,17 @@ class MainWindow(QtGui.QWidget):
         self.move(screenCenter-windowCenter)
 
     def packageLogs(self):
-        log_dir = '../log'
-        messagesFilename = log_dir+'/messages'
-        self.msgLog.messageWrite(messagesFilename)
-        actionsFilename = log_dir+'/actions'
-        self.msgLog.actionWrite(actionsFilename)
+        log_dir = '../log/'
+        for log in self.msgLog.backlogs:
+            self.msgLog.logWrite(log, log_dir+log.objectName.lower())
         vitalsLogFilename = log_dir+'/vitals'
         self.statusBar.writeVitalsLog(vitalsLogFilename)
         dt = datetime.datetime.fromtimestamp(time.time())
         zipFilename = str(QtGui.QFileDialog.getSaveFileName(self, 'Save Zipped logs', '../log/logs_from_%02d-%02d-%04d_%02d:%02d:%02d.zip' % (dt.month, dt.day, dt.year, dt.hour, dt.minute, dt.second)))
         if zipFilename:
             with zipfile.ZipFile(zipFilename, 'w') as f:
-                f.write(messagesFilename)
-                f.write(actionsFilename)
-                f.write(vitalsLogFilename)
+                for log in self.msgLog.backlogs:
+                    f.write(log_dir+log.objectName.lower())
                 f.write('../log/oFile')
                 f.write('../log/eFile')
         self.msgLog.post('Saved debugging logs to {0}'.format(zipFilename))
