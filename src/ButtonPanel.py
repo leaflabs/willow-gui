@@ -167,16 +167,19 @@ class ButtonPanel(QtGui.QWidget):
         if dlg.exec_():
             streamChoice = dlg.getChoice()
             if streamChoice == 'default':
-                self.msgLog.actionPost(str("default streaming window chosen"))
+                self.msgLog.post(str("default streaming window chosen"), 
+                        log=self.msgLog.actionLog)
                 # request parameters
                 dlg = StreamDialog()
                 if dlg.exec_():
                     params = dlg.getParams()
-                    self.msgLog.actionPost(str("the following streaming params requested:"+"\n"+str(params)))
+                    self.msgLog.post(str("the following streaming params requested:"+"\n"+str(params)),
+                        log=self.msgLog.actionLog)
                     self.streamWindow = StreamWindow(params, self.msgLog)
                     self.streamWindow.show()
             else:
-                self.msgLog.actionPost(str("the following streaming script chosen:"+"\n"+str(streamChoice)))
+                self.msgLog.post(str("the following streaming script chosen:"+"\n"+str(streamChoice)),
+                    log=self.msgLog.actionLog)
                 self.streamHandler = StreamHandler(streamChoice)
                 self.streamHandler.msgPosted.connect(self.postStatus)
                 self.streamHandler.run()
@@ -185,7 +188,8 @@ class ButtonPanel(QtGui.QWidget):
         dlg = SnapshotDialog()
         if dlg.exec_():
             params = dlg.getParams()
-            self.msgLog.actionPost(str("the following snapshot params requested:"+"\n"+str(params)))
+            self.msgLog.post(str("the following snapshot params requested:"+"\n"+str(params)),
+                log=self.msgLog.actionLog)
             self.snapshotThread = SnapshotThread(params)
             self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
             self.snapshotProgressDialog.setWindowTitle('Snapshot Progress')
@@ -255,7 +259,8 @@ class ButtonPanel(QtGui.QWidget):
         dlg = TransferDialog()
         if dlg.exec_():
             params = dlg.getParams()
-            self.msgLog.actionPost(str("the following transfer params requested:"+"\n"+str(params)))
+            self.msgLog.post(str("the following transfer params requested:"+"\n"+str(params)),
+                    log=self.msgLog.actionLog)
             self.transferThread = TransferThread(params)
             self.transferProgressDialog = QtGui.QProgressDialog('Transferring Experiment..', 'Cancel', 0, 0)
             self.transferProgressDialog.setWindowTitle('Transfer Progress')
@@ -274,15 +279,18 @@ class ButtonPanel(QtGui.QWidget):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Import Data File', config.dataDir)
         if filename:
             filename = str(filename)
-            self.msgLog.actionPost(str("imported:"+"\n"+filename))
+            self.msgLog.post(str("imported:"+"\n"+filename),
+                    log=self.msgLog.actionLog)
             if isCalibrationFile(filename):
-                self.msgLog.actionPost("(calibration file)")
+                self.msgLog.post("(calibration file)",
+                        log=self.msgLog.actionLog)
                 f = h5py.File(filename)
                 dset = f['impedanceMeasurements']
                 impedanceMeasurements = dset[:]
                 self.launchImpedancePlotWindow(impedanceMeasurements)
             elif isSnapshotFile(filename):
-                self.msgLog.actionPost("(snapshot file)")
+                self.msgLog.post("(snapshot file)",
+                        log=self.msgLog.actionLog)
                 dlg = ImportDialog_snapshot()
                 if dlg.exec_():
                     params = dlg.getParams()
@@ -300,11 +308,13 @@ class ButtonPanel(QtGui.QWidget):
                         dataset.importData()
                         self.launchPlotWindow(dataset)
             else:
-                self.msgLog.actionPost("(experiment file)")
+                self.msgLog.post("(experiment file)",
+                        log=self.msgLog.actionLog)
                 dlg = ImportDialog_experiment()
                 if dlg.exec_():
                     params = dlg.getParams()
-                    self.msgLog.actionPost(str("the following import params requested:"+"\n"+str(params)))
+                    self.msgLog.post(str("the following import params requested:"+"\n"+str(params)),
+                            log=self.msgLog.actionLog)
                     sampleRange = params['sampleRange']
                     if not isSampleRangeValid(sampleRange):
                         self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
