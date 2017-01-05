@@ -1,7 +1,7 @@
 # willowGUI
 GUI software for the Willow electrophysiology system
 
-www.leaflabs.com/neuroscience
+www.leaflabs.com/willow
 
 ![gui_windowtiling](https://github.com/leaflabs/willowgui/blob/master/docs/user_guide/screenshots/gui_windowtiling.png)
 
@@ -19,7 +19,7 @@ www.leaflabs.com/neuroscience
    instead of apt-get.
 
 2. Make sure your system is set up to work with the daemon. Refer to the
-    "Willow 1.0 User Guide", available [here](http://static.leaflabs.com/pub/willow/willow1.0_user_guide.pdf).
+    "Willow 1.0 User Guide", available [here](docs/user_guide/willowgui_userguide.pdf).
 
 3. Run:
 
