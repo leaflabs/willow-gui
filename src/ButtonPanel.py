@@ -8,13 +8,13 @@ from StreamHandler import StreamHandler
 from StreamWindow import StreamWindow
 from StreamDialog import StreamDialog
 
-from PlotWindow import PlotWindow 
+from DataExplorerWindow import DataExplorerWindow
 
 from SnapshotDialog import SnapshotDialog
 from SnapshotThread import SnapshotThread
 from SnapshotAnalysisThread import SnapshotAnalysisThread
 
-from ImportDialog import ImportDialog_experiment, ImportDialog_snapshot
+from ImportDialog import SnapshotImportDialog
 from ImportThread import ImportThread
 
 from TransferDialog import TransferDialog
@@ -291,7 +291,7 @@ class ButtonPanel(QtGui.QWidget):
             elif isSnapshotFile(filename):
                 self.msgLog.post("(snapshot file)",
                         log=self.msgLog.actionLog)
-                dlg = ImportDialog_snapshot()
+                dlg = SnapshotImportDialog()
                 if dlg.exec_():
                     params = dlg.getParams()
                     if params['customScript']:
@@ -303,43 +303,14 @@ class ButtonPanel(QtGui.QWidget):
                         self.subprocessThreads.append(sat) # necessary to prevent garbage collection
                         sat.start()
                     else:
-                        sampleRange = params['sampleRange']
-                        dataset = WillowDataset(filename, sampleRange);
-                        dataset.importData()
-                        self.launchPlotWindow(dataset)
+                        self.launchPlotWindow(filename)
             else:
                 self.msgLog.post("(experiment file)",
                         log=self.msgLog.actionLog)
-                dlg = ImportDialog_experiment()
-                if dlg.exec_():
-                    params = dlg.getParams()
-                    self.msgLog.post(str("the following import params requested:"+"\n"+str(params)),
-                            log=self.msgLog.actionLog)
-                    sampleRange = params['sampleRange']
-                    if not isSampleRangeValid(sampleRange):
-                        self.msgLog.post('Sample range not valid: [%d, %d]' % tuple(sampleRange))
-                        return
-                    try:
-                        dataset = WillowDataset(filename, sampleRange)
-                        self.importProgressDialog = QtGui.QProgressDialog('Importing %s' % filename,
-                            'Cancel', 0, dataset.nsamples)
-                        self.importProgressDialog.setMinimumDuration(1000)
-                        self.importProgressDialog.setModal(False)
-                        self.importProgressDialog.setWindowTitle('Data Import Progress')
-                        self.importProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
-                        self.importThread = ImportThread(dataset)
-                        self.importThread.progressUpdated.connect(self.importProgressDialog.setValue)
-                        self.importThread.msgPosted.connect(self.postStatus) # TODO convert these to postMessage name
-                        self.importThread.finished.connect(self.launchPlotWindow)
-                        self.importThread.canceled.connect(self.importProgressDialog.cancel)
-                        self.importProgressDialog.canceled.connect(self.importThread.terminate)
-                        self.importProgressDialog.show()
-                        self.importThread.start()
-                    except IndexError as e:
-                        self.msgLog.post(e.message)
+                self.launchPlotWindow(filename)
 
-    def launchPlotWindow(self, willowDataset):
-        self.plotWindow = PlotWindow(willowDataset)
+    def launchPlotWindow(self, filename):
+        self.plotWindow = DataExplorerWindow(filename)
         self.plotWindow.show()
 
     def launchImpedancePlotWindow(self, impedanceMeasurements):
