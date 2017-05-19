@@ -120,8 +120,10 @@ if __name__=='__main__':
         print 'Error: Branch is not master'
         sys.exit(1)
     except NothingToPushError:
-        print 'Nothing to push, returning.'
-        sys.exit(0)
+        resp = raw_input('Nothing to push. Proceed anyway? (y/n): ')
+        if not (resp=='y' or resp=='Y'):
+            sys.exit(0)
+        main(repo)
     except RemoteNotInParentsError:
         print "Error: Remote not found in local commit's parents. Try 'git pull' first?"
         sys.exit(1)
