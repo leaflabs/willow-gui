@@ -282,10 +282,7 @@ class ButtonPanel(QtGui.QWidget):
             if isCalibrationFile(filename):
                 self.msgLog.post("(calibration file)",
                         log=self.msgLog.actionLog)
-                f = h5py.File(filename)
-                dset = f['impedanceMeasurements']
-                impedanceMeasurements = dset[:]
-                self.launchImpedancePlotWindow(impedanceMeasurements)
+                self.launchImpedancePlotWindow(filename)
             elif isSnapshotFile(filename):
                 self.msgLog.post("(snapshot file)",
                         log=self.msgLog.actionLog)
@@ -311,7 +308,7 @@ class ButtonPanel(QtGui.QWidget):
         self.plotWindow = DataExplorerWindow(filename)
         self.plotWindow.show()
 
-    def launchImpedancePlotWindow(self, impedanceMeasurements):
-        self.impedancePlotWindow = ImpedancePlotWindow(impedanceMeasurements)
+    def launchImpedancePlotWindow(self, filename):
+        self.impedancePlotWindow = ImpedancePlotWindow(str(filename))
         self.impedancePlotWindow.show()
         

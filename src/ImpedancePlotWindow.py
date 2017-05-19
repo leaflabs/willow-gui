@@ -10,9 +10,12 @@ import h5py
 
 class ImpedancePlotWindow(QtGui.QWidget):
 
-    def __init__(self, data):
+    def __init__(self, filename):
         QtGui.QWidget.__init__(self)
-        self.data = data
+        self.filename = filename
+
+        self.fileObject = h5py.File(filename)
+        self.data = self.fileObject['impedanceMeasurements'][:]
 
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
@@ -54,9 +57,6 @@ if __name__=='__main__':
     config.updateAttributes(config.loadJSON())
     filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Select Impedance File', config.dataDir))
     if filename:
-        f = h5py.File(filename)
-        dset = f['impedanceMeasurements']
-        impedanceMeasurements = dset[:]
-        impedancePlotWindow = ImpedancePlotWindow(impedanceMeasurements)
+        impedancePlotWindow = ImpedancePlotWindow(filename)
         impedancePlotWindow.show()
         app.exec_()

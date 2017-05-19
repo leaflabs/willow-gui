@@ -29,7 +29,7 @@ class ImpedanceThread(QtCore.QThread):
     textChanged = QtCore.pyqtSignal(str)
     finished = QtCore.pyqtSignal()
     msgPosted = QtCore.pyqtSignal(str)
-    dataReady = QtCore.pyqtSignal(object)
+    dataReady = QtCore.pyqtSignal(str)
 
     def __init__(self, params):
         QtCore.QThread.__init__(self)
@@ -157,7 +157,7 @@ class ImpedanceThread(QtCore.QThread):
             saveImpedance_hdf5(self.impedanceMeasurements, timestamp, impedanceFilename)
             self.msgPosted.emit('Impedance measurements saved to %s' % impedanceFilename)
             if self.plot:
-                self.dataReady.emit(self.impedanceMeasurements)
+                self.dataReady.emit(impedanceFilename)
 
     def oneChannelRoutine(self):
         self.startStreaming()
