@@ -204,9 +204,7 @@ class ButtonPanel(QtGui.QWidget):
     def handleSnapshotFinished(self, params):
         finalAction = params['whenFinished'][0]
         if finalAction == -3: # "willowgui data explorer"
-            dataset = WillowDataset(params['filename'], -1)
-            dataset.importData()
-            self.launchPlotWindow(dataset)
+            self.launchPlotWindow(params['filename'])
         elif finalAction == -4: # custom script
             sat = SnapshotAnalysisThread(params)
             sat.msgPosted.connect(self.postStatus)
