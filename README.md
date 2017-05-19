@@ -9,7 +9,7 @@ www.leaflabs.com/willow
 
 1. Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk python-git python-pip
+    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk python-git python-pip python-pyqtgraph
 
     $ pip install h5py
 
