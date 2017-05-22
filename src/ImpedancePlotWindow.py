@@ -1,48 +1,40 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
-import sys, time
+import sys, time, os
 from PyQt4 import QtGui
 import numpy as np
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
 import h5py
+import pyqtgraph as pg
 
-class ImpedancePlotWindow(QtGui.QWidget):
+from WillowDataset import NCHAN
+
+TICKLENGTH = -10
+INITWIDTH = 1200
+INITHEIGHT = 600
+
+class ImpedancePlotWindow(pg.PlotWidget):
 
     def __init__(self, filename):
-        QtGui.QWidget.__init__(self)
-        self.filename = filename
+        pg.PlotWidget.__init__(self)
 
+        self.filename = filename
         self.fileObject = h5py.File(filename)
         self.data = self.fileObject['impedanceMeasurements'][:]
 
-        self.fig = Figure()
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self)
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        self.createPlot()
+        self.plot(np.arange(NCHAN), self.data, pen=None, symbol='o')
+        self.setLogMode(y=True)
+        self.setLimits(xMin=0, xMax=NCHAN, yMin=0, yMax=np.log10(np.max(self.data))+1)
+        self.setLabel('bottom', text='Willow Channel Number')
+        self.setLabel('left', text='Impedance (Ohms)')
+        self.setTitle(os.path.basename(self.filename))
+        # iterate through all axesItems, and set their ticklength to the file-global value
+        for axesDict in self.plotItem.axes.values():
+            axesDict['item'].setStyle(tickLength=TICKLENGTH)
 
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.canvas)
-        layout.addWidget(self.toolbar)
-        self.setLayout(layout)
-        self.resize(1200,600)
+        self.resize(INITWIDTH,INITHEIGHT)
         self.setWindowTitle('Impedance Plot Window')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
         self.center()
-
-    def createPlot(self):
-        self.axes = self.fig.add_subplot(111)
-        self.axes.set_axis_bgcolor('k')
-        self.axes.semilogy(self.data, color='#8fdb90', linestyle='', marker='D')
-        self.axes.set_title('Impedance at 1 kHz')
-        self.axes.set_xlabel('Channel Number')
-        self.axes.set_ylabel('Z (ohms)')
-        self.axes.set_xlim([0,1023])
-        self.axes.tick_params(axis='both', which='both', direction='out', width=1.5)
-        self.axes.tick_params(axis='both', which='major', length=8) 
-        self.axes.tick_params(axis='both', which='minor', length=4) 
 
     def center(self):
         fmgeo = self.frameGeometry()
@@ -50,6 +42,7 @@ class ImpedancePlotWindow(QtGui.QWidget):
         centerPoint = QtGui.QApplication.desktop().screenGeometry(currentScreen).center()
         fmgeo.moveCenter(centerPoint)
         self.move(fmgeo.topLeft())
+
 
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
