@@ -15,7 +15,6 @@ from SnapshotThread import SnapshotThread
 from SnapshotAnalysisThread import SnapshotAnalysisThread
 
 from ImportDialog import SnapshotImportDialog
-from ImportThread import ImportThread
 
 from TransferDialog import TransferDialog
 from TransferThread import TransferThread
