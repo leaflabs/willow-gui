@@ -66,8 +66,6 @@ class WillowDataset(QtCore.QObject):
     Common format for passing data between import processes, plot windows, etc.
     """
 
-    progressUpdated = QtCore.pyqtSignal(int)
-
     def __init__(self, filename, sampleRange):
         QtCore.QObject.__init__(self)
         self.filename = filename
@@ -144,14 +142,10 @@ class WillowDataset(QtCore.QObject):
             self.data_raw = np.zeros((NCHAN,self.nsamples), dtype='uint16')
             for i in range(self.nsamples):
                 self.data_raw[:,i] = self.dset[self.sampleRange[0]+i][3][:NCHAN]
-                if (i%1000==0):
-                    self.progressUpdated.emit(i)
         else:
-            self.progressUpdated.emit(0)
             self.data_raw = np.array(self.fileObject['channel_data']
                             [self.sampleRange[0]*NCHAN:(self.sampleRange[1]+1)*NCHAN],
                             dtype='uint16').reshape((self.nsamples, NCHAN)).transpose()
-        self.progressUpdated.emit(self.nsamples)
         self.data_uv = (np.array(self.data_raw, dtype='float')-2**15)*MICROVOLTS_PER_COUNT
         self.dataMin = np.min(self.data_uv)
         self.dataMax = np.max(self.data_uv)
