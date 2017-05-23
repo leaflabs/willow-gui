@@ -15,7 +15,7 @@ class DataExplorerWindow(QtGui.QWidget):
     def __init__(self, filename):
         QtGui.QWidget.__init__(self)
 
-        self.dataset = WillowDataset(filename, -1)
+        self.dataset = WillowDataset(filename)
 
         # widgets
         self.heatMap = HeatMap(32, 32)

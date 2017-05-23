@@ -49,7 +49,7 @@ def isCalibrationFile(filename):
     return 'impedanceMeasurements' in f.keys()
 
 def isSnapshotFile(filename):
-    dataset = WillowDataset(filename, -1)
+    dataset = WillowDataset(filename)
     return dataset.type == 'snapshot'
 
 class ButtonPanel(QtGui.QWidget):

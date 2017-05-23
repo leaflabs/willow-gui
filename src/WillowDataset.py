@@ -66,7 +66,7 @@ class WillowDataset(QtCore.QObject):
     Common format for passing data between import processes, plot windows, etc.
     """
 
-    def __init__(self, filename, sampleRange):
+    def __init__(self, filename):
         QtCore.QObject.__init__(self)
         self.filename = filename
         self.fileObject = h5py.File(self.filename)
@@ -88,30 +88,12 @@ class WillowDataset(QtCore.QObject):
             else:
                 self.type = 'experiment'
 
-        # define self.sampleRange and related temporal data
-        if sampleRange==-1:
-            if self.isOldLayout:
-                self.nsamples = len(self.dset)
-            else:
-                self.nsamples = len(self.dset)//NCHAN
-            self.sampleRange = [0, self.nsamples-1]
+        # define self.nsamples and related temporal data
+        if self.isOldLayout:
+            self.nsamples = len(self.dset)
         else:
-            self.sampleRange = sampleRange
-            self.nsamples = self.sampleRange[1] - self.sampleRange[0] + 1
-            if self.isOldLayout:
-                dsetMin = int(self.dset[0][1])
-                dsetMax = int(self.dset[-1][1])
-            else:
-                dsetMin = int(self.fileObject['sample_index'][0])
-                dsetMax = int(self.fileObject['sample_index'][-1])
-            if self.type=='snapshot':
-                # need to normalize because snapshots have random offsets
-                dsetMax -= dsetMin
-                dsetMin = 0
-            if (self.sampleRange[0] < dsetMin) or (self.sampleRange[1] > dsetMax):
-                raise IndexError('Error: sampleRange [%d, %d] out of range for dset: [%d, %d]'
-                    % tuple(self.sampleRange+[dsetMin,dsetMax]))
-        self.time_ms = np.arange(self.sampleRange[0], self.sampleRange[1]+1)*MS_PER_SEC/SAMPLE_RATE
+            self.nsamples = len(self.dset)//NCHAN
+        self.time_ms = np.arange(self.nsamples)*MS_PER_SEC/SAMPLE_RATE
         self.timeMin = np.min(self.time_ms)
         self.timeMax = np.max(self.time_ms)
 
@@ -141,10 +123,9 @@ class WillowDataset(QtCore.QObject):
                 raise WillowImportError
             self.data_raw = np.zeros((NCHAN,self.nsamples), dtype='uint16')
             for i in range(self.nsamples):
-                self.data_raw[:,i] = self.dset[self.sampleRange[0]+i][3][:NCHAN]
+                self.data_raw[:,i] = self.dset[i][3][:NCHAN]
         else:
-            self.data_raw = np.array(self.fileObject['channel_data']
-                            [self.sampleRange[0]*NCHAN:(self.sampleRange[1]+1)*NCHAN],
+            self.data_raw = np.array(self.fileObject['channel_data'][:],
                             dtype='uint16').reshape((self.nsamples, NCHAN)).transpose()
         self.data_uv = (np.array(self.data_raw, dtype='float')-2**15)*MICROVOLTS_PER_COUNT
         self.dataMin = np.min(self.data_uv)

@@ -55,7 +55,7 @@ class ImpedanceThread(QtCore.QThread):
         if not os.path.isfile(tmpSnapshotFilename):
             raise SnapshotLoadError
         try:
-            dataset = WillowDataset(tmpSnapshotFilename, -1)
+            dataset = WillowDataset(tmpSnapshotFilename)
         # a ValueError raised by python if saved is improperly formatted
         # (this can happen due to a dropped UDP packet and possibly due to
         # other reasons)
