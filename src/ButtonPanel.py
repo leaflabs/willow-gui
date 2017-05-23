@@ -50,7 +50,7 @@ def isCalibrationFile(filename):
 
 def isSnapshotFile(filename):
     dataset = WillowDataset(filename)
-    return dataset.type == 'snapshot'
+    return dataset.isSnapshot
 
 class ButtonPanel(QtGui.QWidget):
 

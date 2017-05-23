@@ -68,65 +68,29 @@ class WillowDataset(QtCore.QObject):
 
     def __init__(self, filename):
         QtCore.QObject.__init__(self)
+
         self.filename = filename
         self.fileObject = h5py.File(self.filename)
-        # the following test allows for backward-compatibility
-        if 'wired-dataset' in self.fileObject:
-            self.isOldLayout = True
-            self.dset = self.fileObject['wired-dataset']
-            # determine type based on header flag
-            if (self.dset[0][0] & (1<<6)):
-                self.type = 'snapshot'
-            else:
-                self.type = 'experiment'
-        else:
-            self.isOldLayout = False 
-            self.dset = self.fileObject['channel_data']
-            # determine type based on header flag
-            if self.fileObject['ph_flags'][0] & (1<<6):
-                self.type = 'snapshot'
-            else:
-                self.type = 'experiment'
-
-        # define self.nsamples and related temporal data
-        if self.isOldLayout:
-            self.nsamples = len(self.dset)
-        else:
-            self.nsamples = len(self.dset)//NCHAN
+        self.dset = self.fileObject['channel_data']
+        self.isSnapshot = self.fileObject.attrs['ph_flags'][0] & (1 << 6)
+        self.nsamples, self.nchan = self.dset.shape
         self.time_ms = np.arange(self.nsamples)*MS_PER_SEC/SAMPLE_RATE
         self.timeMin = np.min(self.time_ms)
         self.timeMax = np.max(self.time_ms)
-
-        # other metadata
-        if self.isOldLayout:
-            self.boardID = self.dset.attrs['board_id'][0]
-            if self.type=='experiment':
-                self.cookie = self.dset.attrs['experiment_cookie'][0]
-            else:
-                self.cookie = None
-            chipAliveMask = self.dset[0][2]
+        self.boardID = self.fileObject.attrs['board_id'][0]
+        if self.isSnapshot:
+            self.cookie = None
         else:
-            self.boardID = self.fileObject.attrs['board_id'][0]
-            if self.type=='experiment':
-                self.cookie = self.fileObject.attrs['experiment_cookie'][0]
-            else:
-                self.cookie = None
-            chipAliveMask = self.fileObject['chip_live'][0]
+            self.cookie = self.fileObject.attrs['experiment_cookie'][0]
+        chipAliveMask = self.fileObject['chip_live'][0]
         self.chipList = [i for i in range(NCHIPS) if (chipAliveMask & (0x1 << i))]
+
         self.isImported = False
 
         self.ncpu = mp.cpu_count()
 
     def importData(self):
-        if self.isOldLayout:
-            if self.nsamples > MAX_NSAMPLES:
-                raise WillowImportError
-            self.data_raw = np.zeros((NCHAN,self.nsamples), dtype='uint16')
-            for i in range(self.nsamples):
-                self.data_raw[:,i] = self.dset[i][3][:NCHAN]
-        else:
-            self.data_raw = np.array(self.fileObject['channel_data'][:],
-                            dtype='uint16').reshape((self.nsamples, NCHAN)).transpose()
+        self.data_raw = self.dset[:].transpose()
         self.data_uv = (np.array(self.data_raw, dtype='float')-2**15)*MICROVOLTS_PER_COUNT
         self.dataMin = np.min(self.data_uv)
         self.dataMax = np.max(self.data_uv)
@@ -135,8 +99,7 @@ class WillowDataset(QtCore.QObject):
 
     def importSlice(self, s0, s1):
         # s0, s1 are the first and last sample indices of the slice
-        self.slice_raw = np.array(self.fileObject['channel_data'][s0*NCHAN:s1*NCHAN],
-                                    dtype='uint16').reshape((s1-s0, NCHAN)).transpose()
+        self.slice_raw = self.dset[s0:s1,:].transpose()
         # cast to float, center on zero (subtract 2**16/2 = 2**15), and convert to microvolts
         self.slice_uv = (np.array(self.slice_raw, dtype='float')-2**15)*MICROVOLTS_PER_COUNT
         self.slice_s0 = s0
