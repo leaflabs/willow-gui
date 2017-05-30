@@ -1,12 +1,48 @@
 from PyQt4 import QtCore, QtGui
 import time, datetime, os, sys
+import subprocess
 
 import config
+
+DEVICE_DIR = '/dev'
+
+
+def parseRawBlockDevices():
+    """
+    This function parses the output from lsblk, and packs the device names
+    and sizes into a list of strings suitable for e.g. a dropdown menu.
+    Only works on Linux, for now.
+    """
+    deviceList = []
+    output = subprocess.check_output(['lsblk', '-Pd'])
+    lines = output.split('\n')
+    for line in lines:
+        if line: # ignore empty string resulting from trailing newline
+            pairs = line.split()
+            for pair in pairs:
+                key, value = pair.split("=")
+                if key == 'NAME':
+                    name = value.strip('"')
+                elif key == 'SIZE':
+                    size = value.strip('"')
+            deviceString = '%s (%s)' % (os.path.join(DEVICE_DIR, name), size)
+            deviceList.append(deviceString)
+    return deviceList
+
 
 class TransferDialog(QtGui.QDialog):
 
     def __init__(self, parent=None):
         super(TransferDialog, self).__init__(parent)
+
+        self.sourceGroupBox = QtGui.QGroupBox('Source')
+        self.sourceDropdown = QtGui.QComboBox()
+        deviceList = parseRawBlockDevices()
+        for deviceString in deviceList:
+            self.sourceDropdown.addItem(deviceString)
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.sourceDropdown)
+        self.sourceGroupBox.setLayout(layout)
 
         self.allDataButton = QtGui.QRadioButton('Entire Experiment')
         self.allDataButton.setChecked(True)
@@ -54,6 +90,7 @@ class TransferDialog(QtGui.QDialog):
         self.dialogButtons.rejected.connect(self.reject)
 
         layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.sourceGroupBox)
         layout.addWidget(self.experimentGroupBox)
         layout.addWidget(self.filenameGroupBox)
         layout.addWidget(self.dialogButtons)
@@ -79,6 +116,7 @@ class TransferDialog(QtGui.QDialog):
 
     def getParams(self):
         params = {}
+        params['source'] = str(self.sourceDropdown.currentText()).split()[0]
         if self.subsetButton.isChecked():
             fromSamples = int(float(self.subsetFromLine.text())*30000)
             toSamples = int(float(self.subsetToLine.text())*30000)
