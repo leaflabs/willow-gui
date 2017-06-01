@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 from PyQt4 import QtCore, QtGui
 import subprocess, os, sys, socket
 import numpy as np
@@ -15,6 +17,11 @@ import select
 import hwif
 
 MICROVOLTS_PER_COUNT = 0.195
+
+INIT_WILLOWCHAN = 0
+INIT_YMIN = -6000
+INIT_YMAX = 6000
+INIT_REFRESH_RATE = 20
 
 def calculateTicks(axisrange):
     delta = axisrange[1] - axisrange[0]
@@ -34,24 +41,18 @@ def calculateTicks(axisrange):
 
 class StreamWindow(QtGui.QWidget):
 
-    def __init__(self, params, msgLog):
-        super(StreamWindow, self).__init__(None)
-        self.msgLog = msgLog
+    msgPosted = QtCore.pyqtSignal(str)
 
-        channel = params['channel']
-        self.chip = channel//32
-        self.chan = channel%32
-        ymin = params['ymin']
-        ymax = params['ymax']
-        self.yrange_uV = [ymin, ymax]
+    def __init__(self):
+        QtGui.QWidget.__init__(self)
+
+        self.willowchan = INIT_WILLOWCHAN
+        self.chip = self.willowchan//32
+        self.chan = self.willowchan%32
+        self.yrange_uV = [INIT_YMIN, INIT_YMAX]
         # conversion factor from microvolts to ADC = 1/0.195
         self.yrange_cnts = [int((y/MICROVOLTS_PER_COUNT)+2**15) for y in self.yrange_uV]
-        self.refreshRate = params['refreshRate']
-
-        try:
-            hwif.setSubsamples_byChip(self.chip)
-        except hwif.hwifError as e:
-            self.msgLog.post(e.message)
+        self.refreshRate = INIT_REFRESH_RATE
 
         ###################
         # Matplotlib Setup
@@ -135,27 +136,28 @@ class StreamWindow(QtGui.QWidget):
 
     def startStreaming(self):
         try:
+            hwif.setSubsamples_byChip(self.chip)
             hwif.startStreaming_subsamples()
             self.toggleStdin(True)
-            self.msgLog.post('Started streaming.')
+            self.msgPosted.emit('Started streaming.')
         except hwif.AlreadyError:
             #self.toggleStdin(True) # ideally this would start the plot updating, but for now it fails
-            self.msgLog.post('Hardware was already streaming. Try stopping and restarting stream.')
+            self.msgPosted.emit('Hardware was already streaming. Try stopping and restarting stream.')
         except hwif.hwifError as e:
-            self.msgLog.post(e.message)
+            self.msgPosted.emit(e.message)
 
     def stopStreaming(self):
         try:
             hwif.stopStreaming()
-            self.msgLog.post('Stopped streaming.')
+            self.msgPosted.emit('Stopped streaming.')
         except hwif.AlreadyError:
             self.toggleStdin(False)
-            self.msgLog.post('Already not streaming')
+            self.msgPosted.emit('Already not streaming')
         except AttributeError:
             # TODO what's up with this?
-            self.msgLog.post('AttributeError: Pipe object does not exist')
+            self.msgPosted.emit('AttributeError: Pipe object does not exist')
         except hwif.hwifError as e:
-            self.msgLog.post(e.message)
+            self.msgPosted.emit(e.message)
         finally:
             self.toggleStdin(False)
 
@@ -185,7 +187,7 @@ class StreamWindow(QtGui.QWidget):
             self.waveform[0].set_data(self.xvalues, self.plotBuff)
             self.canvas.draw()
         else:
-            self.msgLog.post('Read from proto2bytes timed out!')
+            self.msgPosted.emit('Read from proto2bytes timed out!')
             self.stopStreaming()
 
     def closeEvent(self, event):
@@ -193,5 +195,10 @@ class StreamWindow(QtGui.QWidget):
             if hwif.isStreaming():
                 self.stopStreaming()
         except hwif.hwifError as e:
-            self.msgLog.post(e.message)
+            self.msgPosted.emit(e.message)
 
+if __name__ == '__main__':
+    app = QtGui.QApplication(sys.argv)
+    streamWindow = StreamWindow()
+    streamWindow.show()
+    sys.exit(app.exec_())

@@ -6,7 +6,6 @@ import hwif
 from StreamPickDialog import StreamPickDialog
 from StreamHandler import StreamHandler
 from StreamWindow import StreamWindow
-from StreamDialog import StreamDialog
 
 from DataExplorerWindow import DataExplorerWindow
 
@@ -166,16 +165,9 @@ class ButtonPanel(QtGui.QWidget):
         if dlg.exec_():
             streamChoice = dlg.getChoice()
             if streamChoice == 'default':
-                self.msgLog.post(str("default streaming window chosen"), 
-                        log=self.msgLog.actionLog)
-                # request parameters
-                dlg = StreamDialog()
-                if dlg.exec_():
-                    params = dlg.getParams()
-                    self.msgLog.post(str("the following streaming params requested:"+"\n"+str(params)),
-                        log=self.msgLog.actionLog)
-                    self.streamWindow = StreamWindow(params, self.msgLog)
-                    self.streamWindow.show()
+                self.streamWindow = StreamWindow()
+                self.streamWindow.msgPosted.connect(self.postStatus)
+                self.streamWindow.show()
             else:
                 self.msgLog.post(str("the following streaming script chosen:"+"\n"+str(streamChoice)),
                     log=self.msgLog.actionLog)
