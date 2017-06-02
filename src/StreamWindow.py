@@ -7,37 +7,19 @@ import numpy as np
 import config
 
 import numpy as np
-import matplotlib
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
+
+import pyqtgraph as pg
 
 import select
 
 import hwif
-
-MICROVOLTS_PER_COUNT = 0.195
+import WillowDataset as const
 
 INIT_WILLOWCHAN = 0
-INIT_YMIN = -6000
-INIT_YMAX = 6000
+INIT_YMIN_UV = -6000
+INIT_YMAX_UV = 6000
+INIT_XRANGE_MS = 1000
 INIT_REFRESH_RATE = 20
-
-def calculateTicks(axisrange):
-    delta = axisrange[1] - axisrange[0]
-    # delta must be greater than 1 but less than 100000; check for this somewhere
-    increments = [10**i for i in range(4,-1,-1)]
-    i = 0
-    increment = None
-    while not increment:
-        inc = increments[i]
-        if delta > 3*inc:
-            increment = inc
-        i += 1
-    multiple = axisrange[0]//increment
-    tick0 = (multiple+1)*increment
-    ticks = range(tick0, axisrange[1], increment)
-    return ticks
 
 class StreamWindow(QtGui.QWidget):
 
@@ -49,61 +31,35 @@ class StreamWindow(QtGui.QWidget):
         self.willowchan = INIT_WILLOWCHAN
         self.chip = self.willowchan//32
         self.chan = self.willowchan%32
-        self.yrange_uV = [INIT_YMIN, INIT_YMAX]
-        # conversion factor from microvolts to ADC = 1/0.195
-        self.yrange_cnts = [int((y/MICROVOLTS_PER_COUNT)+2**15) for y in self.yrange_uV]
         self.refreshRate = INIT_REFRESH_RATE
-
-        ###################
-        # Matplotlib Setup
-        ###################
-
-        #self.fig = Figure((5.0, 4.0), dpi=100)
-        self.fig = Figure()
-        self.canvas = FigureCanvas(self.fig)
-        self.canvas.setParent(self)
-        self.axes = self.fig.add_subplot(111)
-        self.axes.set_title('Chip %d, Channel %d' % (self.chip, self.chan))
-        self.axes.set_ylabel('microVolts')
-        self.axes.set_xlabel('Samples')
-        self.axes.set_axis_bgcolor('k')
-        self.axes.axis([0, 30000, self.yrange_cnts[0], self.yrange_cnts[1]])
-
-        yticks_uV = calculateTicks(self.yrange_uV)
-        yticklabels = [str(tick) for tick in yticks_uV]
-        yticks = [int(tick*5+2**15) for tick in yticks_uV]
-        self.axes.set_yticks(yticks)
-        self.axes.set_yticklabels(yticklabels)
-
-        self.mpl_toolbar = NavigationToolbar(self.canvas, self)
-
-        self.mplLayout = QtGui.QVBoxLayout()
-        self.mplLayout.addWidget(self.canvas)
-        self.mplLayout.addWidget(self.mpl_toolbar)
-        self.mplWindow = QtGui.QWidget()
-        self.mplWindow.setLayout(self.mplLayout)
-
-        self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='#8fdb90')
-        #self.waveform = self.axes.plot(np.arange(30000), np.array([2**15]*30000), color='#b2d89f')
-        self.canvas.draw()
 
         ###############################
         # stream buffers, timers, etc.
         ###############################
 
-        sr = 30000  # sample rate
-        fr = self.refreshRate      # frame rate
-        self.fp = 1000//fr  # frame period
-        n = 30000   # number of samples to display
-        self.nrefresh = sr//fr   # new samples collected before refresh
-        self.xvalues = np.arange(n, dtype='int')
-        self.plotBuff = np.zeros(n, dtype='uint16')
+        self.fp = const.MS_PER_SEC // self.refreshRate  # frame period
+        self.nbuff = int(const.SAMPLE_RATE * INIT_XRANGE_MS / const.MS_PER_SEC)   # number of samples to display
+        self.nrefresh = int(const.SAMPLE_RATE / self.refreshRate)   # new samples collected before refresh
+        self.xvalues = np.arange(self.nbuff) * const.MS_PER_SEC / const.SAMPLE_RATE
+        self.plotBuff = np.zeros(self.nbuff, dtype='float')
         self.newBuff = np.zeros(self.nrefresh, dtype='uint16')
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatePlot)
 
         self.proto2bytes_filename = os.path.join(config.daemonDir, 'build/proto2bytes')
+
+        ###############################
+        # pyqtgraph plot
+        ###############################
+
+        self.plotWidget = pg.PlotWidget()
+        self.plotItem = self.plotWidget.getPlotItem()
+        self.plotItem.setXRange(0, INIT_XRANGE_MS)
+        self.plotItem.setYRange(INIT_YMIN_UV, INIT_YMAX_UV)
+        self.plotItem.setLimits(xMin=0, xMax=INIT_XRANGE_MS, yMin=INIT_YMIN_UV, yMax=INIT_YMAX_UV)
+        self.plotWidget.plot(x=self.xvalues, y=self.plotBuff)
+        self.plotCurve = self.plotItem.curves[0]
 
         ###################
         # Top-level stuff
@@ -128,7 +84,7 @@ class StreamWindow(QtGui.QWidget):
 
         self.layout = QtGui.QVBoxLayout()
         self.layout.addWidget(self.buttonPanel)
-        self.layout.addWidget(self.mplWindow)
+        self.layout.addWidget(self.plotWidget)
         self.setLayout(self.layout)
 
         self.setWindowTitle('Willow Live Streaming')
@@ -183,9 +139,9 @@ class StreamWindow(QtGui.QWidget):
         if self.proto2bytes_poller.poll(1000):
             for i in range(self.nrefresh):
                 self.newBuff[i] = self.proto2bytes_po.stdout.readline()
-            self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],self.newBuff))
-            self.waveform[0].set_data(self.xvalues, self.plotBuff)
-            self.canvas.draw()
+            self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],
+                                            (np.array(self.newBuff, dtype=np.float)-2**15)*const.MICROVOLTS_PER_COUNT))
+            self.plotCurve.setData(x=self.xvalues, y=self.plotBuff)
         else:
             self.msgPosted.emit('Read from proto2bytes timed out!')
             self.stopStreaming()
