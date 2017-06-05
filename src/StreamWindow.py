@@ -28,9 +28,6 @@ class StreamWindow(QtGui.QWidget):
     def __init__(self):
         QtGui.QWidget.__init__(self)
 
-        self.willowchan = INIT_WILLOWCHAN
-        self.chip = self.willowchan//32
-        self.chan = self.willowchan%32
         self.refreshRate = INIT_REFRESH_RATE
 
         ###############################
@@ -53,7 +50,9 @@ class StreamWindow(QtGui.QWidget):
         # pyqtgraph plot
         ###############################
 
-        self.plotWidget = pg.PlotWidget(labels={'left':'Raw Signal (uV)', 'bottom':'Relative Time (ms)'})
+        self.plotWidget = pg.PlotWidget(labels={'left':'Raw Signal (uV)',
+                                                'bottom':'Relative Time (ms)'},
+                                        title='Willow Channel ####')
         self.plotItem = self.plotWidget.getPlotItem()
         self.plotItem.setXRange(min(self.t_relative), max(self.t_relative))
         self.plotItem.setYRange(INIT_YMIN_UV, INIT_YMAX_UV)
@@ -65,6 +64,11 @@ class StreamWindow(QtGui.QWidget):
         ###################
         # Top-level stuff
         ##################
+
+
+        self.chanLineEdit = QtGui.QLineEdit(str(INIT_WILLOWCHAN))
+        self.chanLineEdit.setValidator(QtGui.QIntValidator(0,1023))
+        self.chanLineEdit.setMaximumWidth(100)
 
         self.startButton = QtGui.QPushButton()
         self.startButton.setIcon(QtGui.QIcon('../img/play.png'))
@@ -78,9 +82,11 @@ class StreamWindow(QtGui.QWidget):
 
         self.buttonPanel = QtGui.QWidget()
         self.buttonPanel.setMaximumHeight(70)
-        tmp = QtGui.QHBoxLayout()
-        tmp.addWidget(self.startButton)
-        tmp.addWidget(self.stopButton)
+        tmp = QtGui.QGridLayout()
+        tmp.addWidget(QtGui.QLabel('Willow Channel:'), 0,0)
+        tmp.addWidget(self.chanLineEdit, 1,0)
+        tmp.addWidget(self.startButton, 0,1, 2,1)
+        tmp.addWidget(self.stopButton, 0,2, 2,1)
         self.buttonPanel.setLayout(tmp)
 
         self.layout = QtGui.QVBoxLayout()
@@ -91,19 +97,29 @@ class StreamWindow(QtGui.QWidget):
         self.setWindowTitle('Willow Live Streaming')
         self.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
 
+    def setChannel(self, willowChan):
+        self.willowChan = willowChan
+        self.chip = self.willowChan // 32
+        self.chan = self.willowChan % 32
+
     def startStreaming(self):
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        self.setChannel(int(self.chanLineEdit.text()))
         try:
-            hwif.setSubsamples_byChip(self.chip)
-            hwif.startStreaming_subsamples()
-            self.toggleStdin(True)
-            self.msgPosted.emit('Started streaming.')
-        except hwif.AlreadyError:
-            #self.toggleStdin(True) # ideally this would start the plot updating, but for now it fails
-            self.msgPosted.emit('Hardware was already streaming. Try stopping and restarting stream.')
+            if hwif.isStreaming():
+                self.msgPosted.emit('Hardware was already streaming. Try stopping and restarting stream.')
+            else:
+                hwif.setSubsamples_byChip(self.chip)
+                hwif.startStreaming_subsamples()
+                self.toggleStdin(True)
+                self.msgPosted.emit('Started streaming.')
+                self.plotItem.setTitle('Willow Channel %d' % self.willowChan)
         except hwif.hwifError as e:
             self.msgPosted.emit(e.message)
+        QtGui.QApplication.restoreOverrideCursor()
 
     def stopStreaming(self):
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         try:
             hwif.stopStreaming()
             self.msgPosted.emit('Stopped streaming.')
@@ -117,6 +133,7 @@ class StreamWindow(QtGui.QWidget):
             self.msgPosted.emit(e.message)
         finally:
             self.toggleStdin(False)
+        QtGui.QApplication.restoreOverrideCursor()
 
     def toggleStdin(self, enable):
         if enable:
