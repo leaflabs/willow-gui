@@ -40,7 +40,7 @@ class StreamWindow(QtGui.QWidget):
         self.fp = const.MS_PER_SEC // self.refreshRate  # frame period
         self.nbuff = int(const.SAMPLE_RATE * INIT_XRANGE_MS / const.MS_PER_SEC)   # number of samples to display
         self.nrefresh = int(const.SAMPLE_RATE / self.refreshRate)   # new samples collected before refresh
-        self.xvalues = np.arange(self.nbuff) * const.MS_PER_SEC / const.SAMPLE_RATE
+        self.t_relative = (np.arange(self.nbuff) - self.nbuff) / const.SAMPLE_RATE * const.MS_PER_SEC
         self.plotBuff = np.zeros(self.nbuff, dtype='float')
         self.newBuff = np.zeros(self.nrefresh, dtype='uint16')
 
@@ -53,12 +53,13 @@ class StreamWindow(QtGui.QWidget):
         # pyqtgraph plot
         ###############################
 
-        self.plotWidget = pg.PlotWidget()
+        self.plotWidget = pg.PlotWidget(labels={'left':'Raw Signal (uV)', 'bottom':'Relative Time (ms)'})
         self.plotItem = self.plotWidget.getPlotItem()
-        self.plotItem.setXRange(0, INIT_XRANGE_MS)
+        self.plotItem.setXRange(min(self.t_relative), max(self.t_relative))
         self.plotItem.setYRange(INIT_YMIN_UV, INIT_YMAX_UV)
-        self.plotItem.setLimits(xMin=0, xMax=INIT_XRANGE_MS, yMin=INIT_YMIN_UV, yMax=INIT_YMAX_UV)
-        self.plotWidget.plot(x=self.xvalues, y=self.plotBuff)
+        self.plotItem.setLimits(xMin=min(self.t_relative), xMax=max(self.t_relative),
+                                yMin=INIT_YMIN_UV, yMax=INIT_YMAX_UV)
+        self.plotWidget.plot(x=self.t_relative, y=self.plotBuff)
         self.plotCurve = self.plotItem.curves[0]
 
         ###################
@@ -141,7 +142,7 @@ class StreamWindow(QtGui.QWidget):
                 self.newBuff[i] = self.proto2bytes_po.stdout.readline()
             self.plotBuff = np.concatenate((self.plotBuff[self.nrefresh:],
                                             (np.array(self.newBuff, dtype=np.float)-2**15)*const.MICROVOLTS_PER_COUNT))
-            self.plotCurve.setData(x=self.xvalues, y=self.plotBuff)
+            self.plotCurve.setData(x=self.t_relative, y=self.plotBuff)
         else:
             self.msgPosted.emit('Read from proto2bytes timed out!')
             self.stopStreaming()
