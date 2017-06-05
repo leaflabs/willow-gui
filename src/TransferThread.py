@@ -85,5 +85,8 @@ class TransferThread(QtCore.QThread):
                 self.targetFile = os.path.join(config.dataDir, 'experiment_C%s.h5' % strtime)
                 os.rename(tmpFilename, self.targetFile)
             self.statusUpdated.emit('Transfer complete. Generated datafile: %s' % self.targetFile)
+        elif po.returncode == 3:
+            self.statusUpdated.emit('ERROR: Transfer failed; no Willow data found on block device %s'
+                                        % self.deviceFile)
         else:
             self.statusUpdated.emit('ERROR: Transfer failed with return code %d' % po.returncode)
