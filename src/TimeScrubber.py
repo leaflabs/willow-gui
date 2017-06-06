@@ -8,7 +8,7 @@ class TimeScrubber(QtGui.QLabel):
 
     timeRangeSelected= QtCore.pyqtSignal(int, int)
 
-    def __init__(self, nsamples, initRange=[0,30000]):
+    def __init__(self, nsamples, initRange=[0,30000], maxNSamples=60000):
         QtGui.QLabel.__init__(self)
 
         self.nsamples = nsamples
@@ -37,6 +37,10 @@ class TimeScrubber(QtGui.QLabel):
         #   sense to track state as sample indices rather than pixels. however,
         #   we can set them from pixel values using setStateLeft(), setStateRight(),
         #   and setStateCenter(). these functions also implement limit-checking.
+        self.totalsamp = maxNSamples
+        if (initRange[1] - initRange[0]) > maxNSamples:
+            print "Exceeding maximum number of samples to represent! initRange must be less than maxSamples!!"
+            sys.exit(1)
         self.minsamp = initRange[0]
         self.maxsamp = initRange[1]
 
@@ -51,14 +55,18 @@ class TimeScrubber(QtGui.QLabel):
     def setStateLeft(self, pix):
         samp = self._pix2samp(pix)
         upperbound = self.maxsamp - self._dpix2dsamp(2*self.edgeDetectMargin)
-        if (samp >= 0) and (samp < upperbound):
+        if (samp >= 0) and (samp < upperbound) and (samp > (self.maxsamp - self.totalsamp)):
             self.minsamp = self._pix2samp(pix)
+        else:
+            self.minsamp = self._pix2samp(self._samp2pix(self.maxsamp - self.totalsamp))
 
     def setStateRight(self, pix):
         samp = self._pix2samp(pix)
         lowerbound = self.minsamp + self._dpix2dsamp(2*self.edgeDetectMargin)
-        if (samp >= lowerbound) and (samp < self.nsamples):
+        if (samp >= lowerbound) and (samp < self.nsamples) and (samp < (self.minsamp + self.totalsamp)):
             self.maxsamp = self._pix2samp(pix)
+        else:
+            self.maxsamp = self._pix2samp(self._samp2pix(self.minsamp + self.totalsamp))
 
     def setStateCenter(self, pix):
         delta = self.maxsamp - self.minsamp
