@@ -1,7 +1,7 @@
 # willowGUI
 GUI software for the Willow electrophysiology system
 
-www.leaflabs.com/willow
+www.willowephys.com
 
 ![gui_windowtiling](https://github.com/leaflabs/willowgui/blob/master/docs/user_guide/screenshots/gui_windowtiling.png)
 
@@ -9,7 +9,7 @@ www.leaflabs.com/willow
 
 1. Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk python-git python-pip python-pyqtgraph
+    $ sudo apt-get install python-numpy python-qt4 python-tk python-git python-pip python-pyqtgraph util-linux
 
     $ pip install h5py
 
@@ -18,8 +18,8 @@ www.leaflabs.com/willow
    v2.5.0. Make sure you've got the latest version by installing with pip
    instead of apt-get.
 
-2. Make sure your system is set up to work with the daemon. Refer to the
-    "Willow 1.0 User Guide", available [here](docs/user_guide/willowgui_userguide.pdf).
+2. Make sure your system is set up to work with willow-daemon. For instructions on setting up the
+    daemon, refer to the documentation [here](http://docs.willowephys.com/software_user_manual.html#daemon).
 
 3. Run:
 
@@ -27,12 +27,5 @@ www.leaflabs.com/willow
 
 
 ## Usage
-
-See the User Guide in docs/user_guide for usage instructions. A compiled
-version is distributed with this repo as willowgui_userguide.pdf.
-
-To compile the user guide yourself:
-
-    $ cd docs/user_guide
-    $ pdflatex main
+For usage instructions, refer to the documentation [here](http://docs.willowephys.com/software_user_manual.html#willowgui).
 
