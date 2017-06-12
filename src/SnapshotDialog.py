@@ -23,7 +23,7 @@ class SnapshotDialog(QtGui.QDialog):
         self.finishedWidget = QtGui.QWidget()
         self.finishedGroup = QtGui.QButtonGroup()
         self.button1 = QtGui.QRadioButton('Do Nothing (just save)')
-        self.button2 = QtGui.QRadioButton('Open using WillowGUI Data Explorer')
+        self.button2 = QtGui.QRadioButton('Open using Willow Data Explorer')
         self.button3 = QtGui.QRadioButton('Open using custom analysis script:')
         for b in [self.button1, self.button2, self.button3]:
             self.finishedGroup.addButton(b)
