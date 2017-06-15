@@ -112,7 +112,7 @@ class hwifError(Exception):
 
 def _controlCmdWrapper(cmd):
     """
-    cmd can either be a single dc.ControlCommand, or a list of them
+    cmd can either be a single DC.ControlCommand, or a list of them
     with return resp or resps, according to the multiplicity of cmd
     may raise hwifError, with type and message attributes
     """
@@ -120,19 +120,19 @@ def _controlCmdWrapper(cmd):
     try:
         if multiple:
             with QtCore.QMutexLocker(DAEMON_MUTEX):
-                resps = dc.do_control_cmds(cmd, control_socket=DAEMON_SOCK)
+                resps = DC.do_control_cmds(cmd, control_socket=DAEMON_SOCK)
             for resp in resps:
                 if resp:
-                    if resp.type == dc.ControlResponse.ERR:
+                    if resp.type == DC.ControlResponse.ERR:
                         raise hwifError(1, resp.err.code)
                 else:
                     raise hwifError(2)
             return resps
         else:
             with QtCore.QMutexLocker(DAEMON_MUTEX):
-                resp = dc.do_control_cmd(cmd, control_socket=DAEMON_SOCK)
+                resp = DC.do_control_cmd(cmd, control_socket=DAEMON_SOCK)
             if resp:
-                if resp.type == dc.ControlResponse.ERR:
+                if resp.type == DC.ControlResponse.ERR:
                     raise hwifError(1, resp.err.code)
             else:
                 raise hwifError(2)
@@ -172,16 +172,16 @@ def _intanRegWrite(clear=False, address=None, data=None, chip=0xFF):
                    (chip << 16) |                   # zero indexed int, 0xFF for all
                    ((0b10000000 | address) << 8) |  # intan register address
                    data)                            # data
-    cmd = dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData)
+    cmd = DC.reg_write(DC.MOD_DAQ, DC.DAQ_CHIP_CMD, cmdData)
     return cmd
 
 def _doRegRead(module, address):
     mutexLocker = QtCore.QMutexLocker(DAEMON_MUTEX)
-    resp = dc.do_control_cmd(dc.reg_read(module, address), control_socket=DAEMON_SOCK)
+    resp = DC.do_control_cmd(DC.reg_read(module, address), control_socket=DAEMON_SOCK)
     if resp:
-        if resp.type == dc.ControlResponse.REG_IO:
+        if resp.type == DC.ControlResponse.REG_IO:
             return resp.reg_io.val
-        elif resp.type == dc.ControlResponse.ERR:
+        elif resp.type == DC.ControlResponse.ERR:
             raise hwifError(1, resp.err.code)
     else:
         raise hwifError(2)
@@ -195,7 +195,7 @@ def isStreaming():
     """
     Returns True if hardware is streaming, False otherwise.
     """
-    cmd = dc.reg_read(dc.MOD_DAQ, dc.DAQ_UDP_ENABLE)
+    cmd = DC.reg_read(DC.MOD_DAQ, DC.DAQ_UDP_ENABLE)
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val == 1
 
@@ -203,7 +203,7 @@ def isRecording():
     """
     Returns True if hardware is recording, False otherwise.
     """
-    cmd = dc.reg_read(dc.MOD_DAQ, dc.DAQ_SATA_ENABLE)
+    cmd = DC.reg_read(DC.MOD_DAQ, DC.DAQ_SATA_ENABLE)
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val == 3
 
@@ -211,7 +211,7 @@ def getSataBSI():
     """
     Returns BSI of last SATA write.
     """
-    cmd = dc.reg_read(dc.MOD_SATA, dc.SATA_W_IDX)
+    cmd = DC.reg_read(DC.MOD_SATA, DC.SATA_W_IDX)
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val
 
@@ -219,7 +219,7 @@ def getDaqBSI():
     """
     Returns BSI of last DAQ transaction.
     """
-    cmd = dc.reg_read(dc.MOD_DAQ, dc.DAQ_BSMP_CURR)
+    cmd = DC.reg_read(DC.MOD_DAQ, DC.DAQ_BSMP_CURR)
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val
 
@@ -227,7 +227,7 @@ def getSampleType():
     """
     Returns streaming type: 'boardsample' or 'subsample'
     """
-    cmd = dc.reg_read(dc.MOD_DAQ, dc.DAQ_UDP_MODE)
+    cmd = DC.reg_read(DC.MOD_DAQ, DC.DAQ_UDP_MODE)
     resp = _controlCmdWrapper(cmd)
     val = resp.reg_io.val
     if val == 0:
@@ -242,7 +242,7 @@ def getChipsAlive():
     Returns a list of indices of live Intan chips, by reading the bitmask in
         hardware register (3,4)
     """
-    cmd = dc.reg_read(dc.MOD_DAQ, dc.DAQ_CHIP_ALIVE)
+    cmd = DC.reg_read(DC.MOD_DAQ, DC.DAQ_CHIP_ALIVE)
     resp = _controlCmdWrapper(cmd)
     mask = resp.reg_io.val
     return [i for i in range(32) if (mask & (0x1 << i))]
@@ -263,7 +263,7 @@ def setSubsamples_byChip(chip):
     for i,chipchan in enumerate(chipchanList):
         chip = chipchan[0] & 0b00011111
         chan = chipchan[1] & 0b00011111
-        cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_SUBSAMP_CHIP0 + i, (chip << 8) | chan))
+        cmds.append(DC.reg_write(DC.MOD_DAQ, DC.DAQ_SUBSAMP_CHIP0 + i, (chip << 8) | chan))
     resps = _controlCmdWrapper(cmds)
 
 def startStreaming_subsamples():
@@ -275,8 +275,8 @@ def startStreaming_subsamples():
     if isStreaming():
         raise AlreadyError
     else:
-        cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
-        cmd.forward.sample_type = dc.BOARD_SUBSAMPLE
+        cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
+        cmd.forward.sample_type = DC.BOARD_SUBSAMPLE
         cmd.forward.force_daq_reset = not isRecording() # if recording, then DAQ is already running
         aton = socket.inet_aton(config.defaultForwardAddr)
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
@@ -293,8 +293,8 @@ def startStreaming_boardsamples():
     if isStreaming():
         raise AlreadyError
     else:
-        cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
-        cmd.forward.sample_type = dc.BOARD_SAMPLE
+        cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
+        cmd.forward.sample_type = DC.BOARD_SAMPLE
         cmd.forward.force_daq_reset = not isRecording() # if recording, then DAQ is already running
         aton = socket.inet_aton(config.defaultForwardAddr)
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
@@ -310,11 +310,11 @@ def stopStreaming():
         raise AlreadyError
     else:
         cmds = []
-        cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
         cmd.forward.enable = False
         cmds.append(cmd)
         if not isRecording():
-            cmd = dc.ControlCommand(type=dc.ControlCommand.ACQUIRE)
+            cmd = DC.ControlCommand(type=DC.ControlCommand.ACQUIRE)
             cmd.acquire.enable = False
             cmds.append(cmd)
         resps = _controlCmdWrapper(cmds)
@@ -333,18 +333,18 @@ def startRecording():
         cmds = []
         if wasStreaming:
             # temporarily turn off streaming
-            cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
+            cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
             cmd.forward.enable = False
             cmds.append(cmd)
-        cmd = dc.ControlCommand(type=dc.ControlCommand.ACQUIRE)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.ACQUIRE)
         cmd.acquire.exp_cookie = long(time.time())
         cmd.acquire.start_sample = 0
         cmd.acquire.enable = True
         cmds.append(cmd)
         if wasStreaming:
             # turn streaming back on again
-            cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
-            cmd.forward.sample_type = dc.BOARD_SUBSAMPLE
+            cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
+            cmd.forward.sample_type = DC.BOARD_SUBSAMPLE
             cmd.forward.force_daq_reset = False
             aton = socket.inet_aton(config.defaultForwardAddr)
             cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
@@ -365,13 +365,13 @@ def stopRecording():
     else:
         wasStreaming = isStreaming()
         cmds = []
-        cmd = dc.ControlCommand(type=dc.ControlCommand.ACQUIRE)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.ACQUIRE)
         cmd.acquire.enable = False
         cmds.append(cmd)
         if wasStreaming:
             # turn streaming back on again
-            cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
-            cmd.forward.sample_type = dc.BOARD_SUBSAMPLE
+            cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
+            cmd.forward.sample_type = DC.BOARD_SUBSAMPLE
             cmd.forward.force_daq_reset = True
             aton = socket.inet_aton(config.defaultForwardAddr)
             cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
@@ -391,7 +391,7 @@ def takeSnapshot(nsamples, filename):
     if isStreaming():
         sampleType = getSampleType()
         if sampleType == 'boardsample':
-            cmd = dc.ControlCommand(type=dc.ControlCommand.STORE)
+            cmd = DC.ControlCommand(type=DC.ControlCommand.STORE)
             cmd.store.path = filename
             cmd.store.nsamples = nsamples
             cmds.append(cmd)
@@ -402,19 +402,19 @@ def takeSnapshot(nsamples, filename):
             print 'unrecognized sample type received!'
     elif isRecording():
         # if not streaming, but recording...
-        cmd = dc.ControlCommand(type=dc.ControlCommand.STORE)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.STORE)
         cmd.store.path = filename
         cmd.store.nsamples = nsamples
         cmds.append(cmd)
         ####
         # need this to turn off daq->udp, otherwise state gets broken
-        cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
         cmd.forward.enable = False
         cmds.append(cmd)
     else:
         # if idle...
-        cmd = dc.ControlCommand(type=dc.ControlCommand.FORWARD)
-        cmd.forward.sample_type = dc.BOARD_SAMPLE
+        cmd = DC.ControlCommand(type=DC.ControlCommand.FORWARD)
+        cmd.forward.sample_type = DC.BOARD_SAMPLE
         cmd.forward.force_daq_reset = True
         aton = socket.inet_aton(config.defaultForwardAddr) # TODO should this be its own exception?
         cmd.forward.dest_udp_addr4 = struct.unpack('!l', aton)[0]
@@ -422,20 +422,20 @@ def takeSnapshot(nsamples, filename):
         cmd.forward.enable = True
         cmds.append(cmd)
         ####
-        cmd = dc.ControlCommand(type=dc.ControlCommand.STORE)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.STORE)
         cmd.store.path = filename
         cmd.store.nsamples = nsamples
         cmds.append(cmd)
         ####
-        cmd = dc.ControlCommand(type=dc.ControlCommand.ACQUIRE)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.ACQUIRE)
         cmd.acquire.enable = False
         cmds.append(cmd)
     resps = _controlCmdWrapper(cmds)
     for resp in resps:
-        if resp.type==dc.ControlResponse.STORE_FINISHED:
-            if resp.store.status==dc.ControlResStore.DONE:
+        if resp.type==DC.ControlResponse.STORE_FINISHED:
+            if resp.store.status==DC.ControlResStore.DONE:
                 return resp.store.nsamples
-            elif resp.store.status==dc.ControlResStore.PKTDROP:
+            elif resp.store.status==DC.ControlResStore.PKTDROP:
                 return resp.store.nsamples
             else:
                 # this shouldn't happen, but..
@@ -456,7 +456,7 @@ def doTransfer(filename, sampleRange=None):
     if isStreaming() or isRecording():
         raise StateChangeError
     else:
-        cmd = dc.ControlCommand(type=dc.ControlCommand.STORE)
+        cmd = DC.ControlCommand(type=DC.ControlCommand.STORE)
         if sampleRange:
             if _isValidSampleRange(sampleRange):
                 startSample = sampleRange[0]
@@ -470,9 +470,9 @@ def doTransfer(filename, sampleRange=None):
             # leave nsamples missing, which indicates whole experiment
         cmd.store.path = filename
         resp = _controlCmdWrapper(cmd)
-        if resp.store.status == dc.ControlResStore.DONE:
+        if resp.store.status == DC.ControlResStore.DONE:
             return True, resp.store.nsamples
-        elif resp.store.status == dc.ControlResStore.TIMEOUT:
+        elif resp.store.status == DC.ControlResStore.TIMEOUT:
             return False, resp.store.nsamples
 
 def connectChanElecTest(chan):
@@ -545,11 +545,11 @@ def disableZCheck():
     """
     ####
     cmds = []
-    #cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData_DACconfig))
+    #cmds.append(DC.reg_write(DC.MOD_DAQ, DC.DAQ_CHIP_CMD, cmdData_DACconfig))
     cmds.append(_intanRegWrite(address=5, data=0))
-    #cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, cmdData_DACchan))
+    #cmds.append(DC.reg_write(DC.MOD_DAQ, DC.DAQ_CHIP_CMD, cmdData_DACchan))
     cmds.append(_intanRegWrite(address=7, data=0))
-    #cmds.append(dc.reg_write(dc.MOD_DAQ, dc.DAQ_CHIP_CMD, 0)) # clear the CMD register
+    #cmds.append(DC.reg_write(DC.MOD_DAQ, DC.DAQ_CHIP_CMD, 0)) # clear the CMD register
     cmds.append(_intanRegWrite(clear=True))
     resps = _controlCmdWrapper(cmds)
 
@@ -559,7 +559,7 @@ def pingDatanode():
     returns nothing
     mainly used to test for hwifErrors, as in checkVitals()
     """
-    cmd = dc.ControlCommand(type=dc.ControlCommand.PING_DNODE)
+    cmd = DC.ControlCommand(type=DC.ControlCommand.PING_DNODE)
     resp = _controlCmdWrapper(cmd)
 
 def checkVitals():
@@ -582,8 +582,8 @@ def checkVitals():
         vitals['daemon'] = True
         vitals['datanode'] = True
         vitals['chips_live'] = getChipsAlive()
-        vitals['firmware'] = _doRegRead(dc.MOD_CENTRAL, dc.CENTRAL_GIT_SHA_PIECE)
-        vitals['errors'] = _doRegRead(dc.MOD_ERR, dc.ERR_ERR0)
+        vitals['firmware'] = _doRegRead(DC.MOD_CENTRAL, DC.CENTRAL_GIT_SHA_PIECE)
+        vitals['errors'] = _doRegRead(DC.MOD_ERR, DC.ERR_ERR0)
         vitals['stream'] = isStreaming()
         vitals['record'] = isRecording()
     except hwifError as e:
@@ -597,7 +597,7 @@ def checkVitals():
             vitals['stream'] = None
             vitals['record'] = None
         elif e.type==1:
-            if e.errcode in (dc.ControlResErr.NO_DNODE, dc.ControlResErr.DNODE_DIED):
+            if e.errcode in (DC.ControlResErr.NO_DNODE, DC.ControlResErr.DNODE_DIED):
                 # cannot connect to datanode
                 vitals['daemon'] = True
                 vitals['datanode'] = False
@@ -606,13 +606,13 @@ def checkVitals():
                 vitals['errors'] = None
                 vitals['stream'] = None
                 vitals['record'] = None
-            elif e.errcode==dc.ControlResErr.DNODE:
+            elif e.errcode==DC.ControlResErr.DNODE:
                 # datanode is responding, but error condition is present
                 vitals['daemon'] = True
                 vitals['datanode'] = True
                 vitals['chips_live'] = getChipsAlive()
-                vitals['firmware'] = _doRegRead(dc.MOD_CENTRAL, dc.CENTRAL_GIT_SHA_PIECE)
-                vitals['errors'] = _doRegRead(dc.MOD_ERR, dc.ERR_ERR0)
+                vitals['firmware'] = _doRegRead(DC.MOD_CENTRAL, DC.CENTRAL_GIT_SHA_PIECE)
+                vitals['errors'] = _doRegRead(DC.MOD_ERR, DC.ERR_ERR0)
                 vitals['stream'] = isStreaming()
                 vitals['record'] = isRecording()
     finally:
