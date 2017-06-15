@@ -176,6 +176,8 @@ class StatusBar(QtGui.QWidget):
         self.vitalsLog.setReadOnly(True)
         self.watchdogThread.vitalsChecked.connect(self.updateGUI)
         self.watchdogThread.vitalsChecked.connect(self.noteNewVitals)
+        self.watchdogThread.statusUpdated.connect(self.msgLog.post)
+        self.watchdogThread.finished.connect(self.handleWatchdogStopped)
 
     def dontRestartDaemon(self):
         self.keepDaemonDead = True
@@ -187,15 +189,19 @@ class StatusBar(QtGui.QWidget):
             self.stopWatchdog()
 
     def initializeWatchdog(self):
-        self.startWatchdog()
         self.watchdogCheckbox.setChecked(True)
 
     def startWatchdog(self):
-        self.watchdogLoop = True
+        self.msgLog.post('Starting watchdog thread.')
         self.watchdogThread.start()
 
     def stopWatchdog(self):
-        self.watchdogLoop = False
+        self.watchdogThread.running = False
+
+    def handleWatchdogStopped(self):
+        time.sleep(1) # to ensure that the checkbox remains checked for a second
+        self.msgLog.post('Watchdog stopped.')
+        self.watchdogCheckbox.setChecked(False)
 
     def noteNewVitals(self, vitals):
         dt = datetime.datetime.fromtimestamp(time.time())
@@ -293,7 +299,4 @@ class StatusBar(QtGui.QWidget):
             self.chipsLabel.setText('{0} chips live'.format(len(tmp)))
             self.chipsLabel.setToolTip('chips {0} alive'.format(', '.join([str(c) for c in tmp])))
             self.chipsLabel.setStyleSheet(GOOD_STYLE)
-
-        if self.watchdogLoop:
-            self.watchdogThread.start()
 

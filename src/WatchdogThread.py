@@ -6,6 +6,7 @@ import hwif
 class WatchdogThread(QtCore.QThread):
 
     vitalsChecked = QtCore.pyqtSignal(dict)
+    statusUpdated = QtCore.pyqtSignal(str)
 
     def __init__(self):
         super(WatchdogThread, self).__init__()
@@ -13,8 +14,15 @@ class WatchdogThread(QtCore.QThread):
         self.old_vitals = None
         self.vitals = None
 
+        self.running = False
+
     def run(self):
-        time.sleep(1)
-        # doesn't need try/except because it's the watchdog
-        self.vitals = hwif.checkVitals()
-        self.vitalsChecked.emit(self.vitals)
+        self.running = True
+        while self.running:
+            try:
+                self.vitals = hwif.checkVitals()
+                self.vitalsChecked.emit(self.vitals)
+                time.sleep(1)
+            except hwif.hwifError as e:
+                self.statusUpdated.emit(e.message)
+                self.running = False
