@@ -5,8 +5,6 @@ import hwif
 from WillowDataset import WillowDataset
 
 import config
-sys.path.append(os.path.join(config.daemonDir, 'util'))
-from daemon_control import *
 
 FFT_INDEX_1KHZ = 500
 
