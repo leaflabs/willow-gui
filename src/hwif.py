@@ -39,6 +39,7 @@ import config
 if not config.initialized:
     config.updateAttributes(config.loadJSON())
 
+INITIALIZED = False
 
 def init():
     global DC
@@ -59,6 +60,8 @@ def init():
                     DC.ControlResErr.DNODE_DIED : 'DNODE_DIED: Datanode connection died while processing request'
               }
 
+    global INITIALIZED
+    INITIALIZED = True
 
 #
 ##
@@ -90,6 +93,7 @@ class hwifError(Exception):
             (This is a bug in the daemon which needs to be fixed.)
         as a result of the daemon refusing new client connection because 'another is ongoing'.
     type = 3 means "miscellaneous", and should be accompanied by a custom message argument
+    type = 4 means that hwif has not been initialized, so the daemon_control API is inaccessible
     """
     def __init__(self, type, errcode=None, message=None):
         Exception.__init__(self)
@@ -103,6 +107,8 @@ class hwifError(Exception):
             self.message = 'Control Command got No Response'
         elif self.type==3:
             self.message = message
+        elif self.type==4:
+            self.message = 'HWIF Error: Not initialized.'
 
 
 #
@@ -139,7 +145,6 @@ def _controlCmdWrapper(cmd):
             return resp
     except socket.error:
         raise hwifError(0)
-
 
 def _isValidSampleRange(sampleRange):
     if isinstance(sampleRange, list) and (len(sampleRange)==2):
@@ -186,11 +191,20 @@ def _doRegRead(module, address):
     else:
         raise hwifError(2)
 
+def _checkInitialization(hwif_function):
+    def decorator(*args, **kwargs):
+        if INITIALIZED:
+            return hwif_function(*args, **kwargs)
+        else:
+            raise hwifError(4)
+    return decorator
+
 #
 ##
 ###
 #### public functions
 
+@_checkInitialization
 def isStreaming():
     """
     Returns True if hardware is streaming, False otherwise.
@@ -199,6 +213,7 @@ def isStreaming():
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val == 1
 
+@_checkInitialization
 def isRecording():
     """
     Returns True if hardware is recording, False otherwise.
@@ -207,6 +222,7 @@ def isRecording():
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val == 3
 
+@_checkInitialization
 def getSataBSI():
     """
     Returns BSI of last SATA write.
@@ -215,6 +231,7 @@ def getSataBSI():
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val
 
+@_checkInitialization
 def getDaqBSI():
     """
     Returns BSI of last DAQ transaction.
@@ -223,6 +240,7 @@ def getDaqBSI():
     resp = _controlCmdWrapper(cmd)
     return resp.reg_io.val
 
+@_checkInitialization
 def getSampleType():
     """
     Returns streaming type: 'boardsample' or 'subsample'
@@ -237,6 +255,7 @@ def getSampleType():
     else:
         return 'unknown'
 
+@_checkInitialization
 def getChipsAlive():
     """
     Returns a list of indices of live Intan chips, by reading the bitmask in
@@ -247,9 +266,11 @@ def getChipsAlive():
     mask = resp.reg_io.val
     return [i for i in range(32) if (mask & (0x1 << i))]
 
+@_checkInitialization
 def getErrorCode(module):
     return _doRegRead(module, 0)
 
+@_checkInitialization
 def setSubsamples_byChip(chip):
     """
     Set the subsample channels by chip. 
@@ -266,6 +287,7 @@ def setSubsamples_byChip(chip):
         cmds.append(DC.reg_write(DC.MOD_DAQ, DC.DAQ_SUBSAMP_CHIP0 + i, (chip << 8) | chan))
     resps = _controlCmdWrapper(cmds)
 
+@_checkInitialization
 def startStreaming_subsamples():
     """
     Start streaming subsamples.
@@ -284,6 +306,7 @@ def startStreaming_subsamples():
         cmd.forward.enable = True
         resp = _controlCmdWrapper(cmd)
 
+@_checkInitialization
 def startStreaming_boardsamples():
     """
     Start streaming boardsamples.
@@ -302,6 +325,7 @@ def startStreaming_boardsamples():
         cmd.forward.enable = True
         resp = _controlCmdWrapper(cmd)
 
+@_checkInitialization
 def stopStreaming():
     """
     Stop streaming, both from datanode to daemon, and from daemon to proto2bytes
@@ -319,6 +343,7 @@ def stopStreaming():
             cmds.append(cmd)
         resps = _controlCmdWrapper(cmds)
 
+@_checkInitialization
 def startRecording():
     """
     Start recording (acquiring) to disk.
@@ -354,6 +379,7 @@ def startRecording():
         resps = _controlCmdWrapper(cmds)
 
 
+@_checkInitialization
 def stopRecording():
     """
     Stop recording to disk.
@@ -380,6 +406,7 @@ def stopRecording():
             cmds.append(cmd)
         resps = _controlCmdWrapper(cmds)
 
+@_checkInitialization
 def takeSnapshot(nsamples, filename):
     """
     Takes a snapshot (aka save_stream) of length nsamples, and saves it to filename, in HDF5 format.
@@ -441,6 +468,7 @@ def takeSnapshot(nsamples, filename):
                 # this shouldn't happen, but..
                 raise hwifError(3, message='ControlResStore Status: %d' % resp.store.status)
 
+@_checkInitialization
 def doTransfer(filename, sampleRange=None):
     """
     Perform a transfer (aka save_stored), save to filename (HDF5 format).
@@ -475,6 +503,7 @@ def doTransfer(filename, sampleRange=None):
         elif resp.store.status == DC.ControlResStore.TIMEOUT:
             return False, resp.store.nsamples
 
+@_checkInitialization
 def connectChanElecTest(chan):
     """
     Connect a single channel to the elec_test pin for electroplating
@@ -494,6 +523,7 @@ def connectChanElecTest(chan):
     cmds.append(_intanRegWrite(clear=True))
     resps = _controlCmdWrapper(cmds)
 
+@_checkInitialization
 def disconnectAllElecTest():
     """
     Disconnect all channels from the elec_test pin
@@ -505,6 +535,7 @@ def disconnectAllElecTest():
     cmds.append(_intanRegWrite(clear=True))
     resps = _controlCmdWrapper(cmds)
 
+@_checkInitialization
 def enableZCheck(chan, capscale):
     """
     Enable Intan impedance testing
@@ -527,6 +558,7 @@ def enableZCheck(chan, capscale):
     cmds.append(_intanRegWrite(clear=True))
     resps = _controlCmdWrapper(cmds)
 
+@_checkInitialization
 def disableZCheck():
     """
     Disable Intan impedance testing
@@ -553,6 +585,7 @@ def disableZCheck():
     cmds.append(_intanRegWrite(clear=True))
     resps = _controlCmdWrapper(cmds)
 
+@_checkInitialization
 def pingDatanode():
     """
     ping the datanode
