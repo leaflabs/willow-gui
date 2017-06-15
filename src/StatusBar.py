@@ -58,43 +58,6 @@ ERRORDICT_DICT = {
     5 : ('GPIO', GPIO_ERRORDICT)
 }
 
-class DaemonRestartDialog(QtGui.QDialog):
-
-    daemonRestartPasser = QtCore.pyqtSignal()
-    daemonDontRestartPasser = QtCore.pyqtSignal()
-
-    def __init__(self, parent=None):
-        super(DaemonRestartDialog, self).__init__(parent)
-
-        label = QtGui.QLabel('Daemon died. Manually restart?\n(Strongly recommended)')
-        label.setAlignment(QtCore.Qt.AlignHCenter)
-
-        dialogButtons = QtGui.QWidget()
-        OkButton = QtGui.QPushButton("OK")
-        OkButton.pressed.connect(self.okHandler)
-        CancelButton = QtGui.QPushButton("Cancel")
-        CancelButton.pressed.connect(self.cancelHandler)
-        dialogButtonsLayout = QtGui.QHBoxLayout()
-        dialogButtonsLayout.addWidget(OkButton)
-        dialogButtonsLayout.addWidget(CancelButton)
-        dialogButtons.setLayout(dialogButtonsLayout)
-
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(label)
-        layout.addWidget(dialogButtons)
-
-        self.setLayout(layout)
-        self.setWindowTitle('Daemon control')
-        self.resize(200,100)
-
-    def okHandler(self):
-        self.daemonRestartPasser.emit()
-        self.close()
-
-    def cancelHandler(self):
-        self.daemonDontRestartPasser.emit()
-        self.close()
-
 class ErrorInfoDialog(QtGui.QDialog):
     def __init__(self, error, parent=None):
         super(ErrorInfoDialog, self).__init__(parent)
@@ -133,7 +96,6 @@ def getErrorInfo(errorRegister):
 class StatusBar(QtGui.QWidget):
 
     diskFillupDetected = QtCore.pyqtSignal()
-    daemonRestartRequested = QtCore.pyqtSignal()
 
     def __init__(self, msgLog):
         QtGui.QWidget.__init__(self)
@@ -142,7 +104,6 @@ class StatusBar(QtGui.QWidget):
 
         layout = QtGui.QGridLayout()
 
-        self.keepDaemonDead = None
         self.acknowledgedError = None
 
         self.watchdogCheckbox = QtGui.QCheckBox('Watchdog')
@@ -185,9 +146,6 @@ class StatusBar(QtGui.QWidget):
         self.watchdogThread.statusUpdated.connect(self.msgLog.post)
         self.watchdogThread.finished.connect(self.handleWatchdogStopped)
 
-    def dontRestartDaemon(self):
-        self.keepDaemonDead = True
-
     def toggleWatchdog(self, state):
         if state:
             self.startWatchdog()
@@ -228,12 +186,6 @@ class StatusBar(QtGui.QWidget):
             self.daemonLabel.setStyleSheet(GOOD_STYLE)
         elif tmp == False:
             self.daemonLabel.setStyleSheet(BAD_STYLE)
-            #if not self.keepDaemonDead:
-            #    dRD = DaemonRestartDialog()
-            #    dRD.daemonRestartPasser.connect(self.daemonRestartRequested)
-            #    dRD.daemonDontRestartPasser.connect(self.dontRestartDaemon)
-            #    if dRD.exec_():
-            #        dRD.show()
         elif tmp == None:
             self.daemonLabel.setStyleSheet(UNKNOWN_STYLE)
 
