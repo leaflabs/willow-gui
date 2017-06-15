@@ -39,27 +39,25 @@ import config
 if not config.initialized:
     config.updateAttributes(config.loadJSON())
 
-sys.path.append(os.path.join(config.daemonDir, 'util'))
-import daemon_control as dc
 
 def init():
-    global DAEMON_SOCK, DAEMON_MUTEX
-    DAEMON_SOCK = dc.get_daemon_control_sock(retry=True, max_retries=200)
+    global DC
+    sys.path.append(os.path.join(config.daemonDir, 'util'))
+    import daemon_control as DC
+
+    global DAEMON_SOCK, DAEMON_MUTEX, ERR_MSG
+    DAEMON_SOCK = DC.get_daemon_control_sock(retry=True, max_retries=200)
     DAEMON_MUTEX = QtCore.QMutex()
-    print 'hwif initialized'
-
-
-
-ERR_MSG = {  dc.ControlResErr.NO_DNODE : 'NO_DNODE: No datanode connected',
-                dc.ControlResErr.DAEMON : 'DAEMON: Internal daemon error',
-                dc.ControlResErr.DAEMON_IO : 'DAEMON_IO: Daemon I/O error',
-                dc.ControlResErr.C_VALUE : 'C_VALUE: Invalid arguments on client control socket',
-                dc.ControlResErr.C_PROTO : 'C_PROTO: Protocol error on client control socket',
-                dc.ControlResErr.D_PROTO : 'D_Proto: Protocol error on datanode control socket',
-                dc.ControlResErr.DNODE : 'DNODE: Datanode transaction failed',
-                dc.ControlResErr.DNODE_ASYNC : 'DNODE_ASYNC: Asynchronous datanode error',
-                dc.ControlResErr.DNODE_DIED : 'DNODE_DIED: Datanode connection died while processing request'
-                }
+    ERR_MSG = {  DC.ControlResErr.NO_DNODE : 'NO_DNODE: No datanode connected',
+                    DC.ControlResErr.DAEMON : 'DAEMON: Internal daemon error',
+                    DC.ControlResErr.DAEMON_IO : 'DAEMON_IO: Daemon I/O error',
+                    DC.ControlResErr.C_VALUE : 'C_VALUE: Invalid arguments on client control socket',
+                    DC.ControlResErr.C_PROTO : 'C_PROTO: Protocol error on client control socket',
+                    DC.ControlResErr.D_PROTO : 'D_Proto: Protocol error on datanode control socket',
+                    DC.ControlResErr.DNODE : 'DNODE: Datanode transaction failed',
+                    DC.ControlResErr.DNODE_ASYNC : 'DNODE_ASYNC: Asynchronous datanode error',
+                    DC.ControlResErr.DNODE_DIED : 'DNODE_DIED: Datanode connection died while processing request'
+              }
 
 
 #
