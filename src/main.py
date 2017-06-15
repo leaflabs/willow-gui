@@ -34,9 +34,14 @@ class StdOutLogger(object):
         self.terminal.flush()
         self.log.flush()
 
+
+DEVNULL = open(os.devnull, 'w')
+def killSubprocesses():
+    subprocess.call(['killall', 'leafysd'], stdout=DEVNULL, stderr=DEVNULL)
+    subprocess.call(['killall', 'proto2bytes'], stdout=DEVNULL, stderr=DEVNULL)
+
 if __name__=='__main__':
-    subprocess.call(['killall', 'leafysd'])
-    subprocess.call(['killall', 'proto2bytes'])
+    killSubprocesses()
     import argparse
     parser = argparse.ArgumentParser(description='Run the GUI for the Willow.')
     parser.add_argument('-d', '--debug', action='store_true',
@@ -63,4 +68,4 @@ if __name__=='__main__':
         app.exec_()
         if wizard.mainWindow:
             wizard.mainWindow.exit()
-
+    killSubprocesses()

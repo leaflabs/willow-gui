@@ -72,8 +72,6 @@ class MainWindow(QtGui.QWidget):
         if self.debugFlag:
             self.packageLogs()
         self.statusBar.watchdogThread.terminate()
-        subprocess.call(['killall', 'leafysd'])
-        subprocess.call(['killall', 'proto2bytes'])
 
     def center(self):
         windowCenter = self.frameGeometry().center()
