@@ -15,6 +15,13 @@ if not os.path.isdir('../log'):
 oFile = open('../log/oFile', 'w')
 eFile = open('../log/eFile', 'w')
 
+
+class DaemonMissingError(Exception):
+
+    def __init__(self, path):
+        self.path = path
+
+
 class MainWindow(QtGui.QWidget):
 
     def __init__(self, debugFlag, parent=None):
@@ -28,7 +35,6 @@ class MainWindow(QtGui.QWidget):
         self.buttonPanel.logPackageRequested.connect(self.packageLogs)
 
         self.statusBar.diskFillupDetected.connect(self.buttonPanel.handleDiskFillup)
-        self.statusBar.daemonRestartRequested.connect(self.restartDaemon)
 
 
         mainLayout = QtGui.QVBoxLayout()
@@ -48,24 +54,28 @@ class MainWindow(QtGui.QWidget):
         self.center()
 
         ###
-        self.restartDaemon()
+        try:
+            self.startDaemon()
+            self.msgLog.post('Daemon started.')
+        except DaemonMissingError as e:
+            self.msgLog.post('Path to daemon does not exist: %s' % e.path)
 
-    def startDaemon(self):
-        subprocess.call(['killall', 'leafysd'])
-        self.daemonProcess = subprocess.Popen([os.path.join(config.daemonDir, 'build/leafysd'),
-                                                '-N', '-A', '192.168.1.2', '-I', config.networkInterface],
-                                                stdout=oFile, stderr=eFile)
-        self.msgLog.post('Daemon started.')
-        print 'daemon started'
-
-    def restartDaemon(self):
-        self.startDaemon()
         try:
             hwif.init()
-            self.statusBar.initializeWatchdog()
-            self.msgLog.post('Daemon connection established, watchdog started')
-        except socket.error:
-            self.msgLog.post('Could not establish a connection with the daemon.')
+            self.msgLog.post('HWIF initialized.')
+        except (ImportError, socket.error) as e:
+            self.msgLog.post('Could not initialize HWIF.')
+
+        self.statusBar.initializeWatchdog()
+
+    def startDaemon(self):
+        daemonPath = os.path.join(config.daemonDir, 'build/leafysd')
+        if os.path.exists(daemonPath):
+            self.daemonProcess = subprocess.Popen([daemonPath, '-N', '-A', '192.168.1.2',
+                                                    '-I', config.networkInterface],
+                                                    stdout=oFile, stderr=eFile)
+        else:
+            raise DaemonMissingError(daemonPath)
 
     def exit(self):
         print 'Cleaning up, then exiting..'
