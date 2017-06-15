@@ -58,23 +58,6 @@ ERRORDICT_DICT = {
     5 : ('GPIO', GPIO_ERRORDICT)
 }
 
-class ErrorInfoDialog(QtGui.QDialog):
-    def __init__(self, error, parent=None):
-        super(ErrorInfoDialog, self).__init__(parent)
-
-        error_label = QtGui.QLabel(getErrorInfo(error))
-        error_label.setAlignment(QtCore.Qt.AlignHCenter)
-
-        dismissButton = QtGui.QPushButton("OK")
-        dismissButton.pressed.connect(self.accept)
-
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(error_label)
-        layout.addWidget(dismissButton)
-
-        self.setLayout(layout)
-        self.setWindowTitle('Willow error information')
-        self.resize(200,75)
 
 def getErrorInfo(errorRegister):
     infoText = ''
