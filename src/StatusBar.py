@@ -161,17 +161,17 @@ class StatusBar(QtGui.QWidget):
         self.firmwareLabel.setStyleSheet(UNKNOWN_STYLE)
         layout.addWidget(self.firmwareLabel, 2,0)
 
-        self.chipsLabel = QtGui.QLabel('(chips live)')
-        self.chipsLabel.setStyleSheet(UNKNOWN_STYLE)
-        layout.addWidget(self.chipsLabel)
+        self.hwLabel = QtGui.QLabel('(hardware status)')
+        self.hwLabel.setStyleSheet(UNKNOWN_STYLE)
+        layout.addWidget(self.hwLabel, 2,1)
 
         self.streamLabel = QtGui.QLabel('Not Streaming')
         self.streamLabel.setStyleSheet(UNKNOWN_STYLE)
-        layout.addWidget(self.streamLabel)
+        layout.addWidget(self.streamLabel, 3,0)
 
         self.recordLabel = QtGui.QLabel('Not Recording')
         self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
-        layout.addWidget(self.recordLabel)
+        layout.addWidget(self.recordLabel, 3,1)
 
         self.setLayout(layout)
 
@@ -259,15 +259,21 @@ class StatusBar(QtGui.QWidget):
             self.firmwareLabel.setStyleSheet(GOOD_STYLE)
 
         tmp = vitals['errors']
-        if tmp != self.acknowledgedError:
-            self.acknowledgedError = None
-            if tmp != None and tmp != 0:
-                self.msgLog.post('Willow error: {}'.format(
-                                 getErrorInfo(tmp)))
-                error_dialog = ErrorInfoDialog(tmp)
-                if error_dialog.exec_():
-                    error_dialog.show()
-                self.acknowledgedError = tmp
+        if tmp == 0:
+            tmp = vitals['chips_live']
+            if isinstance(tmp, list):
+                self.hwLabel.setText('{0} chips live'.format(len(tmp)))
+                self.hwLabel.setToolTip('chips {0} alive'.format(', '.join([str(c) for c in tmp])))
+            else:
+                self.hwLabel.setText('(chips live)')
+            self.hwLabel.setStyleSheet(GOOD_STYLE)
+        elif tmp ==  None:
+            self.hwLabel.setText('(hardware status)')
+            self.hwLabel.setStyleSheet(UNKNOWN_STYLE)
+        else:
+            self.hwLabel.setText('Hardware Error') 
+            self.hwLabel.setStyleSheet(BAD_STYLE)
+            self.hwLabel.setToolTip(getErrorInfo(tmp))
 
         tmp = vitals['stream']
         if tmp == True:
@@ -296,13 +302,4 @@ class StatusBar(QtGui.QWidget):
         elif tmp == None:
             self.recordLabel.setText('(record)')
             self.recordLabel.setStyleSheet(UNKNOWN_STYLE)
-
-        tmp = vitals['chips_live']
-        if tmp == None:
-            self.chipsLabel.setText('(chips live)')
-            self.chipsLabel.setStyleSheet(UNKNOWN_STYLE)
-        else:
-            self.chipsLabel.setText('{0} chips live'.format(len(tmp)))
-            self.chipsLabel.setToolTip('chips {0} alive'.format(', '.join([str(c) for c in tmp])))
-            self.chipsLabel.setStyleSheet(GOOD_STYLE)
 
