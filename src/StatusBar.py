@@ -115,13 +115,19 @@ class ErrorInfoDialog(QtGui.QDialog):
 
 def getErrorInfo(errorRegister):
     infoText = ''
+    # iterate over modules
     for i in range(1,6):
         if (errorRegister & 1<<i):
             moduleName, errorDict = ERRORDICT_DICT[i]
             errorCode = hwif.getErrorCode(i)
-            print moduleName, errorCode
-            errorMsg = errorDict[errorCode]
-            infoText += '%s: %s, ' % (moduleName, errorMsg)
+            # iterate over error bits for each module
+            for j in range(32):
+                if (errorCode & 1<<j):
+                    try:
+                        errorMsg = errorDict[j]
+                    except KeyError:
+                        errorMsg = 'Unknown Error %d' % j
+                    infoText += '%s: %s, ' % (moduleName, errorMsg)
     return infoText[:-2]
 
 class StatusBar(QtGui.QWidget):
