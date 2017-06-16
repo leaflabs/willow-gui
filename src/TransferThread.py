@@ -5,6 +5,8 @@ import numpy as np
 
 import config
 
+DEVNULL = open(os.devnull, 'w')
+
 class TransferThread(QtCore.QThread):
 
     statusUpdated = QtCore.pyqtSignal(str)
@@ -62,7 +64,7 @@ class TransferThread(QtCore.QThread):
         else: # entire experiment
             callList = [sata2hdf5_path, self.deviceFile, self.targetFile]
 
-        po = subprocess.Popen(callList, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        po = subprocess.Popen(callList, stdout=DEVNULL, stderr=DEVNULL)
         self.statusUpdated.emit('Transfer begun.')
 
         while True:
