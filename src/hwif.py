@@ -619,6 +619,7 @@ def checkVitals():
         vitals['errors'] = _doRegRead(DC.MOD_ERR, DC.ERR_ERR0)
         vitals['stream'] = isStreaming()
         vitals['record'] = isRecording()
+        return vitals
     except hwifError as e:
         if e.type in (0,2):
             # cannot connect to daemon
@@ -629,6 +630,7 @@ def checkVitals():
             vitals['errors'] = None
             vitals['stream'] = None
             vitals['record'] = None
+            return vitals
         elif e.type==1:
             if e.errcode in (DC.ControlResErr.NO_DNODE, DC.ControlResErr.DNODE_DIED):
                 # cannot connect to datanode
@@ -639,6 +641,7 @@ def checkVitals():
                 vitals['errors'] = None
                 vitals['stream'] = None
                 vitals['record'] = None
+                return vitals
             elif e.errcode==DC.ControlResErr.DNODE:
                 # datanode is responding, but error condition is present
                 vitals['daemon'] = True
@@ -648,6 +651,7 @@ def checkVitals():
                 vitals['errors'] = _doRegRead(DC.MOD_ERR, DC.ERR_ERR0)
                 vitals['stream'] = isStreaming()
                 vitals['record'] = isRecording()
-    finally:
-        return vitals
+                return vitals
+        else:
+            raise e
 
