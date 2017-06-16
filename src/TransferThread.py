@@ -79,7 +79,7 @@ class TransferThread(QtCore.QThread):
         if po.returncode == 0:
             if self.rename:
                 tmpFilename = self.targetFile
-                f = h5py.File(tmpFilename)
+                f = h5py.File(tmpFilename, 'r')
                 timestamp = f.attrs['experiment_cookie'][0]
                 dt = datetime.datetime.fromtimestamp(timestamp)
                 strtime = '%04d%02d%02d-%02d%02d%02d' % (dt.year, dt.month, dt.day, dt.hour,

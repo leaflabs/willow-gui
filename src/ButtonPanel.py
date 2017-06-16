@@ -44,7 +44,7 @@ def targetDirExists(filename):
     return os.path.exists(targetDir)
 
 def isCalibrationFile(filename):
-    f = h5py.File(filename)
+    f = h5py.File(filename, 'r')
     return 'impedanceMeasurements' in f.keys()
 
 def isSnapshotFile(filename):

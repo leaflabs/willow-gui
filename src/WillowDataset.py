@@ -70,7 +70,7 @@ class WillowDataset(QtCore.QObject):
         QtCore.QObject.__init__(self)
 
         self.filename = filename
-        self.fileObject = h5py.File(self.filename)
+        self.fileObject = h5py.File(self.filename, 'r')
         self.dset = self.fileObject['channel_data']
         self.isSnapshot = self.fileObject.attrs['ph_flags'][0] & (1 << 6)
         self.nsamples, self.nchan = self.dset.shape

@@ -18,7 +18,7 @@ class ImpedancePlotWindow(pg.PlotWidget):
         pg.PlotWidget.__init__(self)
 
         self.filename = filename
-        self.fileObject = h5py.File(filename)
+        self.fileObject = h5py.File(filename, 'r')
         self.data = self.fileObject['impedanceMeasurements'][:]
 
         self.plot(np.arange(NCHAN), self.data, pen=None, symbol='o')
