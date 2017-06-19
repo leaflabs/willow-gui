@@ -14,7 +14,6 @@ NCHAN = 1024
 NCHIPS = 32
 SAMPLE_RATE = 3e4
 MS_PER_SEC = 1000
-MAX_NSAMPLES = config.importLimit_GB*5e5
 MICROVOLTS_PER_COUNT = 0.195
 
 # filter parameters

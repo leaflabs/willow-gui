@@ -214,40 +214,6 @@ class StorageCapacityPage(QtGui.QWizardPage):
         if dirName:
             self.dirLine.setText(dirName)
 
-class ImportLimitPage(QtGui.QWizardPage):
-
-    def __init__(self):
-        QtGui.QWizardPage.__init__(self)
-
-        self.setTitle('Data Import Limit')
-
-        self.textLabel = QtGui.QLabel("This parameter sets a limit on the size "
-            "of imported datasets. This exists to prevent you from accidentally "
-            "importing a huge dataset that uses up all your memory and crashes "
-            "your system. Half of your computer's RAM is a good ballpark value, "
-            "but you may want to be more or less conservative depending on your "
-            "needs." )
-        self.textLabel.setWordWrap(True)
-        self.textLabel.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Minimum)
-
-        self.importLimitLabel = QtGui.QLabel('<b>Import Limit (GB):</b>')
-        self.importLimitLine = QtGui.QLineEdit()
-        self.registerField('importLimit*', self.importLimitLine)
-
-        layout = QtGui.QGridLayout()
-        layout.addWidget(self.textLabel, 0,0)
-        layout.addWidget(self.importLimitLabel, 1,0)
-        layout.addWidget(self.importLimitLine, 1,1)
-        self.setLayout(layout)
-
-    def initializePage(self):
-        self.importLimitLine.setText('8')
-
-    def browse(self):
-        dirName = QtGui.QFileDialog.getExistingDirectory(self, 'Select Data Directory', expanduser("~"))
-        if dirName:
-            self.dirLine.setText(dirName)
-
 class ConclusionPage(QtGui.QWizardPage):
 
     def __init__(self, jsonDict):
@@ -266,7 +232,6 @@ class ConclusionPage(QtGui.QWizardPage):
         self.analysisDirStreamingLabel = QtGui.QLabel()
         self.networkInterfaceLabel = QtGui.QLabel()
         self.storageCapacityLabel = QtGui.QLabel()
-        self.importLimitLabel = QtGui.QLabel()
         self.initializeLabels()
 
         self.finalLabel = QtGui.QLabel('Click "Finished" to save these settings and '
@@ -284,7 +249,6 @@ class ConclusionPage(QtGui.QWizardPage):
         layout.addWidget(self.analysisDirStreamingLabel)
         layout.addWidget(self.networkInterfaceLabel)
         layout.addWidget(self.storageCapacityLabel)
-        layout.addWidget(self.importLimitLabel)
         layout.addWidget(self.finalLabel)
         self.setLayout(layout)
 
@@ -295,7 +259,6 @@ class ConclusionPage(QtGui.QWizardPage):
         self.analysisDirStreamingLabel.setText('<b>analysisDirStreaming: </b>')
         self.networkInterfaceLabel.setText('<b>networkInterface: </b>')
         self.storageCapacityLabel.setText('<b>storageCapacity_GB: </b>')
-        self.importLimitLabel.setText('<b>importLimit_GB: </b>')
 
     def initializePage(self):
         self.initializeLabels()
@@ -311,8 +274,6 @@ class ConclusionPage(QtGui.QWizardPage):
         self.networkInterfaceLabel.setText(self.networkInterfaceLabel.text().append(self.networkInterface))
         self.storageCapacity = self.field('storageCapacity').toString()
         self.storageCapacityLabel.setText(self.storageCapacityLabel.text().append(self.storageCapacity))
-        self.importLimit = self.field('importLimit').toString()
-        self.importLimitLabel.setText(self.importLimitLabel.text().append(self.importLimit))
 
     def validatePage(self):
         self.jsonDict['daemonDir']['value'] = str(self.daemonDir)
@@ -321,7 +282,6 @@ class ConclusionPage(QtGui.QWizardPage):
         self.jsonDict['analysisDirStreaming']['value'] = str(self.analysisDirStreaming)
         self.jsonDict['networkInterface']['value'] = str(self.networkInterface)
         self.jsonDict['storageCapacity_GB']['value'] = int(self.storageCapacity)
-        self.jsonDict['importLimit_GB']['value'] = int(self.importLimit)
         ###
         config.saveJSON(self.jsonDict)
         config.updateAttributes(self.jsonDict)
@@ -347,7 +307,6 @@ class ConfigWizard(QtGui.QWizard):
         self.jsonDict['analysisDirStreaming'] = {'type': 'str', 'description': 'Streaming Analysis Directory'}
         self.jsonDict['networkInterface'] = {'type': 'str', 'description': 'Network Interface Name'}
         self.jsonDict['storageCapacity_GB'] = {'type': 'float', 'description': 'Datanode Storage Capacity (GB)'}
-        self.jsonDict['importLimit_GB'] = {'type': 'float', 'description': 'Dataset Import Limit (GB)'}
 
         self.mainWindow = None
 
@@ -359,6 +318,5 @@ class ConfigWizard(QtGui.QWizard):
         self.addPage(StreamingAnalysisDirPage())
         self.addPage(NetworkInterfacePage())
         self.addPage(StorageCapacityPage())
-        self.addPage(ImportLimitPage())
         self.addPage(ConclusionPage(self.jsonDict))
 
