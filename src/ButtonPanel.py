@@ -183,6 +183,7 @@ class ButtonPanel(QtGui.QWidget):
                 log=self.msgLog.actionLog)
             self.snapshotThread = SnapshotThread(params)
             self.snapshotProgressDialog = QtGui.QProgressDialog('Taking Snapshot..', 'Cancel', 0, 0)
+            self.snapshotProgressDialog.setModal(True)
             self.snapshotProgressDialog.setWindowTitle('Snapshot Progress')
             self.snapshotProgressDialog.setWindowIcon(QtGui.QIcon('../img/round_logo_60x60.png'))
             self.snapshotProgressDialog.canceled.connect(self.snapshotThread.handleCancel)
