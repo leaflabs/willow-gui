@@ -13,7 +13,7 @@ BAD_STYLE = 'QLabel {background-color: orange; font: bold}'
 STREAM_STYLE = 'QLabel {background-color: rgb(0,191,255); font: bold}'
 RECORD_STYLE = 'QLabel {background-color: red; font: bold}'
 
-MAX_DISK_INDEX = 250e3*config.storageCapacity_GB
+MAX_SAMPLE_INDEX = 250e3*config.storageCapacity_GB
 DISK_FILLUP_FRACTION = 0.97
 
 
@@ -224,13 +224,13 @@ class StatusBar(QtGui.QWidget):
         tmp = vitals['record']
         if tmp == True:
             try:
-                diskIndex = hwif.getSataBSI()
-                if (diskIndex >= DISK_FILLUP_FRACTION*MAX_DISK_INDEX):
+                sampleIndex = hwif.getSataBSI()
+                if (sampleIndex >= DISK_FILLUP_FRACTION*MAX_SAMPLE_INDEX):
                     self.diskFillupDetected.emit()
-                self.recordLabel.setText('Recording: %5.2f%%' % (diskIndex/MAX_DISK_INDEX*100))
+                self.recordLabel.setText('Recording: %5.2f%%' % (sample_index/MAX_SAMPLE_INDEX*100))
                 self.recordLabel.setStyleSheet(RECORD_STYLE)
             except hwif.hwifError as e:
-                self.msgLog.post('StatusBar Error while trying to read disk index: %s' % e.message)
+                self.msgLog.post('StatusBar Error while trying to read sample index: %s' % e.message)
         elif tmp == False:
             self.recordLabel.setText('Not Recording')
             self.recordLabel.setStyleSheet(GOOD_STYLE)

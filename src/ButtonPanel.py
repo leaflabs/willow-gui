@@ -237,8 +237,8 @@ class ButtonPanel(QtGui.QWidget):
     def handleDiskFillup(self):
         try:
             hwif.stopRecording()
-            diskIndex = hwif.getSataBSI()
-            self.msgLog.post('Disk fillup detected! Recording stopped at disk index %d' % diskIndex)
+            sampleIndex = hwif.getSataBSI()
+            self.msgLog.post('Disk fillup detected! Recording stopped at sample index %d' % sampleIndex)
         except hwif.AlreadyError:
             self.msgLog.post('Already not recording.')
         except hwif.hwifError as e:
