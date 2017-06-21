@@ -45,7 +45,10 @@ class MainWindow(QtGui.QWidget):
 
         versionFile = open('../VERSION', 'r')
         versionNumber = versionFile.readline().rstrip('\n')
-        branchName = Repo('..').active_branch.name
+        if not Repo('..').head.is_detached:
+            branchName = Repo('..').active_branch.name
+        else:
+            branchName = Repo('..').head.commit.hexsha
         versionText = versionNumber if (branchName == 'master') else branchName
 
         self.setWindowTitle('WillowGUI (%s)' % versionText)
