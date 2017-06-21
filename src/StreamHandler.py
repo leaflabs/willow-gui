@@ -44,42 +44,45 @@ class StreamHandler(QtCore.QObject):
                             self.script_name)
     def routeStdErr(self):
         err = str(self.streamProcess.readAllStandardError())
-        self.eFile.write(err)
+        commands = err.split("\n")
+        self.eFile.write('\n'.join(commands))
         request_prepend = 'hwif_req: '
-        if err[:len(request_prepend)] == request_prepend:
-            # translate requested function from a str into a Python function
-            request = err[len(request_prepend):].split(', ')
-            s_fun, s_args = request[0], request[1:]
-            call, unstringifiers = self.hwif_calls[s_fun][0], self.hwif_calls[s_fun][1:]
-            # call the function with any remaining arguments
-            real_args = []
+        for command in commands:
+            if command[:len(request_prepend)] == request_prepend:
+                # translate requested function from a str into a Python function
+                request = command[len(request_prepend):].split(', ')
+                s_fun, s_args = request[0], request[1:]
+                call, unstringifiers = self.hwif_calls[s_fun][0], self.hwif_calls[s_fun][1:]
+                # call the function with any remaining arguments
+                real_args = []
 
-            # TODO maybe handle potential hwif calls and errors more selectively
-            for i in xrange(len(s_args)):
-                real_args.append(unstringifiers[i](s_args[i]))
-            try:
-                call(*real_args)
-                if call == hwif.startStreaming_subsamples:
-                    self.msgPosted.emit('Started streaming.')
-                elif call == hwif.stopStreaming:
-                    self.msgPosted.emit('Stopped streaming.')
-                pass
-            except hwif.AlreadyError:
-                already_message = 'Hardware was already '
-                if call == hwif.stopStreaming:
-                    already_message = already_message + 'not streaming.'
-                elif call == hwif.startStreaming_subsamples or call == hwif.startStreaming_boardsamples:
-                    already_message = already_message + \
-                        'streaming. Try stopping and restarting stream.'
-                print already_message
-                pass
-            except AttributeError:
-                # TODO what's up with this?
-                print 'AttributeError: Pipe object does not exist'
-                pass
-            except hwif.hwifError as e:
-                print e.message
-                pass
+                # TODO maybe handle potential hwif calls and errors more selectively
+                for i in xrange(len(s_args)):
+                    real_args.append(unstringifiers[i](s_args[i]))
+                try:
+                    call(*real_args)
+                    if call == hwif.startStreaming_subsamples:
+                        self.msgPosted.emit('Started streaming.')
+                    elif call == hwif.stopStreaming:
+                        self.msgPosted.emit('Stopped streaming.')
+                    pass
+                except hwif.AlreadyError:
+                    already_message = 'Hardware was already '
+                    if call == hwif.stopStreaming:
+                        already_message = already_message + 'not streaming.'
+                    elif (call == hwif.startStreaming_subsamples or
+                          call == hwif.startStreaming_boardsamples):
+                        already_message = already_message + \
+                            'streaming. Try stopping and restarting stream.'
+                    print already_message
+                    pass
+                except AttributeError:
+                    # TODO what's up with this?
+                    print 'AttributeError: Pipe object does not exist'
+                    pass
+                except hwif.hwifError as e:
+                    print e.message
+                    pass
 
     def routeStdOut(self):
         out = str(self.streamProcess.readAllStandardOutput())
