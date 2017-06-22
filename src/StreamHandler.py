@@ -93,6 +93,9 @@ class StreamHandler(QtCore.QObject):
             hwif.stopStreaming()
         except hwif.AlreadyError:
             pass
+        except hwif.hwifError as e:
+            self.msgPosted.emit("streamFinishedHandler: %s" % e.message)
+            pass
         self.msgPosted.emit('Subprocess {0} completed with return code {1} \
             and status {2}. \n Output saved in {3} and {4}.'.format(
             self.script_name, exitCode, exitStatus,
