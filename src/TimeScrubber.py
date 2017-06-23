@@ -58,7 +58,7 @@ class TimeScrubber(QtGui.QLabel):
         if (samp >= 0) and (samp < upperbound) and (samp > (self.maxsamp - self.totalsamp)):
             self.minsamp = self._pix2samp(pix)
         else:
-            self.minsamp = self._pix2samp(self._samp2pix(self.maxsamp - self.totalsamp))
+            self.minsamp = self._pix2samp(self._samp2pix(0))
 
     def setStateRight(self, pix):
         samp = self._pix2samp(pix)
@@ -66,7 +66,7 @@ class TimeScrubber(QtGui.QLabel):
         if (samp >= lowerbound) and (samp < self.nsamples) and (samp < (self.minsamp + self.totalsamp)):
             self.maxsamp = self._pix2samp(pix)
         else:
-            self.maxsamp = self._pix2samp(self._samp2pix(self.minsamp + self.totalsamp))
+            self.maxsamp = self._pix2samp(self._samp2pix(self.nsamples))
 
     def setStateCenter(self, pix):
         delta = self.maxsamp - self.minsamp
