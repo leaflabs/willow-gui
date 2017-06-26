@@ -11,7 +11,7 @@ www.willowephys.com
 
     $ sudo apt-get install python-numpy python-qt4 python-tk python-git python-pip python-pyqtgraph util-linux
 
-    $ pip install h5py
+    $ pip install h5py sharedmem
 
    Note: Old versions of h5py are known to have bugs which can affect GUI
    usage. In particular, v2.2.1 is known to be buggy. This bug is fixed in
