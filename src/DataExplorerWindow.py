@@ -37,7 +37,7 @@ class DataExplorerWindow(QtGui.QWidget):
         self.setLayout(layout)
 
         # window and margin settings
-        self.setWindowTitle('Willow Data Explorer')
+        self.setWindowTitle('Willow Data Explorer (%s)' % filename)
         self.resize(1400,800)
 
         self.timeScrubber.timeRangeSelected.connect(self.handleTimeSelection)
