@@ -21,7 +21,17 @@ class ImpedancePlotWindow(pg.PlotWidget):
         self.fileObject = h5py.File(filename, 'r')
         self.data = self.fileObject['impedanceMeasurements'][:]
 
-        self.plot(np.arange(NCHAN), self.data, pen=None, symbol='o')
+        pt_xs = np.arange(NCHAN)
+        # plot points, setting 'data' attribute of each to channel, kOhm pairs
+        self.points = self.plot(pt_xs, self.data, pen=None, symbol='o',
+                                data=zip(pt_xs, self.data/1000.))
+        self.points.sigPointsClicked.connect(self.pointClicked)
+
+        self.info = pg.TextItem('', color=(255,255,255,255),
+                                fill=(127,127,127,127))
+        self.info.hide()
+        self.addItem(self.info)
+
         self.setLogMode(y=True)
         self.setLimits(xMin=0, xMax=NCHAN, yMin=0, yMax=np.log10(np.max(self.data))+1)
         self.setLabel('bottom', text='Willow Channel Number')
@@ -43,6 +53,12 @@ class ImpedancePlotWindow(pg.PlotWidget):
         fmgeo.moveCenter(centerPoint)
         self.move(fmgeo.topLeft())
 
+    def pointClicked(self, item, pts):
+        pt_text = u'Channel {0}: Impedance = {1:.2f} k\N{OHM SIGN}'
+        get_vals = pg.graphicsItems.ScatterPlotItem.SpotItem.data
+        self.info.setText('\n'.join(pt_text.format(*i) for i in map(get_vals, pts)))
+        self.info.setPos(pts[0].pos())
+        self.info.show()
 
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
