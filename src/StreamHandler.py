@@ -95,7 +95,6 @@ class StreamHandler(QtCore.QObject):
             pass
         except hwif.hwifError as e:
             self.msgPosted.emit("streamFinishedHandler: %s" % e.message)
-            pass
         self.oFile.close()
         self.eFile.close()
         self.msgPosted.emit('Subprocess {0} completed with return code {1} \
