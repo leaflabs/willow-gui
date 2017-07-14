@@ -60,7 +60,7 @@ class DataExplorerWindow(QtGui.QWidget):
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.dataset.importSlice(start,stop)
         self.dataset.filterAndCalculateActivitySlice()
-        self.heatMap.setActivity(self.dataset.slice_activity.reshape((32,32), order='C'))
+        self.heatMap.setActivity(self.dataset.slice_activity.reshape((32,32), order='F'))
         self.plotMatrix.setXRange(0, self.dataset.slice_nsamples/30.)
         if self.filtered:
             self.plotMatrix.setYRange(self.dataset.slice_min, self.dataset.slice_max)
