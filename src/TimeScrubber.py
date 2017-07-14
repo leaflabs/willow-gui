@@ -2,7 +2,8 @@
 
 from PyQt4 import QtGui, QtCore
 import numpy as np
-
+import pyqtgraph as pg
+from WillowDataset import SAMPLE_RATE
 
 class TimeScrubber(QtGui.QLabel):
 
@@ -12,6 +13,7 @@ class TimeScrubber(QtGui.QLabel):
         QtGui.QLabel.__init__(self)
 
         self.nsamples = nsamples
+        self.time_total = nsamples/SAMPLE_RATE  # in seconds
 
         # some drawing parameters
         self.margin = 40
@@ -44,8 +46,11 @@ class TimeScrubber(QtGui.QLabel):
         self.minsamp = initRange[0]
         self.maxsamp = initRange[1]
 
-        self.leftLabel = QtGui.QLabel('0')
-        self.rightLabel = QtGui.QLabel(str(self.nsamples))
+        [timespan, suffix] = pg.siFormat(self.time_total, suffix='s').split(' ')
+
+        self.leftLabel = QtGui.QLabel('sample 0 \n (0 %s)' % suffix)
+        self.rightLabel = QtGui.QLabel('sample %d' % self.nsamples + \
+                                       '\n (%s %s)' % (timespan, suffix))
         for label in [self.leftLabel, self.rightLabel]:
             label.setStyleSheet('color:gray; background:transparent')
             label.setAlignment(QtCore.Qt.AlignCenter)
