@@ -85,6 +85,17 @@ class PlotMatrix(pg.GraphicsLayoutWidget):
         for plotItem in self.plotItems:
             plotItem.setTitle(title=title)
 
+    def setAllLabels(self, b_text=None, b_units=None, b_prefix=None,
+                     l_text=None, l_units=None, l_prefix=None):
+        for plotItem in self.plotItems:
+            plotItem.setLabels(left=(l_text, l_units, l_prefix),
+                               bottom=(b_text, b_units, b_prefix))
+
+    def setAllScales(self, b_scale=None, l_scale=None):
+        for plotItem in self.plotItems:
+            plotItem.axes['bottom']['item'].setScale(b_scale)
+            plotItem.axes['left']['item'].setScale(l_scale)
+
     def setXRange(self, xmin, xmax):
         for plotItem in self.plotItems:
             plotItem.setLimits(xMin=xmin, xMax=xmax)

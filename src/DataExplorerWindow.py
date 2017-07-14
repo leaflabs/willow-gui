@@ -26,6 +26,10 @@ class DataExplorerWindow(QtGui.QWidget):
         self.timeScrubber = TimeScrubber(self.dataset.nsamples, initRange=initRange)
         self.plotMatrix = PlotMatrix(4, 2)
         self.plotMatrix.setAllTitles('willowChan = xxxx')
+        self.plotMatrix.setAllLabels(b_text='time', b_units='s',
+                                     l_text='voltage', l_units='V')
+        # time units in milliseconds; voltage units in microvolts:
+        self.plotMatrix.setAllScales(b_scale=1/1000., l_scale=1/1000000.)
 
         # layout
         topLayout = QtGui.QHBoxLayout()
