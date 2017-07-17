@@ -21,7 +21,11 @@ class StreamHandler(QtCore.QObject):
         self.eFile = open(os.path.join(self.script_dir, 'eFile'), 'w')
 
         self.streamProcess = QtCore.QProcess(self)
-        self.streamProcess.readyReadStandardError.connect(self.routeStdErr)
+        self.streamProcess.setReadChannel(self.streamProcess.StandardError)
+        self.readMoreTimer = QtCore.QTimer()
+        self.readMoreTimer.setSingleShot(True)
+        self.readMoreTimer.timeout.connect(self.routeStdErr)
+        self.streamProcess.readyReadStandardError.connect(self.armReadMoreTimer)
         self.streamProcess.readyReadStandardOutput.connect(self.routeStdOut)
         self.streamProcess.finished.connect(self.streamFinishedHandler)
 
@@ -42,49 +46,49 @@ class StreamHandler(QtCore.QObject):
         self.streamProcess.start(self.exec_path, QtCore.QStringList(proto2bytes_path))
         self.msgPosted.emit('Subprocess %s spawned. Streaming widget running now...' %
                             self.script_name)
-    def routeStdErr(self):
-        err = str(self.streamProcess.readAllStandardError())
-        commands = err.split("\n")
-        self.eFile.write('\n'.join(commands))
-        # MITCH: DEBUG
-        self.msgPosted.emit('\n'.join(commands))
-        request_prepend = 'hwif_req: '
-        for command in commands:
-            if command[:len(request_prepend)] == request_prepend:
-                # translate requested function from a str into a Python function
-                request = command[len(request_prepend):].split(', ')
-                s_fun, s_args = request[0], request[1:]
-                call, unstringifiers = self.hwif_calls[s_fun][0], self.hwif_calls[s_fun][1:]
-                # call the function with any remaining arguments
-                real_args = []
 
-                # TODO maybe handle potential hwif calls and errors more selectively
-                for i in xrange(len(s_args)):
-                    real_args.append(unstringifiers[i](s_args[i]))
-                try:
-                    call(*real_args)
-                    if call == hwif.startStreaming_subsamples:
-                        self.msgPosted.emit('Started streaming.')
-                    elif call == hwif.stopStreaming:
-                        self.msgPosted.emit('Stopped streaming.')
-                    pass
-                except hwif.AlreadyError:
-                    already_message = 'Hardware was already '
-                    if call == hwif.stopStreaming:
-                        already_message = already_message + 'not streaming.'
-                    elif (call == hwif.startStreaming_subsamples or
-                          call == hwif.startStreaming_boardsamples):
-                        already_message = already_message + \
-                            'streaming. Try stopping and restarting stream.'
-                    print already_message
-                    pass
-                except AttributeError:
-                    # TODO what's up with this?
-                    print 'AttributeError: Pipe object does not exist'
-                    pass
-                except hwif.hwifError as e:
-                    print e.message
-                    pass
+    def armReadMoreTimer(self):
+        self.readMoreTimer.start(0)
+
+    def routeStdErr(self):
+        if not self.streamProcess.canReadLine():
+            return
+
+        err = str(self.streamProcess.readLine())
+        self.eFile.write(err)
+        err = err.rstrip()
+        request_prepend = 'hwif_req: '
+        if err.startswith(request_prepend):
+            # translate requested function from a str into a Python function
+            request = err[len(request_prepend):].split(', ')
+            s_fun, s_args = request[0], request[1:]
+            call, unstringifiers = self.hwif_calls[s_fun][0], self.hwif_calls[s_fun][1:]
+            # call the function with any remaining arguments
+            real_args = [unstringifiers[i](arg) for i, arg in enumerate(s_args)]
+            try:
+                call(*real_args)
+            except hwif.AlreadyError:
+                already_message = 'Hardware was already '
+                if call == hwif.stopStreaming:
+                    already_message = already_message + 'not streaming.'
+                elif (call == hwif.startStreaming_subsamples or
+                      call == hwif.startStreaming_boardsamples):
+                    already_message = already_message + \
+                        'streaming. Try stopping and restarting stream.'
+                self.msgPosted.emit(already_message)
+            except AttributeError:
+                # TODO what's up with this?
+                self.msgPosted.emit('AttributeError: Pipe object does not exist')
+            except hwif.hwifError as e:
+                self.msgPosted.emit(e.message)
+            else:
+                if (call == hwif.startStreaming_subsamples or
+                    call == hwif.startStreaming_boardsamples):
+                    self.msgPosted.emit('Started streaming.')
+                elif call == hwif.stopStreaming:
+                    self.msgPosted.emit('Stopped streaming.')
+        # in case we didn't get all lines of stream, re-arm timer to call again
+        self.armReadMoreTimer()
 
     def routeStdOut(self):
         out = str(self.streamProcess.readAllStandardOutput())
@@ -97,6 +101,7 @@ class StreamHandler(QtCore.QObject):
             pass
         except hwif.hwifError as e:
             self.msgPosted.emit("streamFinishedHandler: %s" % e.message)
+        self.readMoreTimer.stop()
         self.oFile.close()
         self.eFile.close()
         self.msgPosted.emit('Subprocess {0} completed with return code {1} \
