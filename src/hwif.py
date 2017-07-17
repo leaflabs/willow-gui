@@ -127,13 +127,16 @@ def _controlCmdWrapper(cmd):
         if multiple:
             with QtCore.QMutexLocker(DAEMON_MUTEX):
                 resps = DC.do_control_cmds(cmd, control_socket=DAEMON_SOCK)
-            for resp in resps:
-                if resp:
-                    if resp.type == DC.ControlResponse.ERR:
-                        raise hwifError(1, resp.err.code)
-                else:
-                    raise hwifError(2)
-            return resps
+            if resps:
+                for resp in resps:
+                    if resp:
+                        if resp.type == DC.ControlResponse.ERR:
+                            raise hwifError(1, resp.err.code)
+                    else:
+                        raise hwifError(2)
+                return resps
+            else:
+                raise hwifError(2)
         else:
             with QtCore.QMutexLocker(DAEMON_MUTEX):
                 resp = DC.do_control_cmd(cmd, control_socket=DAEMON_SOCK)
