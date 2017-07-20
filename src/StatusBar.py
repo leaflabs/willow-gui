@@ -223,14 +223,11 @@ class StatusBar(QtGui.QWidget):
 
         tmp = vitals['record']
         if tmp == True:
-            try:
-                sampleIndex = hwif.getSataBSI()
-                if (sampleIndex >= DISK_FILLUP_FRACTION*MAX_SAMPLE_INDEX):
-                    self.diskFillupDetected.emit()
-                self.recordLabel.setText('Recording: %5.2f%%' % (sampleIndex/MAX_SAMPLE_INDEX*100))
-                self.recordLabel.setStyleSheet(RECORD_STYLE)
-            except hwif.hwifError as e:
-                self.msgLog.post('StatusBar Error while trying to read sample index: %s' % e.message)
+            sampleIndex = vitals['sample_index']
+            if (sampleIndex >= DISK_FILLUP_FRACTION*MAX_SAMPLE_INDEX):
+                self.diskFillupDetected.emit()
+            self.recordLabel.setText('Recording: %5.2f%%' % (sampleIndex/MAX_SAMPLE_INDEX*100))
+            self.recordLabel.setStyleSheet(RECORD_STYLE)
         elif tmp == False:
             self.recordLabel.setText('Not Recording')
             self.recordLabel.setStyleSheet(GOOD_STYLE)

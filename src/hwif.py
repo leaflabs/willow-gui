@@ -611,7 +611,8 @@ def checkVitals():
                 'firmware' : None,
                 'errors' : None,
                 'stream' : None,
-                'record' : None
+                'record' : None,
+                'sample_index' : None
                 }
     try:
         pingDatanode()
@@ -622,6 +623,10 @@ def checkVitals():
         vitals['errors'] = _doRegRead(DC.MOD_ERR, DC.ERR_ERR0)
         vitals['stream'] = isStreaming()
         vitals['record'] = isRecording()
+        if vitals['record']:
+            vitals['sample_index'] = getSataBSI()
+        else:
+            vitals['sample_index'] = None
         return vitals
     except hwifError as e:
         if e.type in (0,2):
@@ -633,6 +638,7 @@ def checkVitals():
             vitals['errors'] = None
             vitals['stream'] = None
             vitals['record'] = None
+            vitals['sample_index'] = None
             return vitals
         elif e.type==1:
             if e.errcode in (DC.ControlResErr.NO_DNODE, DC.ControlResErr.DNODE_DIED):
@@ -644,6 +650,7 @@ def checkVitals():
                 vitals['errors'] = None
                 vitals['stream'] = None
                 vitals['record'] = None
+                vitals['sample_index'] = None
                 return vitals
             elif e.errcode==DC.ControlResErr.DNODE:
                 # datanode is responding, but error condition is present
@@ -654,6 +661,10 @@ def checkVitals():
                 vitals['errors'] = _doRegRead(DC.MOD_ERR, DC.ERR_ERR0)
                 vitals['stream'] = isStreaming()
                 vitals['record'] = isRecording()
+                if vitals['record']:
+                    vitals['sample_index'] = getSataBSI()
+                else:
+                    vitals['sample_index'] = None
                 return vitals
         else:
             raise e
