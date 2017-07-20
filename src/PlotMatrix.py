@@ -13,7 +13,7 @@ class DragPlotItem(pg.PlotItem):
 
         self.subplotIndex = subplotIndex
 
-        # install event filter for viewbox and axes items
+        # install event filter on axes and viewbox, for zooming
         self.vb.installEventFilter(self)
         for axesDict in self.axes.values():
             axesDict['item'].installEventFilter(self)
@@ -28,10 +28,14 @@ class DragPlotItem(pg.PlotItem):
 
     def eventFilter(self, target, ev):
         if ev.type() == QtCore.QEvent.GraphicsSceneWheel:
-            if ev.modifiers() == (QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier):
-                self.axes['left']['item'].wheelEvent(ev)
+            if ev.modifiers():
+                if ev.modifiers() & QtCore.Qt.ControlModifier:
+                    self.axes['bottom']['item'].wheelEvent(ev)
+                if ev.modifiers() & QtCore.Qt.ShiftModifier:
+                    self.axes['left']['item'].wheelEvent(ev)
             else:
                 self.axes['bottom']['item'].wheelEvent(ev)
+                self.axes['left']['item'].wheelEvent(ev)
             return True
         return False
 

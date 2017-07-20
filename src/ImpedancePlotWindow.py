@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 import sys, time, os
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
 import numpy as np
 import h5py
 import pyqtgraph as pg
@@ -37,9 +37,12 @@ class ImpedancePlotWindow(pg.PlotWidget):
         self.setLabel('bottom', text='Willow Channel Number')
         self.setLabel('left', text='Impedance (Ohms)')
         self.setTitle(os.path.basename(self.filename))
-        # iterate through all axesItems, and set their ticklength to the file-global value
+        # set axes tick lengths and install event filter on them for zooming
         for axesDict in self.plotItem.axes.values():
             axesDict['item'].setStyle(tickLength=TICKLENGTH)
+            axesDict['item'].installEventFilter(self)
+        # install event filter for zooming on viewbox also
+        self.plotItem.vb.installEventFilter(self)
 
         self.resize(INITWIDTH,INITHEIGHT)
         self.setWindowTitle('Impedance Plot Window')
@@ -59,6 +62,20 @@ class ImpedancePlotWindow(pg.PlotWidget):
         self.info.setText('\n'.join(pt_text.format(*i) for i in map(get_vals, pts)))
         self.info.setPos(pts[0].pos())
         self.info.show()
+
+    def eventFilter(self, target, ev):
+        if ev.type() == QtCore.QEvent.GraphicsSceneWheel:
+            if ev.modifiers():
+                if ev.modifiers() & QtCore.Qt.ControlModifier:
+                    self.plotItem.axes['bottom']['item'].wheelEvent(ev)
+                if ev.modifiers() & QtCore.Qt.ShiftModifier:
+                    self.plotItem.axes['left']['item'].wheelEvent(ev)
+            else:
+                self.plotItem.axes['bottom']['item'].wheelEvent(ev)
+                self.plotItem.axes['left']['item'].wheelEvent(ev)
+            return True
+        return False
+
 
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)

@@ -61,6 +61,11 @@ class StreamWindow(QtGui.QWidget):
         self.plotWidget.plot(x=self.t_relative, y=self.plotBuff)
         self.plotCurve = self.plotItem.curves[0]
 
+        # install event filters for zooming
+        self.plotItem.vb.installEventFilter(self)
+        for axesDict in self.plotItem.axes.values():
+            axesDict['item'].installEventFilter(self)
+
         ###################
         # Top-level stuff
         ##################
@@ -163,6 +168,19 @@ class StreamWindow(QtGui.QWidget):
         else:
             self.msgPosted.emit('Read from proto2bytes timed out!')
             self.stopStreaming()
+
+    def eventFilter(self, target, ev):
+        if ev.type() == QtCore.QEvent.GraphicsSceneWheel:
+            if ev.modifiers():
+                if ev.modifiers() & QtCore.Qt.ControlModifier:
+                    self.plotItem.axes['bottom']['item'].wheelEvent(ev)
+                if ev.modifiers() & QtCore.Qt.ShiftModifier:
+                    self.plotItem.axes['left']['item'].wheelEvent(ev)
+            else:
+                self.plotItem.axes['bottom']['item'].wheelEvent(ev)
+                self.plotItem.axes['left']['item'].wheelEvent(ev)
+            return True
+        return False
 
     def closeEvent(self, event):
         try:
