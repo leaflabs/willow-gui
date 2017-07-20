@@ -29,6 +29,9 @@ class HeatMap(QtGui.QLabel):
         self.setMinimumSize(tileSize_init*self.ncols,tileSize_init*self.nrows)
         self.setMaximumSize(tileSize_init*self.ncols, tileSize_init*self.nrows)
 
+        self.hold = False
+        self.setMouseTracking(True)
+
     def setActivity(self, activity):
         """
         activity should be a (nrows,ncols) ndarray with values from 0 to 1
@@ -64,6 +67,10 @@ class HeatMap(QtGui.QLabel):
             self.jselected = event.pos().y() // self.recth
 
     def mouseMoveEvent(self, event):
+        chip = event.pos().x() // self.rectw
+        chan = event.pos().y() // self.recth
+        pt = self.mapToGlobal(QtCore.QPoint(event.pos().x(), event.pos().y()))
+        QtGui.QToolTip.showText(pt, 'chip: %d, chan: %d' % (chip, chan))
         if self.hold:
             mimeData = QtCore.QMimeData()
             drag = QtGui.QDrag(self)
