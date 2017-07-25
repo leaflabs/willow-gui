@@ -57,7 +57,7 @@ class ImpedancePlotWindow(pg.PlotWidget):
         self.move(fmgeo.topLeft())
 
     def pointClicked(self, item, pts):
-        pt_text = u'Channel {0}: Impedance = {1:.2f} k\N{OHM SIGN}'
+        pt_text = u'Channel {0}: Impedance = {1:.0f} k\N{OHM SIGN}'
         get_vals = pg.graphicsItems.ScatterPlotItem.SpotItem.data
         self.info.setText('\n'.join(pt_text.format(*i) for i in map(get_vals, pts)))
         self.info.setPos(pts[0].pos())
