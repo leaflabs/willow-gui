@@ -76,6 +76,7 @@ class HeatMap(QtGui.QLabel):
             drag = QtGui.QDrag(self)
             drag.setMimeData(mimeData)
             dropAction = drag.exec_()
+            self.hold = False
             if dropAction == QtCore.Qt.MoveAction:
                 dropText = str(drag.mimeData().text())
                 self.dragAndDropAccepted.emit(self.iselected, self.jselected, dropText)
