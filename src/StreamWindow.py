@@ -50,7 +50,7 @@ class StreamWindow(QtGui.QWidget):
         # pyqtgraph plot
         ###############################
 
-        self.plotWidget = pg.PlotWidget(labels={'left':'Raw Signal (uV)',
+        self.plotWidget = pg.PlotWidget(labels={'left':u'Raw Signal (\N{GREEK SMALL LETTER MU}V)',
                                                 'bottom':'Relative Time (ms)'},
                                         title='Willow Channel ####')
         self.plotItem = self.plotWidget.getPlotItem()
