@@ -9,7 +9,7 @@ class TimeScrubber(QtGui.QLabel):
 
     timeRangeSelected= QtCore.pyqtSignal(int, int)
 
-    def __init__(self, nsamples, initRange=[0,30000], maxNSamples=60000):
+    def __init__(self, nsamples, initRange=[0,30000], maxNSamples=90000):
         QtGui.QLabel.__init__(self)
 
         self.nsamples = nsamples
