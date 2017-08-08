@@ -8,7 +8,9 @@ from PlotMatrix import PlotMatrix
 from HeatMap import HeatMap
 from TimeScrubber import TimeScrubber
 
-from WillowDataset import WillowDataset
+from WillowDataset import WillowDataset, SAMPLE_RATE
+
+DEFAULT_TIME_SPAN = 3       # seconds
 
 class HelpWindow(QtGui.QDialog):
     def __init__(self, *args, **kwargs):
@@ -51,10 +53,10 @@ class DataExplorerWindow(QtGui.QWidget):
 
         # widgets
         self.heatMap = HeatMap(32, 32)
-        if self.dataset.nsamples > 300000:
-            initRange = [0,30000]
+        if self.dataset.nsamples < DEFAULT_TIME_SPAN * SAMPLE_RATE:
+            self.initRange = [0,self.dataset.nsamples]
         else:
-            initRange = [0,self.dataset.nsamples/10]
+            initRange = [0,DEFAULT_TIME_SPAN * SAMPLE_RATE]
         self.timeScrubber = TimeScrubber(self.dataset.nsamples, initRange=initRange)
         self.plotMatrix = PlotMatrix(4, 2)
         self.plotMatrix.setAllTitles('willowChan = xxxx')
