@@ -41,8 +41,7 @@ class TimeScrubber(QtGui.QLabel):
         #   and setStateCenter(). these functions also implement limit-checking.
         self.totalsamp = maxNSamples
         if (initRange[1] - initRange[0]) > maxNSamples:
-            print "Exceeding maximum number of samples to represent! initRange must be less than maxSamples!!"
-            sys.exit(1)
+            raise ValueError("Exceeding maximum number of samples to represent! initRange must be less than maxSamples!!")
         self.minsamp = initRange[0]
         self.maxsamp = initRange[1]
 
