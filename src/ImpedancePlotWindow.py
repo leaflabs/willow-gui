@@ -6,7 +6,7 @@ import numpy as np
 import h5py
 import pyqtgraph as pg
 
-from WillowDataset import NCHAN
+from willowephys import NCHAN
 
 TICKLENGTH = -10
 INITWIDTH = 1200

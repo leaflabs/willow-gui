@@ -3,7 +3,7 @@
 from PyQt4 import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
-from WillowDataset import SAMPLE_RATE
+from willowephys import SAMPLE_RATE
 
 class TimeScrubber(QtGui.QLabel):
 

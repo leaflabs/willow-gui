@@ -8,7 +8,7 @@ from PlotMatrix import PlotMatrix
 from HeatMap import HeatMap
 from TimeScrubber import TimeScrubber
 
-from WillowDataset import WillowDataset, SAMPLE_RATE
+from willowephys import WillowDataset, SAMPLE_RATE
 
 DEFAULT_TIME_SPAN = 3       # seconds
 

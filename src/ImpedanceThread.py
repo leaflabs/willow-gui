@@ -2,7 +2,7 @@ from PyQt4 import QtCore, QtGui
 import sys, os, h5py, time, datetime
 import numpy as np
 import hwif
-from WillowDataset import WillowDataset
+from willowephys import WillowDataset
 
 import config
 

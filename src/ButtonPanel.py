@@ -24,7 +24,7 @@ from ImpedancePlotWindow import ImpedancePlotWindow
 
 from SettingsWindow import SettingsWindow
 
-from WillowDataset import WillowDataset
+from willowephys import WillowDataset
 
 import config
 
