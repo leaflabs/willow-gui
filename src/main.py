@@ -19,6 +19,16 @@ if not os.path.isdir('../log'):
 oFile = open('../log/oFile', 'w')
 eFile = open('../log/eFile', 'w')
 
+def check_willowephys_version():
+    class LibraryVersionError(Exception):
+        pass
+
+    version_file = '../lib/willowephys/LIB_VERSION'
+    current_version = open(version_file).read().rstrip()
+    from willowephys import __version__ as installed_version
+    if installed_version != current_version:
+        raise LibraryVersionError('Update your willowephys library before using the GUI!')
+
 class StdOutLogger(object):
     def __init__(self, filename = '../log/stdoutAndStderrCopy'):
         self.terminal = sys.stdout
@@ -41,6 +51,7 @@ def killSubprocesses():
     subprocess.call(['killall', 'proto2bytes'], stdout=DEVNULL, stderr=DEVNULL)
 
 if __name__=='__main__':
+    check_willowephys_version()
     killSubprocesses()
     import argparse
     parser = argparse.ArgumentParser(description='Run the GUI for the Willow.')
