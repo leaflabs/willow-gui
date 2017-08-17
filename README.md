@@ -21,7 +21,12 @@ www.willowephys.com
 2. Make sure your system is set up to work with willow-daemon. For instructions on setting up the
     daemon, refer to the documentation [here](http://docs.willowephys.com/software_user_manual.html#daemon).
 
-3. Run:
+3. Install the willowephys library, whose source lives in the `lib/` directory
+   of this repository. Follow the instructions in `lib/README.md` to do this.
+   Note that this step should be done after each update to the willowephys
+   library.
+
+4. Run:
 
     $ src/main.py
 
