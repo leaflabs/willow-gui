@@ -74,7 +74,7 @@ class PlotMatrix(pg.GraphicsLayoutWidget):
                 plotItem.setYLink(self.plotItems[subplotIndex-1])
             self.addItem(plotItem)
             self.plotItems.append(plotItem)
-            if subplotIndex % 2 == 1:
+            if subplotIndex % self.ncols == self.ncols - 1:
                 self.nextRow()
 
     def setPlotData(self, subplotIndex, x, y):
@@ -84,6 +84,10 @@ class PlotMatrix(pg.GraphicsLayoutWidget):
     def setPlotTitle(self, subplotIndex, title):
         plotItem = self.plotItems[subplotIndex]
         plotItem.setTitle(title=title)
+
+    def setPlotDoubleClickHandler(self, subplotIndex, handler):
+        plotItem = self.plotItems[subplotIndex]
+        plotItem.mouseDoubleClickEvent = handler
 
     def setAllTitles(self, title):
         for plotItem in self.plotItems:

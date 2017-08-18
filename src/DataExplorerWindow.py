@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui
 
 import numpy as np
 
-from PlotMatrix import PlotMatrix
+from willowephys import PlotMatrix
 from HeatMap import HeatMap
 from TimeScrubber import TimeScrubber
 
