@@ -33,6 +33,7 @@ class HelpWindow(QtGui.QDialog):
         help_texts[-1].setFont(font)
         help_texts.append(QtGui.QLabel('F1 - launch this help menu\n'
             'F - toggles filtering of displayed data\n'
+            'Y - toggles reset of Y-range upon loading new data\n'
             'F11 - toggle fullscreen viewing of the Data Explorer\n'
             'Home - reset viewing range of the eight plots on the bottom\n'
             'Scrollwheel - zoom x and y dimensions of plots\n'
@@ -87,6 +88,7 @@ class DataExplorerWindow(QtGui.QWidget):
             self.chanLedger[i] = None
 
         self.filtered = False
+        self.resetYRange = True
 
         self.helpWindow = HelpWindow(parent=self)
 
@@ -98,7 +100,8 @@ class DataExplorerWindow(QtGui.QWidget):
         self.dataset.filterAndCalculateActivitySlice()
         self.heatMap.setActivity(self.dataset.slice_activity.reshape((32,32), order='F'))
         self.plotMatrix.setXRange(0, self.dataset.slice_nsamples/30.)
-        self.plotMatrix.setYRange(self.dataset.slice_min, self.dataset.slice_max)
+        if self.resetYRange:
+            self.plotMatrix.setYRange(self.dataset.slice_min, self.dataset.slice_max)
         self.updateAllPlots()
         QtGui.QApplication.restoreOverrideCursor()
 
@@ -148,6 +151,8 @@ class DataExplorerWindow(QtGui.QWidget):
         elif event.key() == QtCore.Qt.Key_F:
             self.filtered = not self.filtered
             self.updateAllPlots()
+        elif event.key() == QtCore.Qt.Key_Y:
+            self.resetYRange = not self.resetYRange
         elif event.key() == QtCore.Qt.Key_Home:
             self.plotMatrix.home()
         elif event.key() == QtCore.Qt.Key_F1:
