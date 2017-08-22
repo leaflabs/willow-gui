@@ -17,6 +17,7 @@ class ImpedanceDialog(QtGui.QDialog):
         self.oneChannelButton = QtGui.QRadioButton('Single Channel:')
         self.oneChannelButton.clicked.connect(self.setDisabledOneChannel)
         self.oneChannelLine = QtGui.QLineEdit('0')
+        self.oneChannelLine.setValidator(QtGui.QIntValidator(0, 1023))
         self.oneChannelLine.setDisabled(True)
 
         self.dialogButtons = QtGui.QDialogButtonBox(
