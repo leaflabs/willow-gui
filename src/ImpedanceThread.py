@@ -164,11 +164,11 @@ class ImpedanceThread(QtCore.QThread):
         try:
             thisChanImpedance = self.channelSnapshotRoutine(self.absChan % 32, singleChannel=True)
         except:
-            self.msgPosted.emit('There was an error recording impedance from channel {0}. Trying again..'.format(chan))
+            self.msgPosted.emit('There was an error recording impedance from channel {0}. Trying again..'.format(self.absChan))
             try:
                 thisChanImpedance = self.channelSnapshotRoutine(self.absChan % 32, singleChannel=True)
             except:
-                self.msgPosted.emit('Another error recording impedance from channel {0}. Giving up -- please check network configuration if problem persists.'.format(chan))
+                self.msgPosted.emit('Another error recording impedance from channel {0}. Giving up -- please check network configuration if problem persists.'.format(self.absChan))
         self.progressUpdated.emit(1)
         if thisChanImpedance > 0:
             self.msgPosted.emit('Impedance Result for Channel %d: %10.2f' % (self.absChan, thisChanImpedance))
