@@ -9,7 +9,7 @@ www.willowephys.com
 
 1. Install dependencies:
 
-    $ sudo apt-get install python-numpy python-qt4 python-tk python-git python-pip python-pyqtgraph util-linux
+    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk python-git python-pip python-pyqtgraph util-linux
 
     $ pip install h5py sharedmem
 
