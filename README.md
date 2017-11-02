@@ -9,9 +9,9 @@ www.willowephys.com
 
 1. Install dependencies:
 
-    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk python-git python-pip python-pyqtgraph util-linux
+    $ sudo apt-get install python-numpy python-matplotlib python-qt4 python-tk python-git python-pip util-linux
 
-    $ pip install h5py sharedmem
+    $ pip install pyqtgraph h5py sharedmem
 
    Note: Old versions of h5py are known to have bugs which can affect GUI
    usage. In particular, v2.2.1 is known to be buggy. This bug is fixed in
