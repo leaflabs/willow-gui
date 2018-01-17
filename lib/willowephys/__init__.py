@@ -6,5 +6,5 @@ def read(fname):
 __version__ = read('LIB_VERSION').rstrip()
 
 from const import *
-from .WillowDataset import *
-from .PlotMatrix import PlotMatrix
+from .willowdataset import WillowDataset
+from .plotmatrix import PlotMatrix
