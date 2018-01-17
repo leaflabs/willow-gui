@@ -13,7 +13,7 @@ import pyqtgraph as pg
 import select
 
 import hwif
-from willowephys import WillowDataset as const
+from willowephys import const
 
 INIT_WILLOWCHAN = 0
 INIT_YMIN_UV = -6000
